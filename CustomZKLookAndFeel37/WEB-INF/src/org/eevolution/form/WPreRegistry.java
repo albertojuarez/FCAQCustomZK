@@ -3,7 +3,6 @@ package org.eevolution.form;
 import java.util.logging.Level;
 
 import org.adempiere.webui.LayoutUtils;
-import org.adempiere.webui.apps.form.WMatch;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Combobox;
@@ -15,7 +14,7 @@ import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.editor.WDateEditor;
-import org.adempiere.webui.editor.WSearchEditor;
+import org.adempiere.webui.editor.WStringEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.event.WTableModelEvent;
@@ -24,7 +23,6 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
-import org.compiere.model.MMatchPO;
 import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
@@ -32,7 +30,6 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
-import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Separator;
@@ -57,7 +54,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			log.log(Level.SEVERE, "", e);
 		}
 	}
-	
+
 	/**	Window No			*/
 	private int         	m_WindowNo = 0;
 	/**	Logger			*/
@@ -77,6 +74,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	
 	//infoCandidate
 	private Label lInfoCandidate = new Label();
+	private Label lIdNumberCandidate = new Label();
+	private Textbox fIdNumberCandidate = new Textbox();	
 	private Label lFNameCandidate = new Label();
 	private Textbox fFNameCandidate = new Textbox();
 	private Label lSNameCandidate = new Label();
@@ -85,38 +84,19 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Textbox fFSurnameCandidate = new Textbox();
 	private Label lSSurnameCandidate = new Label();
 	private Textbox fSSurnameCandidate = new Textbox();
-	private Label lIdTypeCandidate = new Label();
-	private Combobox fIdTypeCandidate = new Combobox();
-	private Label lIdNumberCandidate = new Label();
-	private Textbox fIdNumberCandidate = new Textbox();	
 	private Label lBirthday = new Label();
 	private WDateEditor fBirthday = new WDateEditor("Birthday","Birthday",false,false,true);
 	private Label lGender = new Label();
 	private Combobox fGender = new Combobox();
-	private Label lCountryBirth = new Label();
-	private Combobox fCountryBirth = new Combobox();
-	private Label lPhoneCandidate = new Label();
-	private Textbox fPhoneCandidate = new Textbox();
-	private Label lEmailCandidate = new Label();
-	private Textbox fEmailCandidate = new Textbox();
-	private Label lNationality2 = new Label();
-	private Combobox fNationality2 = new Combobox();
-	private Label lNationality3 = new Label();
-	private Combobox fNationality3 = new Combobox();
-	
-	//AddressCandidate
-	private Label lAddressCandidate = new Label();
-	private Label lMainStreet = new Label();
-	private Textbox fMainStreet = new Textbox();
-	private Label lSideStreet = new Label();
-	private Textbox fSideStreet = new Textbox();
-	private Label lSector = new Label();
-	private Combobox fSector = new Combobox();
-	private Label lParish = new Label();
-	private Combobox fParish = new Combobox();
+	private Label lRegistryType = new Label();
+	private Combobox fRegistryType = new Combobox();
+	private Label lProvenance = new Label();
+	private Textbox fProvenance = new Textbox();
 	
 	//infoFather
 	private Label lInfoFather = new Label();
+	private Label lIdNumberFather = new Label();
+	private Textbox fIdNumberFather = new Textbox();
 	private Label lFNameFather = new Label();
 	private Textbox fFNameFather = new Textbox();
 	private Label lSNameFather = new Label();
@@ -125,37 +105,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Textbox fFSurnameFather = new Textbox();
 	private Label lSSurnameFather = new Label();
 	private Textbox fSSurnameFather = new Textbox();
-	private Label lIdTypeFather = new Label();
-	private Combobox fIdTypeFather = new Combobox();
-	private Label lIdNumberFather = new Label();
-	private Textbox fIdNumberFather = new Textbox();	
-	private Label lPhoneFather = new Label();
-	private Textbox fPhoneFather = new Textbox();
-	private Label lMPhoneFather = new Label();
-	private Textbox fMPhoneFather = new Textbox();
-	private Label lHPhoneFather = new Label();
-	private Textbox fHPhoneFather = new Textbox();
-	private Label lOPhoneFather = new Label();
-	private Textbox fOPhoneFather = new Textbox();
-	private Label lEPhoneFather = new Label();
-	private Textbox fEPhoneFather = new Textbox();
-	private Label lEmailFather = new Label();
-	private Textbox fEmailFather = new Textbox();
-	private Label lEmail2Father = new Label();
-	private Textbox fEmail2Father = new Textbox();
-	private Label lWCollegeFather = new Label();
-	private Checkbox fWCollegeFather = new Checkbox();
-	private Label lSCollegeFather = new Label();
-	private Checkbox fSCollegeFather = new Checkbox();
+	private Checkbox fAlumnusFather = new Checkbox();
 	private Label lSYearsFather = new Label();
 	private Textbox fSYearsFather = new Textbox();
-	private Label lGraduateFather = new Label();
 	private Checkbox fGraduateFather = new Checkbox();
-	private Label lGYearFather = new Label();
-	private Textbox fGYearFather = new Textbox();
-	
+	private Checkbox fEmployeeFather = new Checkbox();
+
 	//infoMother
 	private Label lInfoMother = new Label();
+	private Label lIdNumberMother = new Label();
+	private Textbox fIdNumberMother = new Textbox();	
 	private Label lFNameMother = new Label();
 	private Textbox fFNameMother = new Textbox();
 	private Label lSNameMother = new Label();
@@ -164,37 +123,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Textbox fFSurnameMother = new Textbox();
 	private Label lSSurnameMother = new Label();
 	private Textbox fSSurnameMother = new Textbox();
-	private Label lIdTypeMother = new Label();
-	private Combobox fIdTypeMother = new Combobox();
-	private Label lIdNumberMother = new Label();
-	private Textbox fIdNumberMother = new Textbox();	
-	private Label lPhoneMother = new Label();
-	private Textbox fPhoneMother = new Textbox();
-	private Label lMPhoneMother = new Label();
-	private Textbox fMPhoneMother = new Textbox();
-	private Label lHPhoneMother = new Label();
-	private Textbox fHPhoneMother = new Textbox();
-	private Label lOPhoneMother = new Label();
-	private Textbox fOPhoneMother = new Textbox();
-	private Label lEPhoneMother = new Label();
-	private Textbox fEPhoneMother = new Textbox();
-	private Label lEmailMother = new Label();
-	private Textbox fEmailMother = new Textbox();
-	private Label lEmail2Mother = new Label();
-	private Textbox fEmail2Mother = new Textbox();
-	private Label lWCollegeMother = new Label();
-	private Checkbox fWCollegeMother = new Checkbox();
-	private Label lSCollegeMother = new Label();
-	private Checkbox fSCollegeMother = new Checkbox();
+	private Checkbox fAlumnusMother = new Checkbox();
 	private Label lSYearsMother = new Label();
 	private Textbox fSYearsMother = new Textbox();
-	private Label lGraduateMother = new Label();
 	private Checkbox fGraduateMother = new Checkbox();
-	private Label lGYearMother = new Label();
-	private Textbox fGYearMother = new Textbox();
+	private Checkbox fEmployeeMother = new Checkbox();
 
 	//infoEntry
-	private Label lInfoEntry = new Label();
+	private Label lAddInfo = new Label();
+	private Label lFoundOutForm = new Label();
+	private WStringEditor fFoundOutForm = new WStringEditor();
 	private Label lSection = new Label();
 	private Combobox fSection = new Combobox();
 	private Label lModality = new Label();
@@ -206,7 +144,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Button bSend = new Button();
 	private Button bCancel = new Button();
 	
-
+	
 	private void zkInit() throws Exception {
 		form.appendChild(mainPanel);
 		mainPanel.setStyle("width: 99%; height: 100%; padding: 0; margin: 0");
@@ -217,66 +155,55 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		centerLayout.setVflex(true);
 		southPanel.appendChild(southLayout);
 		lInfoCandidate.setText(Msg.translate(Env.getCtx(), "InfoCandidate"));
+		lIdNumberCandidate.setText(Msg.translate(Env.getCtx(), "IdNumber"));
 		lFNameCandidate.setText(Msg.translate(Env.getCtx(), "FirstName"));
 		lSNameCandidate.setText(Msg.translate(Env.getCtx(), "SecondName"));
 		lFSurnameCandidate.setText(Msg.translate(Env.getCtx(), "FirstSurname"));
 		lSSurnameCandidate.setText(Msg.translate(Env.getCtx(), "SecondSurname"));
-		lIdTypeCandidate.setText(Msg.translate(Env.getCtx(), "IdType"));
-		lIdNumberCandidate.setText(Msg.translate(Env.getCtx(), "IdNumber"));
 		lBirthday.setText(Msg.translate(Env.getCtx(), "Birthday"));
 		lGender.setText(Msg.translate(Env.getCtx(), "Gender"));
-		lCountryBirth.setText(Msg.translate(Env.getCtx(), "CountryBirth"));
-		lPhoneCandidate.setText(Msg.translate(Env.getCtx(), "Phone"));
-		lEmailCandidate.setText(Msg.translate(Env.getCtx(), "EMail"));
-		lNationality2.setText(Msg.translate(Env.getCtx(), "Nationality2"));
-		lNationality3.setText(Msg.translate(Env.getCtx(), "Nationality3"));
-		lAddressCandidate.setText(Msg.translate(Env.getCtx(), "Address"));
-		lMainStreet.setText(Msg.translate(Env.getCtx(), "MainStreet"));
-		lSideStreet.setText(Msg.translate(Env.getCtx(), "SideStreet"));
-		lSector.setText(Msg.translate(Env.getCtx(), "Sector"));
-		lParish.setText(Msg.translate(Env.getCtx(), "Parish"));
+		fGender.appendItem("M", "1");
+		fGender.appendItem("F", "2");
+		lRegistryType.setText(Msg.translate(Env.getCtx(), "RegistryType"));
+		fRegistryType.appendItem(Msg.translate(Env.getCtx(), "IsStudent"), "1");
+		fRegistryType.appendItem(Msg.translate(Env.getCtx(), "Exchange"), "2");		
+		lProvenance.setText(Msg.translate(Env.getCtx(), "Provenance"));
 		lInfoFather.setText(Msg.translate(Env.getCtx(), "InfoFather"));
+		lIdNumberFather.setText(Msg.translate(Env.getCtx(), "IdNumber"));
 		lFNameFather.setText(Msg.translate(Env.getCtx(), "FirstName"));
 		lSNameFather.setText(Msg.translate(Env.getCtx(), "SecondName"));
 		lFSurnameFather.setText(Msg.translate(Env.getCtx(), "FirstSurname"));
 		lSSurnameFather.setText(Msg.translate(Env.getCtx(), "SecondSurname"));
-		lIdTypeFather.setText(Msg.translate(Env.getCtx(), "IdType"));
-		lIdNumberFather.setText(Msg.translate(Env.getCtx(), "IdNumber"));
-		lPhoneFather.setText(Msg.translate(Env.getCtx(), "Phone"));
-		lMPhoneFather.setText(Msg.translate(Env.getCtx(), "Phone2"));
-		lHPhoneFather.setText(Msg.translate(Env.getCtx(), "Phone3"));
-		lOPhoneFather.setText(Msg.translate(Env.getCtx(), "Phone4"));;		
-		lEPhoneFather.setText(Msg.translate(Env.getCtx(), "Ext"));
-		lEmailFather.setText(Msg.translate(Env.getCtx(), "EMail"));
-		lEmail2Father.setText(Msg.translate(Env.getCtx(), "EMail2"));
-		lWCollegeFather.setText(Msg.translate(Env.getCtx(), "CollegeEmployee"));
-		lSCollegeFather.setText(Msg.translate(Env.getCtx(), "StudiedCollege"));
+		fAlumnusFather.setText(Msg.translate(Env.getCtx(), "Alumnus"));
 		lSYearsFather.setText(Msg.translate(Env.getCtx(), "Years"));
-		lGraduateFather.setText(Msg.translate(Env.getCtx(), "Graduate"));
-		lGYearFather.setText(Msg.translate(Env.getCtx(), "Year"));
+		fGraduateFather.setText(Msg.translate(Env.getCtx(), "Graduate"));
+		fEmployeeFather.setText(Msg.translate(Env.getCtx(), "IsEmployee"));
 		lInfoMother.setText(Msg.translate(Env.getCtx(), "InfoMother"));
+		lIdNumberMother.setText(Msg.translate(Env.getCtx(), "IdNumber"));
 		lFNameMother.setText(Msg.translate(Env.getCtx(), "FirstName"));
 		lSNameMother.setText(Msg.translate(Env.getCtx(), "SecondName"));
 		lFSurnameMother.setText(Msg.translate(Env.getCtx(), "FirstSurname"));
 		lSSurnameMother.setText(Msg.translate(Env.getCtx(), "SecondSurname"));
-		lIdTypeMother.setText(Msg.translate(Env.getCtx(), "IdType"));
-		lIdNumberMother.setText(Msg.translate(Env.getCtx(), "IdNumber"));
-		lPhoneMother.setText(Msg.translate(Env.getCtx(), "Phone"));
-		lMPhoneMother.setText(Msg.translate(Env.getCtx(), "Phone2"));
-		lHPhoneMother.setText(Msg.translate(Env.getCtx(), "Phone3"));
-		lOPhoneMother.setText(Msg.translate(Env.getCtx(), "Phone4"));
-		lEPhoneMother.setText(Msg.translate(Env.getCtx(), "Ext"));
-		lEmailMother.setText(Msg.translate(Env.getCtx(), "EMail"));
-		lEmail2Mother.setText(Msg.translate(Env.getCtx(), "EMail2"));	
-		lWCollegeMother.setText(Msg.translate(Env.getCtx(), "CollegeEmployee"));
-		lSCollegeMother.setText(Msg.translate(Env.getCtx(), "StudiedCollege"));
+		fAlumnusMother.setText(Msg.translate(Env.getCtx(), "Alumnus"));
 		lSYearsMother.setText(Msg.translate(Env.getCtx(), "Years"));
-		lGraduateMother.setText(Msg.translate(Env.getCtx(), "Graduate"));
-		lGYearMother.setText(Msg.translate(Env.getCtx(), "Year"));
-		lInfoEntry.setText(Msg.translate(Env.getCtx(), "InfoEntry"));
+		fGraduateMother.setText(Msg.translate(Env.getCtx(), "Graduate"));
+		fEmployeeMother.setText(Msg.translate(Env.getCtx(), "IsEmployee"));
+		lAddInfo.setText(Msg.translate(Env.getCtx(), "AdditionalInfo"));
+		lFoundOutForm.setText(Msg.translate(Env.getCtx(), "FoundOutForm"));
 		lSection.setText(Msg.translate(Env.getCtx(), "Section"));
+		fSection.appendItem(Msg.translate(Env.getCtx(), "Nursery"), "1");
+		fSection.appendItem(Msg.translate(Env.getCtx(), "Primary"), "2");
+		fSection.appendItem(Msg.translate(Env.getCtx(), "Secondary"), "3");
 		lModality.setText(Msg.translate(Env.getCtx(), "Modality"));
+		fModality.appendItem(Msg.translate(Env.getCtx(), "National"), "1");
+		fModality.appendItem(Msg.translate(Env.getCtx(), "international"), "2");
 		lGrade.setText(Msg.translate(Env.getCtx(), "Grade"));
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "1"), "1");
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "2"), "2");
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "3"), "3");
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "4"), "4");
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "5"), "5");
+		fGrade.appendItem(Msg.translate(Env.getCtx(), "6"), "6");
 		bSend.setLabel(Msg.translate(Env.getCtx(), "Send"));
 		bCancel.setLabel(Msg.translate(Env.getCtx(), "CancelRegistry"));
 		
@@ -293,82 +220,29 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lInfoCandidate.rightAlign());
 
 		row = rows.newRow();
-		fFNameCandidate.setWidth("100%");
-		fSNameCandidate.setWidth("100%");
+		row.appendChild(lIdNumberCandidate.rightAlign());
+		row.appendChild(fIdNumberCandidate);
+		
+		row = rows.newRow();
 		row.appendChild(lFNameCandidate.rightAlign());
 		row.appendChild(fFNameCandidate);
 		row.appendChild(lSNameCandidate.rightAlign());
 		row.appendChild(fSNameCandidate);
-		
-		row = rows.newRow();
-		fFSurnameCandidate.setWidth("100%");
-		fSSurnameCandidate.setWidth("100%");
 		row.appendChild(lFSurnameCandidate.rightAlign());
 		row.appendChild(fFSurnameCandidate);
 		row.appendChild(lSSurnameCandidate.rightAlign());
 		row.appendChild(fSSurnameCandidate);
 		
 		row = rows.newRow();
-		fIdTypeCandidate.setWidth("100%");
-		fIdNumberCandidate.setWidth("100%");
-		row.appendChild(lIdTypeCandidate.rightAlign());
-		row.appendChild(fIdTypeCandidate);
-		row.appendChild(lIdNumberCandidate.rightAlign());
-		row.appendChild(fIdNumberCandidate);
-		
-		row = rows.newRow();
-		fGender.setWidth("100%");
 		row.appendChild(lBirthday.rightAlign());
 		row.appendChild(fBirthday.getComponent());
 		row.appendChild(lGender.rightAlign());
 		row.appendChild(fGender);
-		
-		row = rows.newRow();
-		fCountryBirth.setWidth("100%");
-		fPhoneCandidate.setWidth("100%");
-		row.appendChild(lCountryBirth.rightAlign());
-		row.appendChild(fCountryBirth);
-		row.appendChild(lPhoneCandidate.rightAlign());
-		row.appendChild(fPhoneCandidate);
-		
-		row = rows.newRow();
-		fEmailCandidate.setWidth("100%");
-		row.appendChild(lEmailCandidate.rightAlign());
-		row.appendChild(fEmailCandidate);
-		
-		row = rows.newRow();
-		fNationality2.setWidth("100%");
-		row.appendChild(lNationality2.rightAlign());
-		row.appendChild(fNationality2);
-		
-		row = rows.newRow();
-		fNationality3.setWidth("100%");
-		row.appendChild(lNationality3.rightAlign());
-		row.appendChild(fNationality3);
+		row.appendChild(lRegistryType.rightAlign());
+		row.appendChild(fRegistryType);
+		row.appendChild(lProvenance.rightAlign());
+		row.appendChild(fProvenance);
 
-	    row = rows.newRow();
-		row.appendChild(new Space());
-		
-		row = rows.newRow();
-		lAddressCandidate.setStyle("font-weight:bold");
-		row.appendChild(lAddressCandidate.rightAlign());
-		
-		row = rows.newRow();
-		fMainStreet.setWidth("100%");
-		fSideStreet.setWidth("100%");
-		row.appendChild(lMainStreet.rightAlign());
-		row.appendChild(fMainStreet);
-		row.appendChild(lSideStreet.rightAlign());
-		row.appendChild(fSideStreet);
-		
-		row = rows.newRow();
-		fSector.setWidth("100%");
-		fParish.setWidth("100%");
-		row.appendChild(lSector.rightAlign());
-		row.appendChild(fSector);
-		row.appendChild(lParish.rightAlign());
-		row.appendChild(fParish);
-		
 	    row = rows.newRow();
 		row.appendChild(new Space());
 		
@@ -377,78 +251,28 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lInfoFather.rightAlign());
 		
 		row = rows.newRow();
-		fFNameFather.setWidth("100%");
-		fSNameFather.setWidth("100%");
+		row.appendChild(lIdNumberFather.rightAlign());
+		row.appendChild(fIdNumberFather);
+		
+		row = rows.newRow();
 		row.appendChild(lFNameFather.rightAlign());
 		row.appendChild(fFNameFather);
 		row.appendChild(lSNameFather.rightAlign());
 		row.appendChild(fSNameFather);
-		
-		row = rows.newRow();
-		fFSurnameFather.setWidth("100%");
-		fSSurnameFather.setWidth("100%");
 		row.appendChild(lFSurnameFather.rightAlign());
 		row.appendChild(fFSurnameFather);
 		row.appendChild(lSSurnameFather.rightAlign());
 		row.appendChild(fSSurnameFather);
 		
 		row = rows.newRow();
-		fIdTypeFather.setWidth("100%");
-		fIdNumberFather.setWidth("100%");
-		row.appendChild(lIdTypeFather.rightAlign());
-		row.appendChild(fIdTypeFather);
-		row.appendChild(lIdNumberFather.rightAlign());
-		row.appendChild(fIdNumberFather);
-		
-		row = rows.newRow();
-		fPhoneFather.setWidth("100%");
-		row.appendChild(lPhoneFather.rightAlign());
-		row.appendChild(fPhoneFather);
-		
-		row = rows.newRow();
-		fMPhoneFather.setWidth("100%");
-		fHPhoneFather.setWidth("100%");
-		row.appendChild(lMPhoneFather.rightAlign());
-		row.appendChild(fMPhoneFather);
-		row.appendChild(lHPhoneFather.rightAlign());
-		row.appendChild(fHPhoneFather);
-		
-		row = rows.newRow();
-		fOPhoneFather.setWidth("100%");
-		fEPhoneFather.setWidth("100%");
-		row.appendChild(lOPhoneFather.rightAlign());
-		row.appendChild(fOPhoneFather);
-		row.appendChild(lEPhoneFather.rightAlign());
-		row.appendChild(fEPhoneFather);
-		
-		row = rows.newRow();
-		fEmailFather.setWidth("100%");
-		fEmail2Father.setWidth("100%");
-		row.appendChild(lEmailFather.rightAlign());
-		row.appendChild(fEmailFather);
-		row.appendChild(lEmail2Father.rightAlign());
-		row.appendChild(fEmail2Father);
-		
-		row = rows.newRow();
-		fWCollegeFather.setWidth("100%");
-		row.appendChild(lWCollegeFather.rightAlign());
-		row.appendChild(fWCollegeFather);
-
-		row = rows.newRow();
-		fSCollegeFather.setWidth("100%");
-		fSYearsFather.setWidth("100%");
-		row.appendChild(lSCollegeFather.rightAlign());
-		row.appendChild(fSCollegeFather);
+		row.appendChild(new Space());
+		row.appendChild(fAlumnusFather);
 		row.appendChild(lSYearsFather.rightAlign());
 		row.appendChild(fSYearsFather);
-		
-		row = rows.newRow();
-		fGraduateFather.setWidth("100%");
-		fGYearFather.setWidth("100%");
-		row.appendChild(lGraduateFather.rightAlign());
+		row.appendChild(new Space());
 		row.appendChild(fGraduateFather);
-		row.appendChild(lGYearFather.rightAlign());
-		row.appendChild(fGYearFather);
+		row.appendChild(new Space());
+		row.appendChild(fEmployeeFather);
 		
 	    row = rows.newRow();
 		row.appendChild(new Space());
@@ -458,98 +282,45 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lInfoMother.rightAlign());
 		
 		row = rows.newRow();
-		fFNameMother.setWidth("100%");
-		fSNameMother.setWidth("100%");
-		row.appendChild(lFNameMother.rightAlign());
-		row.appendChild(fFNameMother);
-		row.appendChild(lSNameMother.rightAlign());
-		row.appendChild(fSNameMother);
-		
-		row = rows.newRow();
-		fFSurnameMother.setWidth("100%");
-		fSSurnameMother.setWidth("100%");
-		row.appendChild(lFSurnameMother.rightAlign());
-		row.appendChild(fFSurnameMother);
-		row.appendChild(lSSurnameMother.rightAlign());
-		row.appendChild(fSSurnameMother);
-		
-		row = rows.newRow();
-		fIdTypeMother.setWidth("100%");
-		fIdNumberMother.setWidth("100%");
-		row.appendChild(lIdTypeMother.rightAlign());
-		row.appendChild(fIdTypeMother);
 		row.appendChild(lIdNumberMother.rightAlign());
 		row.appendChild(fIdNumberMother);
 		
 		row = rows.newRow();
-		fPhoneMother.setWidth("100%");
-		row.appendChild(lPhoneMother.rightAlign());
-		row.appendChild(fPhoneMother);
-		
-		row = rows.newRow();
-		fMPhoneMother.setWidth("100%");
-		fHPhoneMother.setWidth("100%");
-		row.appendChild(lMPhoneMother.rightAlign());
-		row.appendChild(fMPhoneMother);
-		row.appendChild(lHPhoneMother.rightAlign());
-		row.appendChild(fHPhoneMother);
-		
-		row = rows.newRow();
-		fOPhoneMother.setWidth("100%");
-		fEPhoneMother.setWidth("100%");
-		row.appendChild(lOPhoneMother.rightAlign());
-		row.appendChild(fOPhoneMother);
-		row.appendChild(lEPhoneMother.rightAlign());
-		row.appendChild(fEPhoneMother);
+		row.appendChild(lFNameMother.rightAlign());
+		row.appendChild(fFNameMother);
+		row.appendChild(lSNameMother.rightAlign());
+		row.appendChild(fSNameMother);
+		row.appendChild(lFSurnameMother.rightAlign());
+		row.appendChild(fFSurnameMother);
+		row.appendChild(lSSurnameMother.rightAlign());
+		row.appendChild(fSSurnameMother);
 
 		row = rows.newRow();
-		fEmailMother.setWidth("100%");
-		fEmail2Mother.setWidth("100%");
-		row.appendChild(lEmailMother.rightAlign());
-		row.appendChild(fEmailMother);
-		row.appendChild(lEmail2Mother.rightAlign());
-		row.appendChild(fEmail2Mother);
-		
-		row = rows.newRow();
-		fWCollegeMother.setWidth("100%");
-		row.appendChild(lWCollegeMother.rightAlign());
-		row.appendChild(fWCollegeMother);
-
-		row = rows.newRow();
-		fSCollegeMother.setWidth("100%");
-		fSYearsMother.setWidth("100%");
-		row.appendChild(lSCollegeMother.rightAlign());
-		row.appendChild(fSCollegeMother);
+		row.appendChild(new Space());
+		row.appendChild(fAlumnusMother);
 		row.appendChild(lSYearsMother.rightAlign());
 		row.appendChild(fSYearsMother);
-		
-		row = rows.newRow();
-		fGraduateMother.setWidth("100%");
-		fGYearMother.setWidth("100%");
-		row.appendChild(lGraduateMother.rightAlign());
+		row.appendChild(new Space());
 		row.appendChild(fGraduateMother);
-		row.appendChild(lGYearMother.rightAlign());
-		row.appendChild(fGYearMother);
+		row.appendChild(new Space());
+		row.appendChild(fEmployeeMother);
 		
 	    row = rows.newRow();
 		row.appendChild(new Space());
 		
 		row = rows.newRow();
-		lInfoEntry.setStyle("font-weight:bold");
-		row.appendChild(lInfoEntry.rightAlign());
+		lAddInfo.setStyle("font-weight:bold");
+		row.appendChild(lAddInfo.rightAlign());
 		
 		row = rows.newRow();
-		fSection.setWidth("100%");
+		row.appendChild(lFoundOutForm);
+        row.appendChild(fFoundOutForm.getComponent());
+        
+		row = rows.newRow();
 		row.appendChild(lSection.rightAlign());
 		row.appendChild(fSection);
-		
-		row = rows.newRow();
-		fModality.setWidth("100%");
 		row.appendChild(lModality.rightAlign());
 		row.appendChild(fModality);
-		
-		row = rows.newRow();
-		fGrade.setWidth("100%");
 		row.appendChild(lGrade.rightAlign());
 		row.appendChild(fGrade);
 		
@@ -578,7 +349,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		southRow.appendChild(statusBar);
 		
 	}
-	
 	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
