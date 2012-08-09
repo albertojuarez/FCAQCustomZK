@@ -1,6 +1,5 @@
 package org.eevolution.form;
 
-import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -27,23 +26,27 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
+import org.compiere.model.MBPartner;
+import org.compiere.model.MDocType;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.model.MSequence;
+import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.eevolution.model.X_HR_Employee;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
-import org.zkoss.zul.Space;
 import org.zkoss.zul.Html;
+import org.zkoss.zul.Space;
 
 public class WFCAQPayment extends FCAQPayment implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
 
-	private Properties ctx = Env.getCtx();
 	private CustomForm form = new CustomForm();
 	private Borderlayout mainLayout = new Borderlayout();
 	private Panel parameterPanel = new Panel();
@@ -88,7 +91,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private Label lConTotal = new Label();
 	private Textbox fConTotal = new Textbox();
 	private Label lPaymentModality = new Label();
-	private Combobox fPaymentModeality = new Combobox();
+	private Combobox fPaymentMode = new Combobox();
 	
 	private Label lPaymentReceipt = new Label();
 	private Label lDocumentType = new Label();
@@ -115,10 +118,12 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	{
 		try
 		{
+			loadStartData();
 			dynInit();
 			zkInit();
 			loadStudentTable();
 			loadPaymentTable();
+			
 			
 		}
 		catch(Exception e)
@@ -228,7 +233,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		row.appendChild(lConTotal.rightAlign());
 		row.appendChild(fConTotal);
 		row.appendChild(lPaymentModality.rightAlign());
-		row.appendChild(fPaymentModeality);
+		row.appendChild(fPaymentMode);
 		row = rows.newRow();
 
 		row = rows.newRow();
@@ -290,7 +295,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
 		MLookup lookupBP = MLookupFactory.get (ctx, form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
 		fParent = new WSearchEditor("C_BPartner_ID", true, false, true, lookupBP);
-		fParent.addValueChangeListener(this);
+		
 		
 		worksInCollege.setLabel(Msg.translate(ctx, "WorksInCollege"));
 		lStudentData.setText(Msg.translate(ctx, "StudentData"));
@@ -314,6 +319,24 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		lValue.setText(Msg.translate(ctx, "PaymentValue"));
 		lPaymentMode.setText(Msg.translate(ctx, "PaymentMode"));
 		
+		fPaymentMode.appendItem("Diners", "DI");
+		fPaymentMode.appendItem("Pago Anticipado", "AP");
+		fPaymentMode.appendItem("Rol de Pagos", "PR");
+		fPaymentMode.appendItem("Pago Mesual", "MP");
+		fPaymentMode.appendItem("Pago Web", "WP");
+		
+		for(MDocType doctype : doctypes)
+		{
+			fDocumentType.appendItem(doctype.getName(), doctype.get_ID());
+			fDocumentType.setSelectedIndex(0);
+		}
+		
+		
+		fDocumentNo.setText(MSequence.getDocumentNo(Env.getContextAsInt(ctx, "@#AD_Client_ID@"), "CA_Payment", null) );
+		
+		
+		fParent.addValueChangeListener(this);
+		studentTable.addActionListener(this);
 	}
 	
 	private void loadStudentTable() {
@@ -328,7 +351,6 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		modelP.addTableModelListener(this);
 		studentTable.setData(modelP, columnNames);
 		
-		studentTable.setColumnClass(0, Checkbox.class, true);         //  0- Select
 		studentTable.setColumnClass(1, String.class, false);        //  1- Código
 		studentTable.setColumnClass(2, String.class, false);          // 2- Nombre
 		studentTable.setColumnClass(3, String.class, false);          // 3- Código seguro
@@ -347,7 +369,6 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		modelP.addTableModelListener(this);
 		paymentTable.setData(modelP, columnNames);
 		
-		paymentTable.setColumnClass(0, Combobox.class, true);         //  0- Forma de Pago
 		paymentTable.setColumnClass(1, String.class, false);        //  1- Cuota
 		paymentTable.setColumnClass(2, String.class, false);          // 2- Tarjeta
 		paymentTable.setColumnClass(3, Combobox.class, false);          // 3- Cuenta Bancaria
@@ -363,6 +384,19 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 
+		String name = evt.getPropertyName();
+		Object value = evt.getNewValue();
+		
+		clean();
+		
+		if (value == null)
+			return;
+		
+		if ("C_BPartner_ID".equals(name))
+		{
+			fParent.setValue(value);
+			loadBPartner();
+		}
 	}
 
 
@@ -375,6 +409,13 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	@Override
 	public void onEvent(Event event) throws Exception {
 
+		if(event.getTarget().equals(studentTable))
+		{
+			if(studentTable.getSelectedRow()>=0)
+			{
+				refresh();
+			}
+		}
 	}
 
 
@@ -382,16 +423,98 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	public ADForm getForm() {
 		return form;
 	}
+	
 
+	
+	private void loadBPartner()
+	{	
+		
+		
+		m_bpartner = new MBPartner(ctx, (Integer)fParent.getValue(),null);
+		
+		if(m_bpartner.get_ValueAsBoolean("IsStudent"))
+		{
+			worksInCollege.setChecked(false);
+			loadBPartner(m_bpartner,true);
+		}
+		else
+		{
+			//Verifica si es empleado
+			X_HR_Employee employee = new Query(ctx, X_HR_Employee.Table_Name, "C_BPartner_ID=?", m_bpartner.get_TrxName()).setParameters(m_bpartner.get_ID()).first();
+			worksInCollege.setChecked(employee!=null?true:false);
+			loadBPartner(m_bpartner, false);
+		}
+	}
+	
+	private void loadBPartner(MBPartner bpartner, boolean student)
+	{
+		Vector<Vector<Object>> data; 
+		
+		if(student)
+			data = getStudentData(m_bpartner);
+		else
+			data = getParentData(m_bpartner);
+		
+		
+		Vector<String> columnNames = getStudentColumnNames();
+		
+		studentTable.clear();
+		studentTable.getModel().removeTableModelListener(this);
+		
+		ListModelTable modelP = new ListModelTable(data);
+		modelP.addTableModelListener(this);
+		studentTable.setData(modelP, columnNames);
+		
 
-
-
-
-	@Override
-	public void cleanComponents() {
-		// TODO Auto-generated method stub
+		studentTable.setColumnClass(0, String.class, true);        //  1- Código
+		studentTable.setColumnClass(1, String.class, true);          // 2- Nombre
+		studentTable.setColumnClass(2, String.class, true);          // 3- Código seguro
+		studentTable.setColumnClass(3, String.class, true);          // 4- Matricula
+		studentTable.setColumnClass(4, String.class, true);          // 5- Codigo Bus
+	}
+	
+	
+	private void refresh()
+	{
+		int row = studentTable.getSelectedRow();
+		String value = (String)studentTable.getValueAt(row, INDEX_VALUE);
+		fChildNo.setValue(getChildNo(value));
+		calculateItems(value);
+		
+		fSingleMonth.setText(String.valueOf(singleMonth));
+		fSingleYear.setText(String.valueOf(singleYear));
+		fSingleTotal.setText(String.valueOf(singleTotal));
+		
+		fConMonth.setText(String.valueOf(consolidatedMonth));
+		fConYear.setText(String.valueOf(consolidatedYear));
+		fConTotal.setText(String.valueOf(consolidatedTotal));
+		
+		String pm = getDefaultPayMode(value);
+		
+		for(int x = 0 ; x<=fPaymentMode.getItemCount()-1;x++)
+		{
+			if(fPaymentMode.getItemAtIndex(x).getValue().equals(pm))
+			{
+				fPaymentMode.setSelectedIndex(x);
+			}
+			
+		}
+			
 		
 	}
 
+	@Override
+	public void cleanComponents() {
+		fChildNo.setValue("");
+		
+		fSingleMonth.setText("");
+		fSingleYear.setText("");
+		fSingleTotal.setText("");
+		
+		fConMonth.setText("");
+		fConYear.setText("");
+		fConTotal.setText("");
+		loadStudentTable();
+	}
 	
 }
