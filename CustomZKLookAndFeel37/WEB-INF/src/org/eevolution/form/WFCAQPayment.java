@@ -383,5 +383,15 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		return form;
 	}
 
+
+
+
+
+	@Override
+	public void cleanComponents() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }
