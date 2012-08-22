@@ -26,10 +26,14 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
+import org.adempiere.webui.window.FDialog;
+import org.compiere.model.MAttributeInstance;
 import org.compiere.model.MBPartner;
+import org.compiere.model.MBankAccount;
 import org.compiere.model.MDocType;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.model.MRefList;
 import org.compiere.model.MSequence;
 import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
@@ -61,7 +65,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private Borderlayout borderPaymentLayout = new Borderlayout();
 	private Panel paymentSummaryPanel = new Panel();
 	private Grid paymentSummaryLayout = GridFactory.newGridLayout();
-	private WListbox paymentTable = ListboxFactory.newDataTable();
+	
 	private Panel paymentSouthPanel = new Panel();
 	private Grid paymentSouthLayout = GridFactory.newGridLayout();
 	
@@ -111,7 +115,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private Button bNewPayment = new Button(Msg.translate(ctx, "NewPayment"));
 	private Button bSavePayment = new Button(Msg.translate(ctx, "CompletePayments"));
 
-	
+	private Label currentBox = new Label();
 	
 	
 	public WFCAQPayment()
@@ -123,8 +127,6 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			zkInit();
 			loadStudentTable();
 			loadPaymentTable();
-			
-			
 		}
 		catch(Exception e)
 		{
@@ -158,6 +160,8 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		row.appendChild(fParent.getComponent());
 		row.appendChild(new Space());
 		row.appendChild(worksInCollege);
+		row.appendChild(new Space());
+		row.appendChild(currentBox.rightAlign());
 		row = rows.newRow();
 		row = rows.newRow();
 		row.appendChild(new Space());
@@ -277,10 +281,10 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		center.setFlex(true);
 		borderPaymentLayout.appendChild(center);
 		
-		center.appendChild(paymentTable);
+		center.appendChild((WListbox)paymentTable);
 		center.setStyle("height: 25%");
-		paymentTable.setWidth("99%");
-		paymentTable.setHeight("100%");
+		((WListbox)paymentTable).setWidth("99%");
+		((WListbox)paymentTable).setHeight("100%");
 		center.setStyle("border: none");
 		
 	}
@@ -288,6 +292,8 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	
 
 	private void dynInit() {
+		
+		paymentTable = ListboxFactory.newDataTable();
 		
 		lGeneralData.setText(Msg.translate(ctx, "GeneralData"));
 		lParent.setText(Msg.translate(ctx, "Parent"));
@@ -325,6 +331,8 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		fPaymentMode.appendItem("Pago Mesual", "MP");
 		fPaymentMode.appendItem("Pago Web", "WP");
 		
+		currentBox.setText("Caja Actual: " + cashbox.getAccountNo());
+		
 		for(MDocType doctype : doctypes)
 		{
 			fDocumentType.appendItem(doctype.getName(), doctype.get_ID());
@@ -337,6 +345,9 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		fParent.addValueChangeListener(this);
 		studentTable.addActionListener(this);
+		bNewPayment.addActionListener(this);
+		bSavePayment.addActionListener(this);
+		
 	}
 	
 	private void loadStudentTable() {
@@ -351,30 +362,34 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		modelP.addTableModelListener(this);
 		studentTable.setData(modelP, columnNames);
 		
-		studentTable.setColumnClass(1, String.class, false);        //  1- Código
-		studentTable.setColumnClass(2, String.class, false);          // 2- Nombre
-		studentTable.setColumnClass(3, String.class, false);          // 3- Código seguro
-		studentTable.setColumnClass(4, String.class, false);          // 4- Matricula
-		studentTable.setColumnClass(5, String.class, false);          // 5- Codigo Bus
+		studentTable.setColumnClass(0, String.class, false);        //  1- Código
+		studentTable.setColumnClass(1, String.class, false);          // 2- Nombre
+		studentTable.setColumnClass(2, String.class, false);          // 3- Código seguro
+		studentTable.setColumnClass(3, String.class, false);          // 4- Matricula
+		studentTable.setColumnClass(4, String.class, false);          // 5- Codigo Bus
 	}
 	
 	private void loadPaymentTable() {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>(); //new getCandidateData(fEvaluator.getValue(), fDate.getValue(), fGroup.getValue());
 		Vector<String> columnNames = getPaymentColumnNames();
 		
-		paymentTable.clear();
-		paymentTable.getModel().removeTableModelListener(this);
+		((WListbox)paymentTable).clear();
+		((WListbox)paymentTable).getModel().removeTableModelListener(this);
 		
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
-		paymentTable.setData(modelP, columnNames);
+		((WListbox)paymentTable).setData(modelP, columnNames);
 		
-		paymentTable.setColumnClass(1, String.class, false);        //  1- Cuota
+		paymentTable.setColumnClass(0, Combobox.class, false);          // 6- Valor
+		paymentTable.setColumnClass(1, Combobox.class, false);        //  1- Cuota
 		paymentTable.setColumnClass(2, String.class, false);          // 2- Tarjeta
-		paymentTable.setColumnClass(3, Combobox.class, false);          // 3- Cuenta Bancaria
+		paymentTable.setColumnClass(3, Boolean.class, false);          // 3- Cuenta Bancaria
 		paymentTable.setColumnClass(4, String.class, false);          // 4- Cheque
 		paymentTable.setColumnClass(5, String.class, false);          // 5- C. Cte
 		paymentTable.setColumnClass(6, String.class, false);          // 6- Valor
+
+		
+		
 
 		
 		
@@ -397,6 +412,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			fParent.setValue(value);
 			loadBPartner();
 		}
+		
 	}
 
 
@@ -415,6 +431,21 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			{
 				refresh();
 			}
+		}
+		else if(event.getTarget().equals(bNewPayment))
+		{
+			addPaymentRow();
+		}
+		else if(event.getTarget().equals(bSavePayment))
+		{
+			boolean success = completePayments();
+			
+			if(!success)
+				FDialog.error(0, message_error);
+		}
+		else if(event.getTarget() instanceof Combobox)
+		{
+			refreshSelectedRow((Combobox)event.getTarget());
 		}
 	}
 
@@ -502,6 +533,140 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			
 		
 	}
+	
+	
+	private void addPaymentRow()
+	{		
+		
+		Vector<Object> data = new Vector<Object>();
+
+		Combobox paymentType = new Combobox();
+		
+		for( MRefList payT :  paymentTypes)
+			paymentType.appendItem(payT.getName(), payT.getValue());
+		
+		paymentType.addEventListener("onChange", this);
+		paymentType.setSelectedIndex(0);
+		
+
+		data.add(paymentType);
+		
+		Combobox cardType = new Combobox();
+		cardType.addEventListener("onChange", this);
+		data.add(cardType);
+		
+		data.add("1");
+
+		data.add(new Boolean(false));
+		
+		Combobox bankAccount = new Combobox();
+
+		data.add(bankAccount);
+		
+		data.add("");
+		
+		data.add("");
+		
+		((WListbox)paymentTable).getModel().add(data);
+		
+		refreshSelectedRow(paymentType);
+	}	
+	
+	
+	private void refreshSelectedRow(Combobox current)
+	{
+		int rowNo = -1;
+		boolean updatecardtype = true;
+		
+		// find current row
+		for(int x=0; x<=paymentTable.getRowCount()-1;x++)
+		{
+			Combobox rowCombo = (Combobox)paymentTable.getValueAt(x,0);
+			Combobox rowCombo2 = (Combobox)paymentTable.getValueAt(x,1);
+			
+			if(rowCombo.equals(current) || rowCombo2.equals(current))
+			{
+				updatecardtype = rowCombo2.equals(current) ? false : true;
+				rowNo=x;
+				current=rowCombo;
+			}
+		}
+		
+		// Update cardType
+		Combobox cardCombo = (Combobox)paymentTable.getValueAt(rowNo,1);
+
+		if(updatecardtype)
+		{
+			cardCombo.removeAllItems();
+			
+			if(!current.getValue().equals("Credit Card"))
+			{
+				cardCombo.appendItem("N/A", "NA");
+			}
+			else 
+			{
+				for(MRefList card : cardTypes)
+				{
+					cardCombo.appendItem(card.getName(), card.getValue());
+				}
+			}
+			
+			cardCombo.setSelectedIndex(0);
+		}
+		
+		//---
+		
+		// Update bankAccount
+		
+		Combobox bankCombo = (Combobox)paymentTable.getValueAt(rowNo,4);
+		bankCombo.removeAllItems();
+		
+		
+		if(!current.getValue().equals("Cash") && !current.getValue().equals("Credit Card"))
+		{
+			for(MBankAccount bankaccount : bankAccounts)
+			{
+				if(bankaccount.get_ID()!=cashbox.get_ID() && 
+						bankaccount.getC_Bank_ID()!=bankbox.get_ID() &&
+						bankaccount.getC_Bank_ID()!=bankdiners.get_ID()&&
+						bankaccount.getC_Bank_ID()!=bankvisa.get_ID())
+				{
+					bankCombo.appendItem(bankaccount.getName(), bankaccount.get_ID());
+				}	
+			}
+		}
+		else if(current.getValue().equals("Credit Card"))
+		{
+			
+			String cardType = (String)cardCombo.getItemAtIndex(cardCombo.getSelectedIndex()).getValue();
+			
+			if("D".equals(cardType))
+			{
+				for(MBankAccount bankaccount : bankAccounts)
+				{
+					if(bankaccount.getC_Bank_ID()==bankdiners.get_ID())
+					{
+						bankCombo.appendItem(bankaccount.getName(), bankaccount.get_ID());
+					}	
+				}
+			}
+			else if("V".equals(cardType))
+			{
+				for(MBankAccount bankaccount : bankAccounts)
+				{
+					if(bankaccount.getC_Bank_ID()==bankvisa.get_ID())
+					{
+						bankCombo.appendItem(bankaccount.getName(), bankaccount.get_ID());
+					}	
+				}
+			}
+		}
+		else
+		{
+			bankCombo.appendItem(cashbox.getName(), cashbox.get_ID());
+		}
+		bankCombo.setSelectedIndex(0);
+	}
 
 	@Override
 	public void cleanComponents() {
@@ -515,6 +680,16 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		fConYear.setText("");
 		fConTotal.setText("");
 		loadStudentTable();
+		loadPaymentTable();
+	}
+
+
+
+
+
+	@Override
+	public void showErrorMessage(String message) {
+		FDialog.error(0, message);
 	}
 	
 }
