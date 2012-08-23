@@ -1,5 +1,6 @@
 package org.eevolution.form;
 
+import java.sql.Timestamp;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -55,7 +56,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private Borderlayout mainLayout = new Borderlayout();
 	private Panel parameterPanel = new Panel();
 	private Grid parameterLayout = GridFactory.newGridLayout();
-	private WListbox studentTable = ListboxFactory.newDataTable();
+	
 	private Button bRefresh = new Button();
 	private Panel southPanel = new Panel();
 	private StatusBarPanel statusBar = new StatusBarPanel();
@@ -122,6 +123,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	{
 		try
 		{
+			
 			loadStartData();
 			dynInit();
 			zkInit();
@@ -178,10 +180,10 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		center.setFlex(true);
 		mainLayout.appendChild(center);
 		
-		center.appendChild(studentTable);
+		center.appendChild((WListbox)studentTable);
 		center.setStyle("height: 25%");
-		studentTable.setWidth("99%");
-		studentTable.setHeight("100%");
+		((WListbox)studentTable).setWidth("99%");
+		((WListbox)studentTable).setHeight("100%");
 		center.setStyle("border: none");
 		
 		
@@ -294,6 +296,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private void dynInit() {
 		
 		paymentTable = ListboxFactory.newDataTable();
+		studentTable = ListboxFactory.newDataTable();
 		
 		lGeneralData.setText(Msg.translate(ctx, "GeneralData"));
 		lParent.setText(Msg.translate(ctx, "Parent"));
@@ -321,6 +324,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		lDocumentType.setText(Msg.translate(ctx, "DocumentType"));
 		lDocumentNo.setText(Msg.translate(ctx, "DocumentNo"));
 		lDate.setText(Msg.translate(ctx, "Date"));
+		fDate.setValue(new Timestamp(System.currentTimeMillis()));
 		lConcept.setText(Msg.translate(ctx, "Concept"));
 		lValue.setText(Msg.translate(ctx, "PaymentValue"));
 		lPaymentMode.setText(Msg.translate(ctx, "PaymentMode"));
@@ -344,7 +348,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		
 		fParent.addValueChangeListener(this);
-		studentTable.addActionListener(this);
+		((WListbox)studentTable).addActionListener(this);
 		bNewPayment.addActionListener(this);
 		bSavePayment.addActionListener(this);
 		
@@ -355,18 +359,20 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>(); //new getCandidateData(fEvaluator.getValue(), fDate.getValue(), fGroup.getValue());
 		Vector<String> columnNames = getStudentColumnNames();
 		
-		studentTable.clear();
-		studentTable.getModel().removeTableModelListener(this);
+		((WListbox)studentTable).clear();
+		((WListbox)studentTable).getModel().removeTableModelListener(this);
 		
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
-		studentTable.setData(modelP, columnNames);
+		((WListbox)studentTable).setData(modelP, columnNames);
 		
 		studentTable.setColumnClass(0, String.class, false);        //  1- Código
 		studentTable.setColumnClass(1, String.class, false);          // 2- Nombre
 		studentTable.setColumnClass(2, String.class, false);          // 3- Código seguro
 		studentTable.setColumnClass(3, String.class, false);          // 4- Matricula
 		studentTable.setColumnClass(4, String.class, false);          // 5- Codigo Bus
+		studentTable.setColumnClass(5, Boolean.class, false);
+
 	}
 	
 	private void loadPaymentTable() {
@@ -380,13 +386,15 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		modelP.addTableModelListener(this);
 		((WListbox)paymentTable).setData(modelP, columnNames);
 		
-		paymentTable.setColumnClass(0, Combobox.class, false);          // 6- Valor
-		paymentTable.setColumnClass(1, Combobox.class, false);        //  1- Cuota
-		paymentTable.setColumnClass(2, String.class, false);          // 2- Tarjeta
-		paymentTable.setColumnClass(3, Boolean.class, false);          // 3- Cuenta Bancaria
-		paymentTable.setColumnClass(4, String.class, false);          // 4- Cheque
-		paymentTable.setColumnClass(5, String.class, false);          // 5- C. Cte
-		paymentTable.setColumnClass(6, String.class, false);          // 6- Valor
+		
+		paymentTable.setColumnClass(0, Combobox.class, false); 
+		paymentTable.setColumnClass(1, Combobox.class, false);          
+		paymentTable.setColumnClass(2, Combobox.class, false);       
+		paymentTable.setColumnClass(3, java.lang.Number.class, false);        
+		paymentTable.setColumnClass(4, Boolean.class, false);         
+		paymentTable.setColumnClass(5, String.class, false);          
+		paymentTable.setColumnClass(6, String.class, false);         
+		paymentTable.setColumnClass(7, java.lang.Number.class, false);          
 
 		
 		
@@ -438,10 +446,13 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		}
 		else if(event.getTarget().equals(bSavePayment))
 		{
-			boolean success = completePayments();
+			boolean success = completePayments(((Integer) fDocumentType.getSelectedItem().getValue()).intValue() , fDocumentNo.getText(), (Timestamp)fDate.getValue());
 			
 			if(!success)
 				FDialog.error(0, message_error);
+			else
+				FDialog.error(0, "Pagos generados");
+			
 		}
 		else if(event.getTarget() instanceof Combobox)
 		{
@@ -489,12 +500,12 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		Vector<String> columnNames = getStudentColumnNames();
 		
-		studentTable.clear();
-		studentTable.getModel().removeTableModelListener(this);
+		((WListbox)studentTable).clear();
+		((WListbox)studentTable).getModel().removeTableModelListener(this);
 		
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
-		studentTable.setData(modelP, columnNames);
+		((WListbox)studentTable).setData(modelP, columnNames);
 		
 
 		studentTable.setColumnClass(0, String.class, true);        //  1- Código
@@ -502,6 +513,13 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		studentTable.setColumnClass(2, String.class, true);          // 3- Código seguro
 		studentTable.setColumnClass(3, String.class, true);          // 4- Matricula
 		studentTable.setColumnClass(4, String.class, true);          // 5- Codigo Bus
+		studentTable.setColumnClass(5, Boolean.class, false);
+		
+		if(studentTable.getRowCount()>0)
+		{
+			refresh();
+		}
+
 	}
 	
 	
@@ -539,23 +557,24 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	{		
 		
 		Vector<Object> data = new Vector<Object>();
+		
+		
+		Combobox type = new Combobox();
+		type.appendItem("Anual", "AN");
+		type.appendItem("Mensual", "ME");
+		data.add(type);
 
 		Combobox paymentType = new Combobox();
-		
 		for( MRefList payT :  paymentTypes)
 			paymentType.appendItem(payT.getName(), payT.getValue());
-		
 		paymentType.addEventListener("onChange", this);
 		paymentType.setSelectedIndex(0);
-		
-
 		data.add(paymentType);
 		
 		Combobox cardType = new Combobox();
 		cardType.addEventListener("onChange", this);
 		data.add(cardType);
-		
-		data.add("1");
+		data.add(1);
 
 		data.add(new Boolean(false));
 		
@@ -565,7 +584,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		data.add("");
 		
-		data.add("");
+		data.add(0);
 		
 		((WListbox)paymentTable).getModel().add(data);
 		
@@ -581,8 +600,8 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		// find current row
 		for(int x=0; x<=paymentTable.getRowCount()-1;x++)
 		{
-			Combobox rowCombo = (Combobox)paymentTable.getValueAt(x,0);
-			Combobox rowCombo2 = (Combobox)paymentTable.getValueAt(x,1);
+			Combobox rowCombo = (Combobox)paymentTable.getValueAt(x,1);
+			Combobox rowCombo2 = (Combobox)paymentTable.getValueAt(x,2);
 			
 			if(rowCombo.equals(current) || rowCombo2.equals(current))
 			{
@@ -593,13 +612,13 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		}
 		
 		// Update cardType
-		Combobox cardCombo = (Combobox)paymentTable.getValueAt(rowNo,1);
+		Combobox cardCombo = (Combobox)paymentTable.getValueAt(rowNo,2);
 
 		if(updatecardtype)
 		{
 			cardCombo.removeAllItems();
 			
-			if(!current.getValue().equals("Credit Card"))
+			if(!current.getSelectedItem().getValue().equals("C")) //Tarjeta de Crédito
 			{
 				cardCombo.appendItem("N/A", "NA");
 			}
@@ -618,11 +637,11 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		// Update bankAccount
 		
-		Combobox bankCombo = (Combobox)paymentTable.getValueAt(rowNo,4);
+		Combobox bankCombo = (Combobox)paymentTable.getValueAt(rowNo,5);
 		bankCombo.removeAllItems();
 		
 		
-		if(!current.getValue().equals("Cash") && !current.getValue().equals("Credit Card"))
+		if(!current.getSelectedItem().getValue().equals("E") && !current.getSelectedItem().getValue().equals("C")) //Efectivo,  Tarjeta de Crédito
 		{
 			for(MBankAccount bankaccount : bankAccounts)
 			{
@@ -635,7 +654,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 				}	
 			}
 		}
-		else if(current.getValue().equals("Credit Card"))
+		else if(current.getSelectedItem().getValue().equals("C")) //Tarjeta de Crédito
 		{
 			
 			String cardType = (String)cardCombo.getItemAtIndex(cardCombo.getSelectedIndex()).getValue();
@@ -690,6 +709,36 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	@Override
 	public void showErrorMessage(String message) {
 		FDialog.error(0, message);
+	}
+
+
+	@Override
+	public String getComboValue(int row, int column) {
+		
+		
+		String retValue = "";
+		
+		Combobox combo = (Combobox) paymentTable.getValueAt(row, column);
+		
+		Object value = combo.getSelectedItem().getValue();
+		if(value instanceof String)
+			retValue = (String)value;
+		else if(value instanceof java.lang.Integer)
+			retValue = String.valueOf(value);
+			
+		
+		return retValue;
+	}
+
+
+
+
+
+	@Override
+	public void dinamycRefresh() {
+		clean();
+		loadBPartner();
+	
 	}
 	
 }

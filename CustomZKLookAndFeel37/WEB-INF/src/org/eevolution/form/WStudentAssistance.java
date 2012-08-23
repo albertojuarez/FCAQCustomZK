@@ -1,6 +1,5 @@
 package org.eevolution.form;
 
-import java.sql.Timestamp;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -14,7 +13,6 @@ import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
-import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WDateEditor;
 import org.adempiere.webui.editor.WSearchEditor;
@@ -172,6 +170,30 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		private void loadCandidateTable() {
 			Vector<Vector<Object>> data = getAssistanceData(fCourse.getValue(), fSubject.getValue(), fDate.getValue());
 			Vector<String> columnNames = getColumnNames();
+			
+			
+			
+			Combobox assistanceCategory = new Combobox();
+			
+			data = new Vector<Vector<Object>>();
+			Vector<Object> line = new Vector<Object>();
+			
+			
+			assistanceCategory.appendItem("Asistencia", "Asistencia");
+			assistanceCategory.appendItem("Falta", "Falta");
+			assistanceCategory.appendItem("Retardo", "Retardo");
+			assistanceCategory.setSelectedIndex(0);
+			
+			
+			
+			line.add("");
+			line.add(assistanceCategory);
+			line.add("");
+			
+			data.add(line);
+			
+			
+			
 			
 			studentTable.clear();
 			studentTable.getModel().removeTableModelListener(this);

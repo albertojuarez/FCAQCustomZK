@@ -55,6 +55,7 @@ import org.compiere.model.GridTab;
 import org.compiere.model.GridTable;
 import org.compiere.model.GridWindow;
 import org.compiere.model.MLookup;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MTree;
 import org.compiere.model.MTreeNode;
 import org.compiere.model.X_AD_FieldGroup;
@@ -875,10 +876,16 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	
 	    		if(isGridView())
 	    		{
+	    			
+	    			int size = MSysConfig.getIntValue("TAB_INCLUDING_HEIGHT", 400);
+	    			
+	    			
+	    			/*
 		    		int rows = gridTab.getRowCount();
 		    		int size = (rows * 32) + 75;
 					if(size>400)
-						size=400;
+						size=400;*/
+						
 		    		window.setHeight(size + "px");
 					
 					listPanel.resize();

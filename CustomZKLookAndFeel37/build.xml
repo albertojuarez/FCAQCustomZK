@@ -1,6 +1,6 @@
 <project default="jar" basedir="."> 
     <!-- set global properties for this build zkpatches--> 
     <target name="jar"> 
-        <jar destfile="./zkpatches.jar" basedir="." excludes="WEB-INF/src/**, zkpatches.jar, build.xml,WEB-INF/lib/*-sources.jar" update="false"/> 
+        <jar destfile="./zkcustomization.jar" basedir="." excludes="WEB-INF/src/**, zkcustomization.jar, build.xml,WEB-INF/lib/*-sources.jar" update="false"/> 
     </target> 
 </project>
