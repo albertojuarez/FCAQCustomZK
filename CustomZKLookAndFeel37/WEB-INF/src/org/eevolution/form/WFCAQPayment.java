@@ -451,7 +451,10 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			if(!success)
 				FDialog.error(0, message_error);
 			else
+			{
 				FDialog.error(0, "Pagos generados");
+				dinamycRefresh();
+			}
 			
 		}
 		else if(event.getTarget() instanceof Combobox)
@@ -517,6 +520,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		if(studentTable.getRowCount()>0)
 		{
+			((WListbox)studentTable).setSelectedIndex(0);
 			refresh();
 		}
 
@@ -736,9 +740,15 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 
 	@Override
 	public void dinamycRefresh() {
-		clean();
-		loadBPartner();
+		loadPaymentTable();
 	
+		if(studentTable.getRowCount()>0)
+		{
+			((WListbox)studentTable).setSelectedIndex(0);
+			refresh();
+		}
+		
+		fDocumentNo.setText(MSequence.getDocumentNo(Env.getContextAsInt(ctx, "@#AD_Client_ID@"), "CA_Payment", null) );
 	}
 	
 }
