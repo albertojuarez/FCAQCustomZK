@@ -15,7 +15,7 @@ import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WDateEditor;
-import org.adempiere.webui.editor.WSearchEditor;
+import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.event.WTableModelEvent;
@@ -54,9 +54,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Label lDate = null;
 	private Label lGroup = null;
 	
-	private WSearchEditor fSubject = null;
+	private WTableDirEditor fSubject = null;
 	private WDateEditor fDate = null;
-	private WSearchEditor fCourse = null;
+	private WTableDirEditor fCourse = null;
 	
 	public WStudentAssistance()
 	{
@@ -87,7 +87,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			
 			lSubject = new Label();
-			lSubject.setText(Msg.getMsg(Env.getCtx(), "Subject"));
+			lSubject.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
 
 			lDate = new Label();
 			lDate.setText(Msg.getMsg(Env.getCtx(), "Date"));
@@ -95,7 +95,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			
 			lGroup = new Label();
-			lGroup.setText(Msg.getMsg(Env.getCtx(), "AcademicGroup"));
+			lGroup.setText(Msg.getMsg(Env.getCtx(), "Group"));
 			
 			bSendAssistance.setLabel(Msg.getMsg(Env.getCtx(), "SendAssistance"));
 			
@@ -154,14 +154,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		// Init Search Editors
 		private void dynInit() {
 			
-				int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
-				MLookup subjectLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-				fSubject = new WSearchEditor("CA_SubjectMatter_ID", true, false, true, subjectLk);
+				int AD_Column_ID = 1000934;        //  CA_SubjectMatter.CA_SubjectMatter_ID
+				MLookup subjectLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
+				fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, subjectLk);
 				fSubject.addValueChangeListener(this);
 				
-				AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
-				MLookup groupLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-				fCourse= new WSearchEditor("CA_CourseDef_ID", true, false, true, subjectLk);
+				AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
+				MLookup groupLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
+				fCourse= new WTableDirEditor("CA_CourseDef_ID", true, false, true, groupLk);
 				fCourse.addValueChangeListener(this);
 
 		}
@@ -172,28 +172,36 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			Vector<String> columnNames = getColumnNames();
 			
 			
-			
 			Combobox assistanceCategory = new Combobox();
-			
-			data = new Vector<Vector<Object>>();
-			Vector<Object> line = new Vector<Object>();
-			
-			
 			assistanceCategory.appendItem("Asistencia", "Asistencia");
 			assistanceCategory.appendItem("Falta", "Falta");
 			assistanceCategory.appendItem("Retardo", "Retardo");
 			assistanceCategory.setSelectedIndex(0);
 			
+			data = new Vector<Vector<Object>>();
+			Vector<Object> line = new Vector<Object>();
 			
-			
-			line.add("");
+			line.add("Gabriel Garcia");
 			line.add(assistanceCategory);
 			line.add("");
 			
 			data.add(line);
 			
+			Vector<Object> line1 = new Vector<Object>();
 			
+			line1.add("Carlos Fuentes");
+			line1.add(assistanceCategory);
+			line1.add("");
 			
+			data.add(line1);
+			
+			Vector<Object> line2 = new Vector<Object>();
+			
+			line2.add("Ricardo Garibay");
+			line2.add(assistanceCategory);
+			line2.add("");
+			
+			data.add(line2);
 			
 			studentTable.clear();
 			studentTable.getModel().removeTableModelListener(this);
@@ -203,8 +211,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			studentTable.setData(modelP, columnNames);
 			
 			studentTable.setColumnClass(0, String.class, true);         //  0-Name
-			studentTable.setColumnClass(1, Combobox.class, false);        //  1-Birthday
-			studentTable.setColumnClass(2, String.class, false);          // Group
+			studentTable.setColumnClass(1, Combobox.class, false);        //  1-Status
+			studentTable.setColumnClass(2, String.class, false);          // 2-Comment
 					
 		}
 	

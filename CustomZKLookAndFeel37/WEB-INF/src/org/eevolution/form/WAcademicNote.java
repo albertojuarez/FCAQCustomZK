@@ -19,7 +19,7 @@ import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.component.Window;
-import org.adempiere.webui.editor.WSearchEditor;
+import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.event.WTableModelEvent;
@@ -28,7 +28,6 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
-import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.util.DisplayType;
@@ -65,7 +64,7 @@ public class WAcademicNote extends AcademicNote
 	private Label lParcial = null;
 	private Label lSubjectMatter = null;
 	
-	private WSearchEditor fCourseDef = null;
+	private WTableDirEditor fCourseDef = null;
 	private Combobox fParcial = null;
 	private Combobox fSubjectMatter = null;
 	
@@ -126,6 +125,12 @@ public class WAcademicNote extends AcademicNote
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
 		fSubjectMatter = new Combobox();
 		
+		//Temporal
+		fParcial.appendItem("1er Parcial");
+		fParcial.appendItem("2do Parcial");
+		fSubjectMatter.appendItem("Matematicas");
+		fSubjectMatter.appendItem("Redaccion");
+		
 		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
 		bSendNotes.setLabel(Msg.getMsg(Env.getCtx(), "SendNotes"));
 		
@@ -180,9 +185,9 @@ public class WAcademicNote extends AcademicNote
 	
 	// Init Search Editor
 	private void dynInit() {
-		int AD_Column_ID = 2893;        //  CA_CourseDef.CA_CourseDef_ID
-		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fCourseDef = new WSearchEditor("CA_CourseDef_ID", true, false, true, lookupBP);
+		int AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
+		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
+		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, lookupBP);
 		fCourseDef.addValueChangeListener(this);
 		bShowComments.addActionListener(this);
 		bSendNotes.addActionListener(this);

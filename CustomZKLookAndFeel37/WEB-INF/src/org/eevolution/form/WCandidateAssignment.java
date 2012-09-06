@@ -92,11 +92,12 @@ public class WCandidateAssignment extends CandidateAssignment
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
 		candidateTable.setData(modelP, columnNames);
-		
-		candidateTable.setColumnClass(0, String.class, true);         //  0-Name
-		candidateTable.setColumnClass(1, Timestamp.class, true);        //  1-Birthday
-		candidateTable.setColumnClass(2, String.class, true);          // Group
-				
+
+		candidateTable.setColumnClass(0, Boolean.class, false);			//  0-Selection
+		candidateTable.setColumnClass(1, String.class, true);         	//  1-Name
+		candidateTable.setColumnClass(2, Timestamp.class, true);        //  2-Birthday
+		candidateTable.setColumnClass(3, String.class, true);			//  3-Group
+			
 	}
 
 
