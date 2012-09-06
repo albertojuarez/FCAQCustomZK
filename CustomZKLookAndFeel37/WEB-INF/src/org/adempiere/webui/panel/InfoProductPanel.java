@@ -125,6 +125,12 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 	Tabbox tabbedPane = new Tabbox();
 	WListbox warehouseTbl = ListboxFactory.newDataTable();
     String m_sqlWarehouse;
+    
+    //Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+    WListbox locatorTbl = ListboxFactory.newDataTable();
+    String m_sqlLocator;
+    //
+    
     WListbox substituteTbl = ListboxFactory.newDataTable();
     String m_sqlSubstitute;
     WListbox relatedTbl = ListboxFactory.newDataTable();
@@ -146,9 +152,9 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 		+ " LEFT OUTER JOIN M_AttributeSet pa ON (p.M_AttributeSet_ID=pa.M_AttributeSet_ID)"
 		+ " LEFT OUTER JOIN M_Product_PO ppo ON (p.M_Product_ID=ppo.M_Product_ID)"
 		+ " LEFT OUTER JOIN C_BPartner bp ON (ppo.C_BPartner_ID=bp.C_BPartner_ID)"
-		//Begin Translated Product. Jos’as Vargas, e-evolution, 14-06-2012
+		//Begin Translated Product. Josias Vargas, e-evolution, 14-06-2012
 		+ " LEFT OUTER JOIN M_Product_Trl pt ON (p.M_Product_ID=pt.M_Product_ID AND pt.AD_Language = 'es_EC')";
-	    //End Translated Product. Jos’as Vargas, e-evolution, 14-06-2012
+	    //End Translated Product. Josias Vargas, e-evolution, 14-06-2012
 
 	/**  Array of Column Info    */
 	private static ColumnInfo[] s_productLayout = null;
@@ -361,6 +367,22 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 		warehouseTbl.setMultiSelection(false);
         warehouseTbl.autoSize();
         warehouseTbl.getModel().addTableModelListener(this);
+        
+        //Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+        ColumnInfo[] s_layoutLocator = new ColumnInfo[]{
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "Warehouse"), "(SELECT Value FROM M_Locator WHERE M_Locator_ID = M_Storage.M_Locator_ID)", String.class),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "QtyAvailable"), "SUM(QtyOnHand) - SUM(QtyReserved)", Double.class),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "QtyOnHand"), "SUM(QtyOnHand)", Double.class)};
+        /**	From Clause							*/
+        s_sqlFrom = "M_Storage";
+        /** Where Clause						*/
+        s_sqlWhere = "M_Locator_ID IN (SELECT M_Locator_ID FROM M_Locator WHERE M_Warehouse_ID = ?) AND M_Product_ID = ?";
+        m_sqlLocator = locatorTbl.prepareTable(s_layoutLocator, s_sqlFrom, s_sqlWhere, false, "M_Storage");
+		m_sqlLocator += " Group By M_Locator_ID";
+		locatorTbl.setMultiSelection(false);
+        locatorTbl.autoSize();
+        locatorTbl.getModel().addTableModelListener(this);
+        //
 
         ColumnInfo[] s_layoutSubstitute = new ColumnInfo[]{
         		new ColumnInfo(Msg.translate(Env.getCtx(), "Warehouse"), "orgname", String.class),
@@ -413,6 +435,15 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 		desktopTabPanel.setHeight("100%");
 		desktopTabPanel.appendChild(warehouseTbl);
 		tabPanels.appendChild(desktopTabPanel);
+		
+		//Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+		tab = new Tab(Msg.translate(Env.getCtx(), "Locator"));
+		tabs.appendChild(tab);
+		desktopTabPanel = new Tabpanel();
+		desktopTabPanel.setHeight("100%");
+		desktopTabPanel.appendChild(locatorTbl);
+		tabPanels.appendChild(desktopTabPanel);
+		//
 
 		tab = new Tab(Msg.translate(Env.getCtx(), "Description"));
 		tabs.appendChild(tab);
@@ -512,6 +543,14 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 				}
 			}
 		});
+		
+		//Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+		warehouseTbl.addActionListener(new EventListener() {
+			public void onEvent(Event event) throws Exception {
+        		refreshLocator();
+			}
+		});
+		//
 	}
 
 	@Override
@@ -521,6 +560,37 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 		borderlayout.appendChild(north);
 	}
 
+	//Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+	private void refreshLocator() {
+		m_M_Product_ID = getSelectedRowKey();
+		String sqlLocator = m_sqlLocator;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		int m_M_Warehouse_ID = 0;
+		String sql_M_Warehouse = "";
+		if (warehouseTbl.getSelectedRow() >= 0)
+		{
+			sql_M_Warehouse = "SELECT M_Warehouse_ID FROM M_Warehouse WHERE Name = '" + (String) warehouseTbl.getValueAt(warehouseTbl.getSelectedRow(), 0) + "'";
+			m_M_Warehouse_ID = DB.getSQLValue(null, sql_M_Warehouse);
+		}
+		log.finest(sqlLocator);
+		try {
+			pstmt = DB.prepareStatement(sqlLocator, null);
+			pstmt.setInt(1, m_M_Warehouse_ID);
+			pstmt.setInt(2, m_M_Product_ID);
+			rs = pstmt.executeQuery();
+			locatorTbl.loadTable(rs);
+			rs.close();	
+		} catch (Exception e) {
+			log.log(Level.WARNING, sqlLocator, e);
+		}
+		finally
+		{
+			DB.close(rs, pstmt);
+			rs = null; pstmt = null;
+		}
+	}
+	//
 	/**
 	 * 	Refresh Query
 	 */
@@ -557,6 +627,33 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 
 		m_M_Product_ID = getSelectedRowKey();
 
+		//Begin LocatorTab. Josias Vargas, e-Evolution, 23-08-2012
+		sql = m_sqlLocator;
+		int m_M_Warehouse_ID = 0;
+		String sql_M_Warehouse = "";
+		if (warehouseTbl.getSelectedRow() >= 0)
+		{
+			sql_M_Warehouse = "SELECT M_Warehouse_ID FROM M_Warehouse WHERE Name = '" + (String) warehouseTbl.getValueAt(warehouseTbl.getSelectedRow(), 0) + "'";
+			m_M_Warehouse_ID = DB.getSQLValue(null, sql_M_Warehouse);
+		}
+		log.finest(sql);
+		try {
+			pstmt = DB.prepareStatement(sql, null);
+			pstmt.setInt(1, m_M_Warehouse_ID);
+			pstmt.setInt(2, m_M_Product_ID);
+			rs = pstmt.executeQuery();
+			locatorTbl.loadTable(rs);
+			rs.close();	
+		} catch (Exception e) {
+			log.log(Level.WARNING, sql, e);
+		}
+		finally
+		{
+			DB.close(rs, pstmt);
+			rs = null; pstmt = null;
+		}
+		//
+		
 		sql = m_sqlSubstitute;
 		log.finest(sql);
 		try {
@@ -1153,9 +1250,9 @@ public class InfoProductPanel extends InfoPanel implements EventListener
 			list.add(new ColumnInfo(" ", "p.M_Product_ID", IDColumn.class));
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "Discontinued").substring(0, 1), "p.Discontinued", Boolean.class));
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "Value"), "p.Value", String.class));
-			//Begin Translated Product. Jos’as Vargas, e-evolution, 14-06-2012
+			//Begin Translated Product. Josias Vargas, e-evolution, 14-06-2012
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "Name"), ((Env.getContext(Env.getCtx(), "#AD_Language").equals(new String ("es_EC")) ? "pt.Name" : "p.Name")), String.class));
-			//End Translated Product. Jos’as Vargas, e-evolution, 14-06-2012
+			//End Translated Product. Josias Vargas, e-evolution, 14-06-2012
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "QtyAvailable"), "bomQtyAvailable(p.M_Product_ID,?,0) AS QtyAvailable", Double.class, true, true, null));
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "PriceList"), "bomPriceList(p.M_Product_ID, pr.M_PriceList_Version_ID) AS PriceList",  BigDecimal.class));
 			list.add(new ColumnInfo(Msg.translate(Env.getCtx(), "PriceStd"), "bomPriceStd(p.M_Product_ID, pr.M_PriceList_Version_ID) AS PriceStd", BigDecimal.class));

@@ -126,6 +126,12 @@ public class WAcademicNote extends AcademicNote
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
 		fSubjectMatter = new Combobox();
 		
+		//Temporal
+		fParcial.appendItem("1er Parcial");
+		fParcial.appendItem("2do Parcial");
+		fSubjectMatter.appendItem("Matemáticas");
+		fSubjectMatter.appendItem("Redacción");
+		
 		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
 		bSendNotes.setLabel(Msg.getMsg(Env.getCtx(), "SendNotes"));
 		
@@ -180,8 +186,8 @@ public class WAcademicNote extends AcademicNote
 	
 	// Init Search Editor
 	private void dynInit() {
-		int AD_Column_ID = 2893;        //  CA_CourseDef.CA_CourseDef_ID
-		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
+		int AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
+		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
 		fCourseDef = new WSearchEditor("CA_CourseDef_ID", true, false, true, lookupBP);
 		fCourseDef.addValueChangeListener(this);
 		bShowComments.addActionListener(this);
