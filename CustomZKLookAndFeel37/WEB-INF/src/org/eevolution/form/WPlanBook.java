@@ -275,6 +275,7 @@ public class WPlanBook extends PlanBook implements IFormController, EventListene
 		
 		public PlanBookDay()
 		{
+			super();
 			this.appendChild(fieldGrid);
 			
 			fieldGrid.setWidth("100%");
