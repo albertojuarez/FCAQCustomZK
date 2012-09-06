@@ -17,6 +17,7 @@ import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WDateEditor;
 import org.adempiere.webui.editor.WSearchEditor;
+import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.panel.ADForm;
@@ -49,10 +50,10 @@ public class WPlanBook extends PlanBook implements IFormController, EventListene
 	private Label lDateFrm = new Label();
 	private Label lSubject = new Label();
 
-	private WSearchEditor fGroup = null;
+	private WTableDirEditor fGroup = null;
 	private WSearchEditor fBPartner = null;	
 	private WDateEditor fDateFrom = null;
-	private WSearchEditor fSubject = null;
+	private WTableDirEditor fSubject = null;
 
 	private Grid labelGrid = GridFactory.newGridLayout();
 	
@@ -97,17 +98,17 @@ public class WPlanBook extends PlanBook implements IFormController, EventListene
 		
 		int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
 		MLookup teacher = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fBPartner = new WSearchEditor("CA_SubjectMatter_ID", true, false, true, teacher);
+		fBPartner = new WSearchEditor("C_BPartner_ID", true, false, true, teacher);
 		fBPartner.addValueChangeListener(this);
 		
-		AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
-		MLookup group = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fGroup= new WSearchEditor("CA_CourseDef_ID", true, false, true, group);
+		AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
+		MLookup group = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
+		fGroup= new WTableDirEditor("CA_CourseDef_ID", true, false, true, group);
 		fGroup.addValueChangeListener(this);
 		
-		AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
-		MLookup subject = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fSubject= new WSearchEditor("CA_CourseDef_ID", true, false, true, subject);
+		AD_Column_ID = 1000934;        //  CA_SubjectMatter.CA_SubjectMatter_ID
+		MLookup subject = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
+		fSubject= new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, subject);
 		fSubject.addValueChangeListener(this);
 		
 		for(int x=0; x<=4; x++)
