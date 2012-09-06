@@ -171,38 +171,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			Vector<Vector<Object>> data = getAssistanceData(fCourse.getValue(), fSubject.getValue(), fDate.getValue());
 			Vector<String> columnNames = getColumnNames();
 			
-			
-			Combobox assistanceCategory = new Combobox();
-			assistanceCategory.appendItem("Asistencia", "Asistencia");
-			assistanceCategory.appendItem("Falta", "Falta");
-			assistanceCategory.appendItem("Retardo", "Retardo");
-			assistanceCategory.setSelectedIndex(0);
-			
-			data = new Vector<Vector<Object>>();
-			Vector<Object> line = new Vector<Object>();
-			
-			line.add("Gabriel Garcia");
-			line.add(assistanceCategory);
-			line.add("");
-			
-			data.add(line);
-			
-			Vector<Object> line1 = new Vector<Object>();
-			
-			line1.add("Carlos Fuentes");
-			line1.add(assistanceCategory);
-			line1.add("");
-			
-			data.add(line1);
-			
-			Vector<Object> line2 = new Vector<Object>();
-			
-			line2.add("Ricardo Garibay");
-			line2.add(assistanceCategory);
-			line2.add("");
-			
-			data.add(line2);
-			
 			studentTable.clear();
 			studentTable.getModel().removeTableModelListener(this);
 			
@@ -237,6 +205,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public ADForm getForm() {
 		return form;
+	}
+
+	@Override
+	public Object getCombobox() {
+		Combobox assistanceCategory = new Combobox();
+		assistanceCategory.appendItem("Asistencia", "Asistencia");
+		assistanceCategory.appendItem("Falta", "Falta");
+		assistanceCategory.appendItem("Retardo", "Retardo");
+		assistanceCategory.setSelectedIndex(0);
+		return assistanceCategory;
 	}
 	
 	
