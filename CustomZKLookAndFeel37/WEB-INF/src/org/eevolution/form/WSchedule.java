@@ -47,7 +47,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 	private Label lSubject = null;
 	private WTableDirEditor fSubject = null; // Materia
 	
-	private Button bSave = new Button("Save");
+	private Button bSave = new Button(Msg.getMsg(Env.getCtx(),"Save"));
 	
 	private Borderlayout scheduleLayout = new Borderlayout();
 	
@@ -138,44 +138,44 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		Span span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width:10%;");
-		Label header = new Label("Period");
+		Label header = new Label(Msg.getMsg(Env.getCtx(),"Period"));
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 1");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 1");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 2");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 2");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 3");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 3");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 4");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 4");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 5");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 5");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 6");
+		header = new Label(Msg.getMsg(Env.getCtx(),"Day") + " 6");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		
