@@ -75,7 +75,7 @@ public class WPlanBook extends PlanBook implements IFormController, EventListene
 	private Label lPeriod = new Label("1");
 	private Panel periodControl = new Panel(); 
 	
-	private Button bSave = new Button("Save");
+	private Button bSave = new Button(Msg.getMsg(Env.getCtx(),"Save"));
 	
 	
 	public WPlanBook()
