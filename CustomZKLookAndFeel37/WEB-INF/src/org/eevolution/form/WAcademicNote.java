@@ -30,12 +30,16 @@ import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
 import org.adempiere.webui.window.FDialog;
+import org.compiere.model.MBPartner;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.model.MLookupInfo;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_Parcial;
+import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -96,7 +100,7 @@ public class WAcademicNote extends AcademicNote
 	private void loadNoteTable() {
 		
 		Vector<Vector<Object>> data = getNoteData();
-		Vector<String> columnNames = getColumnNamesNote();
+		Vector<String> columnNames = getEmptyColumn();
 		
 		noteTable.clear();
 		noteTable.getModel().removeTableModelListener(this);
@@ -192,7 +196,7 @@ public class WAcademicNote extends AcademicNote
 		fCourseDef.addValueChangeListener(this);
 		
 		fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID()));
-		fCourseDef.addValueChangeListener(this);
+		fSubjectMatter.addValueChangeListener(this);
 		
 		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
 		fParcial.addValueChangeListener(this);
@@ -204,6 +208,29 @@ public class WAcademicNote extends AcademicNote
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		
+		String name = evt.getPropertyName();
+		Object value = evt.getNewValue();
+		
+		clean();
+		
+		if (value == null)
+			return;
+		
+		if ("CA_CourseDef_ID".equals(name))
+		{
+			fCourseDef.setValue(value);
+		}
+		if ("CA_SubjectMatter_ID".equals(name))
+		{
+			fSubjectMatter.setValue(value);
+		}
+		if ("CA_Parcial_ID".equals(name))
+		{
+			fParcial.setValue(value);
+		}
+		
+		refreshHeader();
+		refreshStudentList();
 	}
 
 	@Override
@@ -300,7 +327,6 @@ public class WAcademicNote extends AcademicNote
 
 	@Override
 	public ADForm getForm() {
-		// TODO Auto-generated method stub
 		return form;
 	}
 
@@ -314,14 +340,51 @@ public class WAcademicNote extends AcademicNote
 	@Override
 	public void dispose() {
 		form.dispose();
+	}
+
+	
+	public void refreshHeader(){
+		
+		if(fCourseDef.getValue()==null || fSubjectMatter.getValue()==null || fParcial.getValue()==null)
+			return;
+		
+		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubjectMatter.getValue(), null);
+		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+		
+		Vector<String> columns = buildNoteHeading();
+		
+		
+		Vector<Vector<Object>> data = getStudentData();
+		
+		
+		noteTable.clear();
+		noteTable.getModel().removeTableModelListener(this);
+		
+		ListModelTable modelP = new ListModelTable(data);
+		modelP.addTableModelListener(this);
+		noteTable.setData(modelP, columns);
+		
+		
+		noteTable.setColumnClass(0, String.class, true);
+		int index = 1;
+		for(index = 1; index<= headingLines.size(); index++)
+		{
+			noteTable.setColumnClass(index, java.lang.Number.class, false);
+		}
+		noteTable.setColumnClass(index+1, String.class, false);
 		
 	}
 
 
 	@Override
 	public boolean refreshStudentList() {
-		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	private void clean()
+	{
+		
 	}
 
 }
