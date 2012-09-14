@@ -36,6 +36,7 @@ import org.compiere.model.MLookupInfo;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -187,13 +188,13 @@ public class WAcademicNote extends AcademicNote
 	private void dynInit() {
 		
 		
-		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseLookup(form.getWindowNo()));
+		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 		
-		fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, getSubjectLookup(form.getWindowNo()));
+		fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 		
-		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, getParcialLookup(form.getWindowNo()));
+		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
 		fParcial.addValueChangeListener(this);
 		
 		bShowComments.addActionListener(this);
