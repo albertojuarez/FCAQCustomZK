@@ -36,6 +36,7 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.MSort;
 import org.compiere.util.Util;
+import org.fcaq.components.WNoteEditor;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -215,7 +216,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				listcell.appendChild(checkbox);
 				ZkCssHelper.appendStyle(listcell, "text-align:center");
 			}
-			else if (field instanceof Number)
+			else if (field instanceof Number && !(field instanceof org.fcaq.components.WNoteEditor))
 			{
 				DecimalFormat format = field instanceof BigDecimal
 					? DisplayType.getNumberFormat(DisplayType.Amount, AEnv.getLanguage(Env.getCtx()))
@@ -294,6 +295,27 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				}
 			}
 			//END AJC 9 ago 2012
+			
+			//BEGIN AJC 17 sep 2012
+			
+			else if (field instanceof org.fcaq.components.WNoteEditor)
+			{
+				listcell.setValue(field);
+				if (isCellEditable)
+				{
+					WNoteEditor noteeditor =  (WNoteEditor)field;
+					noteeditor.addEventListener(Events.ON_CHANGE, this);
+					listcell.appendChild(noteeditor);
+				}
+				else
+				{
+					WNoteEditor noteeditor =  (WNoteEditor)field;
+					if(noteeditor!=null)
+						listcell.setLabel(noteeditor.getValue().toString());
+				}
+			}
+			//END AJC 17 sep 2012
+			
 			// if ID column make it invisible
 			else if (field instanceof IDColumn)
 			{
