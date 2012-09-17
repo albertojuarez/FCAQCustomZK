@@ -37,6 +37,9 @@ import org.compiere.model.MLookupInfo;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.compiere.util.TrxRunnable;
+import org.fcaq.components.INoteEditor;
+import org.fcaq.components.WNoteEditor;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SubjectMatter;
@@ -230,7 +233,6 @@ public class WAcademicNote extends AcademicNote
 		}
 		
 		refreshHeader();
-		refreshStudentList();
 	}
 
 	@Override
@@ -248,6 +250,74 @@ public class WAcademicNote extends AcademicNote
 		}
 	}
 
+	
+
+	@Override
+	public ADForm getForm() {
+		return form;
+	}
+
+
+	@Override
+	public void showErrorMessage(String message) {
+		FDialog.error(0, message);
+	}
+
+
+	@Override
+	public void dispose() {
+		form.dispose();
+	}
+
+	
+	public void refreshHeader(){
+		
+		if(fCourseDef.getValue()==null || fSubjectMatter.getValue()==null || fParcial.getValue()==null)
+			return;
+		
+		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubjectMatter.getValue(), null);
+		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+		
+		Vector<String> columns = buildNoteHeading();
+		
+		if(headingLines==null)
+			return;
+		
+		
+		Vector<Vector<Object>> data = getStudentData();
+		
+		
+		noteTable.clear();
+		noteTable.getModel().removeTableModelListener(this);
+		
+		ListModelTable modelP = new ListModelTable(data);
+		modelP.addTableModelListener(this);
+		noteTable.setData(modelP, columns);
+		
+		
+		noteTable.setColumnClass(0, String.class, true);
+		int index = 1;
+		for(index = 1; index<= headingLines.size(); index++)
+		{
+			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		}
+		noteTable.setColumnClass(index+1, String.class, false);
+		
+		refreshNotes();
+		
+	}
+	
+	private void clean()
+	{
+		
+	}
+	
+	
+	
+	
+	/// comments
+	
 	private void showComments() {
 		// TODO Auto-generated method stub
 		Window comments = new Window();
@@ -325,66 +395,10 @@ public class WAcademicNote extends AcademicNote
 		//Falta poner todo en el FDialog o el que corresponda y mostrar la forma
 	}
 
-	@Override
-	public ADForm getForm() {
-		return form;
-	}
-
 
 	@Override
-	public void showErrorMessage(String message) {
-		FDialog.error(0, message);
-	}
-
-
-	@Override
-	public void dispose() {
-		form.dispose();
-	}
-
-	
-	public void refreshHeader(){
-		
-		if(fCourseDef.getValue()==null || fSubjectMatter.getValue()==null || fParcial.getValue()==null)
-			return;
-		
-		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
-		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubjectMatter.getValue(), null);
-		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
-		
-		Vector<String> columns = buildNoteHeading();
-		
-		
-		Vector<Vector<Object>> data = getStudentData();
-		
-		
-		noteTable.clear();
-		noteTable.getModel().removeTableModelListener(this);
-		
-		ListModelTable modelP = new ListModelTable(data);
-		modelP.addTableModelListener(this);
-		noteTable.setData(modelP, columns);
-		
-		
-		noteTable.setColumnClass(0, String.class, true);
-		int index = 1;
-		for(index = 1; index<= headingLines.size(); index++)
-		{
-			noteTable.setColumnClass(index, java.lang.Number.class, false);
-		}
-		noteTable.setColumnClass(index+1, String.class, false);
-		
-	}
-
-
-	@Override
-	public boolean refreshStudentList() {
-		return false;
-	}
-	
-	private void clean()
-	{
-		
+	public INoteEditor getNoteComponent() {
+		return new WNoteEditor();
 	}
 
 }
