@@ -1,9 +1,12 @@
 package org.eevolution.form;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import org.adempiere.webui.component.Button;
+import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Combobox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
@@ -24,9 +27,9 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
-import org.compiere.model.MLookup;
-import org.compiere.model.MLookupFactory;
-import org.compiere.util.DisplayType;
+import org.adempiere.webui.window.FDialog;
+import org.compiere.model.MRefList;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.zkoss.zk.ui.event.Event;
@@ -58,10 +61,13 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WDateEditor fDate = null;
 	private WTableDirEditor fCourse = null;
 	
+	
 	public WStudentAssistance()
 	{
 		try
 		{
+			loadStartData();
+			
 			dynInit();
 			zkInit();
 			loadCandidateTable();
@@ -92,6 +98,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			lDate = new Label();
 			lDate.setText(Msg.getMsg(Env.getCtx(), "Date"));
 			fDate = new WDateEditor();
+			fDate.setValue(new Timestamp(System.currentTimeMillis()));
+			fDate.setReadWrite(false);
 			
 			
 			lGroup = new Label();
@@ -154,15 +162,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		// Init Search Editors
 		private void dynInit() {
 			
-				int AD_Column_ID = 1000934;        //  CA_SubjectMatter.CA_SubjectMatter_ID
-				MLookup subjectLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
-				fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, subjectLk);
-				fSubject.addValueChangeListener(this);
+			fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, getSubjectMatter(form.getWindowNo()));
+			fSubject.addValueChangeListener(this);
 				
-				AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
-				MLookup groupLk = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
-				fCourse= new WTableDirEditor("CA_CourseDef_ID", true, false, true, groupLk);
-				fCourse.addValueChangeListener(this);
+			fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
+			fCourse.addValueChangeListener(this);
 
 		}
 		
@@ -178,10 +182,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			modelP.addTableModelListener(this);
 			studentTable.setData(modelP, columnNames);
 			
-			studentTable.setColumnClass(0, String.class, true);         //  0-Name
-			studentTable.setColumnClass(1, Combobox.class, false);        //  1-Status
-			studentTable.setColumnClass(2, String.class, false);          // 2-Comment
-					
+			studentTable.setColumnClass(0, String.class, true);			//  0-Name
+			studentTable.setColumnClass(1, Checkbox.class, false);		//  1-Assistance
+			studentTable.setColumnClass(2, Checkbox.class, false);		//  2-Absence
+			studentTable.setColumnClass(3, Checkbox.class, false); 		//  3-Dealy
+			studentTable.setColumnClass(4, Combobox.class, false);		//  4-Motive
+			studentTable.setColumnClass(5, Combobox.class, false);		//  5-Comment
+			studentTable.setColumnClass(6, String.class, false);		// 6-Observations
+			
 		}
 	
 	@Override
@@ -189,34 +197,63 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		// TODO Auto-generated method stub
 		
 	}
-
+	
 	@Override
 	public void tableChanged(WTableModelEvent event) {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
 	@Override
 	public void onEvent(Event event) throws Exception {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
 	@Override
 	public ADForm getForm() {
 		return form;
 	}
-
+	
 	@Override
-	public Object getCombobox() {
-		Combobox assistanceCategory = new Combobox();
-		assistanceCategory.appendItem("Asistencia", "Asistencia");
-		assistanceCategory.appendItem("Falta", "Falta");
-		assistanceCategory.appendItem("Retardo", "Retardo");
-		assistanceCategory.setSelectedIndex(0);
-		return assistanceCategory;
+	public void showErrorMessage(String message){
+		FDialog.error(form.getWindowNo(), Msg.translate(Env.getCtx(), message));
 	}
 	
+	@Override
+	public void dispose(){
+		form.dispose();
+	}
+
+	@Override
+	public Object getComments() {
+		Combobox commentBox = new Combobox();
+		commentBox.setSclass("ipadcombobox");
+		
+		String name = null;
+		for (MRefList comment : comments) {
+			name = DB.getSQLValueString(
+					null,
+					"SELECT NAME FROM AD_Ref_List_Trl WHERE AD_Ref_List_ID = "
+							+ comment.get_ID() + " AND AD_Language = '"
+							+ Env.getContext(Env.getCtx(), "#AD_Language")
+							+ "'");
+
+			if (name == "" || name == null)
+				commentBox.appendItem(comment.getName(), comment.getValue());
+			else
+				commentBox.appendItem(name, comment.getValue());
+		}
+		return commentBox;
+	}
 	
+	@Override
+	public Object getMotive() {
+		Combobox motiveBox = new Combobox();
+		motiveBox.setSclass("ipadcombobox");
+		motiveBox.appendItem(Msg.translate(Env.getCtx(), "Justified"), "J");
+		motiveBox.appendItem(Msg.translate(Env.getCtx(), "Unjustified"), "I");
+		return motiveBox;
+	}
 	
 }
