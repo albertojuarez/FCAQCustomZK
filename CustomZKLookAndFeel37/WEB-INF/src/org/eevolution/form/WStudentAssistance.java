@@ -32,6 +32,9 @@ import org.compiere.model.MRefList;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_Parcial;
+import org.fcaq.model.X_CA_SubjectMatter;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -93,19 +96,19 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			
 			lSubject = new Label();
-			lSubject.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
+			lSubject.setText(Msg.getMsg(m_ctx, "SubjectMatter"));
 
 			lDate = new Label();
-			lDate.setText(Msg.getMsg(Env.getCtx(), "Date"));
+			lDate.setText(Msg.getMsg(m_ctx, "Date"));
 			fDate = new WDateEditor();
 			fDate.setValue(new Timestamp(System.currentTimeMillis()));
 			fDate.setReadWrite(false);
 			
 			
 			lGroup = new Label();
-			lGroup.setText(Msg.getMsg(Env.getCtx(), "Group"));
+			lGroup.setText(Msg.getMsg(m_ctx, "Group"));
 			
-			bSendAssistance.setLabel(Msg.getMsg(Env.getCtx(), "SendAssistance"));
+			bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
 			
 			
 			
@@ -194,8 +197,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
-		// TODO Auto-generated method stub
+		String name = evt.getPropertyName();
+		Object value = evt.getNewValue();
 		
+		clean();
+		
+		if (value == null)
+			return;
+		
+		if ("CA_CourseDef_ID".equals(name))
+		{
+			fCourse.setValue(value);
+		}
+		if ("CA_SubjectMatter_ID".equals(name))
+		{
+			fSubject.setValue(value);
+		}
+		
+		refreshHeader();
 	}
 	
 	@Override
@@ -217,7 +236,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	
 	@Override
 	public void showErrorMessage(String message){
-		FDialog.error(form.getWindowNo(), Msg.translate(Env.getCtx(), message));
+		FDialog.error(form.getWindowNo(), Msg.translate(m_ctx, message));
 	}
 	
 	@Override
@@ -228,7 +247,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public Object getComments() {
 		Combobox commentBox = new Combobox();
-		commentBox.setSclass("ipadcombobox");
 		
 		String name = null;
 		for (MRefList comment : comments) {
@@ -236,7 +254,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					null,
 					"SELECT NAME FROM AD_Ref_List_Trl WHERE AD_Ref_List_ID = "
 							+ comment.get_ID() + " AND AD_Language = '"
-							+ Env.getContext(Env.getCtx(), "#AD_Language")
+							+ Env.getContext(m_ctx, "#AD_Language")
 							+ "'");
 
 			if (name == "" || name == null)
@@ -250,10 +268,27 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public Object getMotive() {
 		Combobox motiveBox = new Combobox();
-		motiveBox.setSclass("ipadcombobox");
-		motiveBox.appendItem(Msg.translate(Env.getCtx(), "Justified"), "J");
-		motiveBox.appendItem(Msg.translate(Env.getCtx(), "Unjustified"), "I");
+		motiveBox.appendItem(Msg.translate(m_ctx, "Justified"), "J");
+		motiveBox.appendItem(Msg.translate(m_ctx, "Unjustified"), "U");
 		return motiveBox;
+	}
+	
+	
+	public void refreshHeader(){
+		
+		if(fCourse.getValue()==null || fSubject.getValue()==null)
+			return;
+		
+		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourse.getValue(), null);
+		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubject.getValue(), null);
+		
+
+		
+	}
+	
+	private void clean()
+	{
+		
 	}
 	
 }
