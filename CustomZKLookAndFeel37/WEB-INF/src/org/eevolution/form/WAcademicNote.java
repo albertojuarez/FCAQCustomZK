@@ -11,13 +11,16 @@ import org.adempiere.webui.component.ConfirmPanel;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
+import org.adempiere.webui.component.ListHead;
 import org.adempiere.webui.component.ListModelTable;
 import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.Textbox;
+import org.adempiere.webui.component.WListItemRenderer;
 import org.adempiere.webui.component.WListbox;
+import org.adempiere.webui.component.WTableColumn;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.editor.WSearchEditor;
 import org.adempiere.webui.editor.WTableDirEditor;
@@ -41,6 +44,7 @@ import org.compiere.util.TrxRunnable;
 import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.util.AcademicUtil;
@@ -77,7 +81,7 @@ public class WAcademicNote extends AcademicNote
 	
 	private WTableDirEditor fCourseDef = null;
 	private WTableDirEditor fParcial = null;
-	private WTableDirEditor fSubjectMatter = null;
+	private WTableDirEditor fMatterAssignment = null;
 	
 	
 	public WAcademicNote()
@@ -157,7 +161,7 @@ public class WAcademicNote extends AcademicNote
 		row.appendChild(fCourseDef.getComponent());
 		row = rows.newRow();
 		row.appendChild(lSubjectMatter);
-		row.appendChild(fSubjectMatter.getComponent());
+		row.appendChild(fMatterAssignment.getComponent());
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
 		
@@ -198,8 +202,8 @@ public class WAcademicNote extends AcademicNote
 		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 		
-		fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID()));
-		fSubjectMatter.addValueChangeListener(this);
+		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
+		fMatterAssignment.addValueChangeListener(this);
 		
 		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
 		fParcial.addValueChangeListener(this);
@@ -223,9 +227,9 @@ public class WAcademicNote extends AcademicNote
 		{
 			fCourseDef.setValue(value);
 		}
-		if ("CA_SubjectMatter_ID".equals(name))
+		if ("CA_MatterAssignment_ID".equals(name))
 		{
-			fSubjectMatter.setValue(value);
+			fMatterAssignment.setValue(value);
 		}
 		if ("CA_Parcial_ID".equals(name))
 		{
@@ -272,11 +276,12 @@ public class WAcademicNote extends AcademicNote
 	
 	public void refreshHeader(){
 		
-		if(fCourseDef.getValue()==null || fSubjectMatter.getValue()==null || fParcial.getValue()==null)
+		if(fCourseDef.getValue()==null || fMatterAssignment.getValue()==null || fParcial.getValue()==null)
 			return;
 		
 		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
-		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubjectMatter.getValue(), null);
+		currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
+		currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getCA_SubjectMatter_ID(), null);
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 		
 		Vector<String> columns = buildNoteHeading();
@@ -292,9 +297,9 @@ public class WAcademicNote extends AcademicNote
 		noteTable.getModel().removeTableModelListener(this);
 		
 		ListModelTable modelP = new ListModelTable(data);
+		
 		modelP.addTableModelListener(this);
 		noteTable.setData(modelP, columns);
-		
 		
 		noteTable.setColumnClass(0, String.class, true);
 		int index = 1;
@@ -303,7 +308,7 @@ public class WAcademicNote extends AcademicNote
 			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 		}
 		noteTable.setColumnClass(index+1, String.class, false);
-		
+
 		refreshNotes();
 		
 	}

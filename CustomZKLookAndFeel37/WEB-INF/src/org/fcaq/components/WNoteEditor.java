@@ -7,9 +7,12 @@ import org.compiere.model.MBPartner;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
+import org.eevolution.form.AcademicNote;
 import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
+import org.fcaq.model.X_CA_NoteRule;
+import org.fcaq.model.X_CA_SchoolYearConfig;
 import org.zkoss.zhtml.Table;
 import org.zkoss.zhtml.Td;
 import org.zkoss.zhtml.Tr;
@@ -32,8 +35,16 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public MBPartner student = null;
 	public X_CA_NoteHeadingLine noteHeadingLine = null;
 	public int noteLine_id = 0;
+	
+	
+	public X_CA_SchoolYearConfig yearConfig = null;
+	public X_CA_NoteRule noteRule = null;
+	
+	
 
 	Decimalbox decimalBox = new Decimalbox();
+
+	private AcademicNote academicNote;
 
 
 	public WNoteEditor()
@@ -135,15 +146,41 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public X_CA_NoteHeadingLine getNoteHeading() {
 		return noteHeadingLine;
 	}
+	
+	@Override
+	public void setAcademicNoteInstance(AcademicNote academicNote) {
+		this.academicNote = academicNote;
+	}
+
+	@Override
+	public AcademicNote getAcademicNote() {
+		return academicNote;
+	}
+
+	@Override
+	public void setSchoolYearConfig(X_CA_SchoolYearConfig yearConfig) {
+		this.yearConfig = yearConfig;
+	}
+
+	@Override
+	public void setNoteRule(X_CA_NoteRule noteRule) {
+		this.noteRule = noteRule;
+	}
+
+	@Override
+	public X_CA_SchoolYearConfig getSchoolYearConfig() {
+		return yearConfig;
+	}
+
+	@Override
+	public X_CA_NoteRule getNoteRule() {
+		return noteRule;
+	}
 
 
 	@Override
 	public void saveEx() {
-
-
 		try{
-
-
 			Trx.run(new TrxRunnable() 
 			{
 				public void run(String trxName)
@@ -154,17 +191,16 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						noteline.setCA_Note_ID(note.get_ID());
 						noteline.setC_BPartner_ID(student.get_ID());
 						noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
-
 					}
 					else
 					{
 						noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
 					}
-
 					noteline.setAmount(decimalBox.getValue());
 					noteline.setIsFinal(false);
-
 					noteline.saveEx();
+					
+					academicNote.refreshFinalNote(student, trxName);
 				}
 			});
 		}catch (Exception e)
@@ -174,9 +210,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		finally{
 
 		}
-
-
-
-
 	}
+
+
 }
