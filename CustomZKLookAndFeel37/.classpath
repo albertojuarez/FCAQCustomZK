@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="WEB-INF/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/CustomFCAQ"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/adempiereTrunk"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/adempiereTrunk_WOB"/>
 	<classpathentry kind="output" path="WEB-INF/classes"/>
 </classpath>
