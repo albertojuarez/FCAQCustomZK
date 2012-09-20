@@ -25,24 +25,18 @@ import org.zkoss.zul.Div;
 
 public class WNoteEditor extends Div  implements INoteEditor{
 
-
-
-
 	private static final long serialVersionUID = 299456427772228471L;
+	private X_CA_Note note = null;
+	private X_CA_NoteLine noteline = null;
+	private MBPartner student = null;
+	private X_CA_NoteHeadingLine noteHeadingLine = null;
+	private int noteLine_id = 0;
+	private X_CA_SchoolYearConfig yearConfig = null;
+	private X_CA_NoteRule noteRule = null;
+	private boolean isfinal=false;
 
-	public X_CA_Note note = null;
-	public X_CA_NoteLine noteline = null;
-	public MBPartner student = null;
-	public X_CA_NoteHeadingLine noteHeadingLine = null;
-	public int noteLine_id = 0;
-	
-	
-	public X_CA_SchoolYearConfig yearConfig = null;
-	public X_CA_NoteRule noteRule = null;
-	
-	
 
-	Decimalbox decimalBox = new Decimalbox();
+	private Decimalbox decimalBox = new Decimalbox();
 
 	private AcademicNote academicNote;
 
@@ -146,7 +140,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public X_CA_NoteHeadingLine getNoteHeading() {
 		return noteHeadingLine;
 	}
-	
+
 	@Override
 	public void setAcademicNoteInstance(AcademicNote academicNote) {
 		this.academicNote = academicNote;
@@ -177,6 +171,16 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		return noteRule;
 	}
 
+	@Override
+	public void setIsFinal(boolean isfinal) {
+		this.isfinal = isfinal;
+		decimalBox.setReadonly(isfinal);
+	}
+
+	@Override
+	public boolean isFinal() {
+		return isfinal;
+	}
 
 	@Override
 	public void saveEx() {
@@ -185,22 +189,25 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				public void run(String trxName)
 				{
-					if(noteLine_id==0)
+					if(!isfinal)
 					{
-						noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
-						noteline.setCA_Note_ID(note.get_ID());
-						noteline.setC_BPartner_ID(student.get_ID());
-						noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+						if(noteLine_id==0)
+						{
+							noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+							noteline.setCA_Note_ID(note.get_ID());
+							noteline.setC_BPartner_ID(student.get_ID());
+							noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+						}
+						else
+						{
+							noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+						}
+						noteline.setAmount(decimalBox.getValue());
+						noteline.setIsFinal(false);
+						noteline.saveEx();
+
+						academicNote.refreshFinalNote(student, trxName);
 					}
-					else
-					{
-						noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
-					}
-					noteline.setAmount(decimalBox.getValue());
-					noteline.setIsFinal(false);
-					noteline.saveEx();
-					
-					academicNote.refreshFinalNote(student, trxName);
 				}
 			});
 		}catch (Exception e)
@@ -212,5 +219,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 	}
 
+
+
+	@Override
+	public void setFValue(BigDecimal value) {
+		decimalBox.setValue(value);
+	}
 
 }

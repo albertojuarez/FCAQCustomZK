@@ -68,7 +68,7 @@ public class WAcademicNote extends AcademicNote
 	private Grid parameterLayout = GridFactory.newGridLayout();
 	private Panel southPanel = new Panel();
 	private StatusBarPanel statusBar = new StatusBarPanel();
-	private WListbox noteTable = ListboxFactory.newDataTable();
+	private WListbox noteTable = null; // ListboxFactory.newDataTable();
 	private Button bSendNotes = new Button();
 	private Button bShowComments = new Button();
     private Hbox hboxBtnRight;
@@ -117,9 +117,6 @@ public class WAcademicNote extends AcademicNote
 		noteTable.setData(modelP, columnNames);
 		
 		noteTable.setColumnClass(0, String.class, true);			//  0-Student
-		noteTable.setColumnClass(1, BigDecimal.class, false);		//  1-NoteHeading
-		noteTable.setColumnClass(2, BigDecimal.class, false);		//  2-NoteHeading2
-		noteTable.setColumnClass(3, BigDecimal.class, true);		//  3-Final
 	}
 
 	
@@ -197,6 +194,14 @@ public class WAcademicNote extends AcademicNote
 	
 	// Init Search Editor
 	private void dynInit() {
+		
+		noteTable = new WListbox();
+		noteTable.setWidth("100%");
+		noteTable.setHeight("100%");
+		noteTable.setFixedLayout(false);
+		noteTable.setVflex(true);
+		
+		
 		
 		
 		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID()));
@@ -307,10 +312,31 @@ public class WAcademicNote extends AcademicNote
 		{
 			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 		}
-		noteTable.setColumnClass(index+1, String.class, false);
+		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 
 		refreshNotes();
 		
+	}
+	
+	
+
+	@Override
+	public INoteEditor getNoteComponent() {
+		return new WNoteEditor();
+	}
+
+
+	@Override
+	public void repaintFinal(MBPartner studen, String value) {
+		for(int x=0;x<=noteTable.getRowCount()-1; x++)
+		{
+			INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-2);
+			if(editor.getStudent().get_ID() == studen.get_ID())
+			{
+				editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-1);
+				editor.setFValue(new BigDecimal(value));
+			}
+		}
 	}
 	
 	private void clean()
@@ -400,10 +426,5 @@ public class WAcademicNote extends AcademicNote
 		//Falta poner todo en el FDialog o el que corresponda y mostrar la forma
 	}
 
-
-	@Override
-	public INoteEditor getNoteComponent() {
-		return new WNoteEditor();
-	}
 
 }
