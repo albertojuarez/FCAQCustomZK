@@ -3,6 +3,7 @@ package org.fcaq.components;
 import java.math.BigDecimal;
 
 import org.adempiere.webui.apps.AEnv;
+import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
@@ -44,7 +45,6 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public WNoteEditor()
 	{
 		super();
-
 		decimalBox.addEventListener(Events.ON_BLUR, new EventListener(){
 			@Override
 			public void onEvent(Event event){
@@ -104,6 +104,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			this.noteLine_id = noteLine.get_ID();
 			decimalBox.setValue(noteLine.getAmount());
+			
 		}
 		else
 		{
@@ -123,6 +124,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public X_CA_NoteLine getNoteLine() {
+		
+		if(noteLine_id>0)
+		{
+			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+		}
+		
 		return noteline;
 	}
 
@@ -154,6 +161,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setSchoolYearConfig(X_CA_SchoolYearConfig yearConfig) {
 		this.yearConfig = yearConfig;
+		decimalBox.setFormat(yearConfig.getFormatPattern());
 	}
 
 	@Override
@@ -191,6 +199,13 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				{
 					if(!isfinal)
 					{
+						
+						if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
+						{
+							decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
+						}
+							
+						
 						if(noteLine_id==0)
 						{
 							noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -205,8 +220,9 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						noteline.setAmount(decimalBox.getValue());
 						noteline.setIsFinal(false);
 						noteline.saveEx();
-
-						academicNote.refreshFinalNote(student, trxName);
+						
+						noteLine_id = noteline.get_ID();
+						
 					}
 				}
 			});
@@ -215,7 +231,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 		}
 		finally{
-
+			if(!isfinal)
+			{
+				academicNote.refreshFinalNote(student);
+			}
 		}
 	}
 
@@ -224,6 +243,13 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setFValue(BigDecimal value) {
 		decimalBox.setValue(value);
+	}
+
+
+
+	@Override
+	public int getNoteLine_ID() {
+		return noteLine_id;
 	}
 
 }
