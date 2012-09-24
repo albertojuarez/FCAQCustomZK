@@ -1,7 +1,6 @@
 package org.eevolution.form;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -33,8 +32,7 @@ import org.compiere.model.MRefList;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.fcaq.model.X_CA_CourseDef;
-import org.fcaq.model.X_CA_SubjectMatter;
+import org.fcaq.model.MPeriodClass;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -54,28 +52,29 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private StatusBarPanel statusBar = new StatusBarPanel();
 	private WListbox studentTable = ListboxFactory.newDataTable();
 	private Button bSendAssistance = new Button();
-	
-	
+
 	private Label lSubject = null;
 	private Label lDate = null;
-	private Label lGroup = null;
-	
+	private Label lCourse = null;
+	private Label lPeriod = null;
+
 	private WTableDirEditor fSubject = null;
 	private WDateEditor fDate = null;
 	private WTableDirEditor fCourse = null;
-	
+	private WTableDirEditor fPeriod = null;
+
 	private boolean setting = false;
-	
-	
+
+
 	public WStudentAssistance()
 	{
 		try
 		{
 			loadStartData();
-			
+
 			dynInit();
 			zkInit();
-			loadAssistanceTable();
+			refreshHeader();
 			southPanel.appendChild(new Separator());
 			southPanel.appendChild(statusBar);
 		}
@@ -84,167 +83,159 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			log.log(Level.SEVERE, "", e);
 		}
 	}
-	
+
 	// Init Components
-		private void zkInit() {
-			
-			
-			form.appendChild(mainLayout);
-			mainLayout.setWidth("99%");
-			mainLayout.setHeight("100%");
-			
-			parameterPanel.appendChild(parameterLayout);
+	private void zkInit() {
 
-			
-			
-			lSubject = new Label();
-			lSubject.setText(Msg.getMsg(m_ctx, "SubjectMatter"));
+		form.appendChild(mainLayout);
+		mainLayout.setWidth("99%");
+		mainLayout.setHeight("100%");
 
-			lDate = new Label();
-			lDate.setText(Msg.getMsg(m_ctx, "Date"));
-			fDate = new WDateEditor();
-			fDate.setValue(new Timestamp(System.currentTimeMillis()));
-			fDate.setReadWrite(false);
-			
-			
-			lGroup = new Label();
-			lGroup.setText(Msg.getMsg(m_ctx, "Group"));
-			
-			bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
-			
-			
-			
-			
-			North north = new North();
-			north.setStyle("border: none");
-			mainLayout.appendChild(north);
-			north.appendChild(parameterPanel);
-			Rows rows = null;
-			Row row = null;
-			parameterLayout.setWidth("800px");
-			rows = parameterLayout.newRows();
-			row = rows.newRow();
-			
-			row.appendChild(lGroup);
-			row.appendChild(fCourse.getComponent());
-			
-			row.appendChild(lSubject);
-			row.appendChild(fSubject.getComponent());
-			
-			row = rows.newRow();
-			
-			row.appendChild(lDate);
-			row.appendChild(fDate.getComponent());
-			
-			row = rows.newRow();
-			
-			
-			
-			Center center = new Center();
-			center.setFlex(true);
-			mainLayout.appendChild(center);
-			
-			center.appendChild(studentTable);
-			studentTable.setWidth("99%");
-			studentTable.setHeight("99%");
-			center.setStyle("border: none");
-			
-			
-			South south = new South();
-			south.setStyle("border: none");
-			Panel southPanel = new Panel();
-			Grid southLayout= GridFactory.newGridLayout();
-			southPanel.appendChild(southLayout);
-			south.appendChild(southPanel);
-			rows = new Rows();
-			southLayout.appendChild(rows);
-			row = rows.newRow();
-			row.appendChild(bSendAssistance);
-			mainLayout.appendChild(south);
-			
-		}
-	
-		// Init Search Editors
-		private void dynInit() {
-			
-			fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, getSubjectMatter(form.getWindowNo()));
-			fSubject.addValueChangeListener(this);
-				
-			fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
-			fCourse.addValueChangeListener(this);
+		parameterPanel.appendChild(parameterLayout);
 
-		}
-		
-		
-		private void loadAssistanceTable() {
-			Vector<Vector<Object>> data = getEmptyData();
-			Vector<String> columnNames = getColumnNames();
-			
-			studentTable.clear();
-			studentTable.getModel().removeTableModelListener(this);
-			
-			ListModelTable modelP = new ListModelTable(data);
-			modelP.addTableModelListener(this);
-			studentTable.setData(modelP, columnNames);
-			
-			studentTable.setColumnClass(0, IDColumn.class, true);		//  0-ID
-			studentTable.setColumnClass(1, String.class, true);			//  1-Name
-			studentTable.setColumnClass(2, String.class, true);			//  2-Course
-			studentTable.setColumnClass(3, Checkbox.class, false);		//  3-Assistance
-			studentTable.setColumnClass(4, Checkbox.class, false);		//  4-Absence
-			studentTable.setColumnClass(5, Checkbox.class, false); 		//  5-Delay
-			studentTable.setColumnClass(6, Combobox.class, false);		//  6-Motive
-			studentTable.setColumnClass(7, Combobox.class, false);		//  7-Comment
-			studentTable.setColumnClass(8, String.class, false);		//  8-Observations
-			
-			studentTable.addActionListener(this);
-			
-		}
-	
+		lSubject = new Label();
+		lSubject.setText(Msg.getMsg(m_ctx, "SubjectMatter"));
+
+		lDate = new Label();
+		lDate.setText(Msg.getMsg(m_ctx, "Date"));
+		fDate = new WDateEditor();
+		fDate.setValue(new Timestamp(System.currentTimeMillis()));
+		fDate.setReadWrite(false);
+
+		lCourse = new Label();
+		lCourse.setText(Msg.getMsg(m_ctx, "Group"));
+
+		lPeriod = new Label();
+		lPeriod.setText(Msg.getMsg(m_ctx, "PeriodClass"));
+
+		bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
+
+
+		North north = new North();
+		north.setStyle("border: none");
+		mainLayout.appendChild(north);
+		north.appendChild(parameterPanel);
+		Rows rows = null;
+		Row row = null;
+		parameterLayout.setWidth("99%");
+		rows = parameterLayout.newRows();
+
+		row = rows.newRow();
+		row.appendChild(lDate);
+		row.appendChild(fDate.getComponent());
+		row.appendChild(lPeriod);
+		fPeriod.getComponent().setWidth("90%");
+		row.appendChild(fPeriod.getComponent());
+
+		row = rows.newRow();
+		row.appendChild(lCourse);
+		fCourse.getComponent().setWidth("90%");
+		row.appendChild(fCourse.getComponent());
+		row.appendChild(lSubject);
+		fSubject.getComponent().setWidth("90%");
+		row.appendChild(fSubject.getComponent());
+
+
+		Center center = new Center();
+		center.setFlex(true);
+		mainLayout.appendChild(center);
+
+		center.appendChild(studentTable);
+		studentTable.setWidth("99%");
+		studentTable.setHeight("99%");
+		center.setStyle("border: none");
+
+
+		South south = new South();
+		south.setStyle("border: none");
+		Panel southPanel = new Panel();
+		Grid southLayout= GridFactory.newGridLayout();
+		southPanel.appendChild(southLayout);
+		south.appendChild(southPanel);
+		rows = new Rows();
+		southLayout.appendChild(rows);
+		row = rows.newRow();
+		row.appendChild(bSendAssistance);
+		mainLayout.appendChild(south);
+	}
+
+	// Init Search Editors
+	private void dynInit() {
+
+		fPeriod = new WTableDirEditor("CA_PeriodClass_ID", true, false, true, getPeriodClass(form.getWindowNo()));
+		fPeriod.addValueChangeListener(this);
+		if (periodClass != null)
+			fPeriod.setValue(periodClass.getCA_PeriodClass_ID());
+
+		fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, getSubjectMatter(form.getWindowNo()));
+		fSubject.setReadWrite(false);
+		fSubject.addValueChangeListener(this);
+		if (currentSubject != null)
+			fSubject.setValue(currentSubject.getCA_SubjectMatter_ID());
+
+		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
+		fCourse.setReadWrite(false);
+		fCourse.addValueChangeListener(this);
+		if (currentCourse != null)
+			fCourse.setValue(currentCourse.getCA_CourseDef_ID());
+	}
+
+
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		String name = evt.getPropertyName();
 		Object value = evt.getNewValue();
-		
+
 		clean();
-		
+
 		if (value == null)
 			return;
-		
-		if ("CA_CourseDef_ID".equals(name))
+
+		if ("CA_PeriodClass_ID".equals(name))
 		{
-			fCourse.setValue(value);
+			fPeriod.setValue(value);
+
+			int CA_PeriodClass_ID = (Integer) value;
+
+			periodClass = new MPeriodClass(m_ctx, CA_PeriodClass_ID, null);
+			currentSubject = currentSubject();
+			currentCourse = currentCourse();
+
+			if (currentSubject != null && currentCourse != null) {
+				fSubject.setValue(currentSubject.get_ID());
+				fCourse.setValue(currentCourse.get_ID());
+			}
+			else {
+				fSubject.setValue(null);
+				fCourse.setValue(null);
+			}
 		}
-		if ("CA_SubjectMatter_ID".equals(name))
-		{
-			fSubject.setValue(value);
-		}
-		
+
 		refreshHeader();
 	}
-	
+
 	@Override
 	public void tableChanged(WTableModelEvent event) {
 		//Checkbox & Observations
-		if (!setting)
+		if (!setting && event.getLastRow() >= 0 && event.getColumn() >= 0)
 			setAssistenceRow(event.getLastRow(), event.getColumn());	
 	}
-	
+
 	@Override
 	public void onEvent(Event event) throws Exception {
-		//cambia combobox
+		//Combobox
 		if(event.getTarget() instanceof Combobox)
 		{
 			int rowNo = -1;
 			int colNo = -1;
 			Combobox currentCombo = (Combobox)event.getTarget();
-			
+
 			// find current row
 			for(int x=0; x <= studentTable.getRowCount()-1;x++)
 			{
 				Combobox motiveCombo = (Combobox)studentTable.getValueAt(x,6);
 				Combobox commentCombo = (Combobox)studentTable.getValueAt(x,7);
-				
+
 				if(motiveCombo == currentCombo) {
 					rowNo = x;
 					colNo = 6;
@@ -257,29 +248,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			if (!setting)
 				setAssistenceRow(rowNo, colNo);
 		}
-		
-	}
-	
-	@Override
-	public ADForm getForm() {
-		return form;
-	}
-	
-	@Override
-	public void showErrorMessage(String message){
-		FDialog.error(form.getWindowNo(), Msg.translate(m_ctx, message));
-	}
-	
-	@Override
-	public void dispose(){
-		form.dispose();
 	}
 
 	@Override
 	public Object getComments() {
+		
 		Combobox commentBox = new Combobox();
 		commentBox.setWidth("100%");
-		
+
 		String name = null;
 		for (MRefList comment : comments) {
 			name = DB.getSQLValueString(
@@ -297,9 +273,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		commentBox.addEventListener("onChange", this);
 		return commentBox;
 	}
-	
+
 	@Override
 	public Object getMotive() {
+		
 		Combobox motiveBox = new Combobox();
 		motiveBox.setWidth("100%");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Justified"), "J");
@@ -307,25 +284,25 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		motiveBox.addEventListener("onChange", this);
 		return motiveBox;
 	}
-	
-	
+
+
 	public void refreshHeader(){
-		
-		if(fCourse.getValue()==null || fSubject.getValue()==null)
+
+		if(fCourse.getValue()==null || fSubject.getValue()==null) {
+			studentTable.clear();
+			showErrorMessage("No open period");
 			return;
-		
-		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourse.getValue(), null);
-		currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubject.getValue(), null);
+		}
 
 		Vector<Vector<Object>> data = getAssistanceData();
-		
+
 		studentTable.clear();
 		studentTable.getModel().removeTableModelListener(this);
-		
+
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
 		studentTable.setData(modelP, getColumnNames());
-		
+
 		studentTable.setColumnClass(0, IDColumn.class, true);		//  0-ID
 		studentTable.setColumnClass(1, String.class, true);			//  1-Name
 		studentTable.setColumnClass(2, String.class, true);			//  2-Course
@@ -335,45 +312,44 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		studentTable.setColumnClass(6, Combobox.class, false);		//  6-Motive
 		studentTable.setColumnClass(7, Combobox.class, false);		//  7-Comment
 		studentTable.setColumnClass(8, String.class, false);		//  8-Observations
-		
+
 		studentTable.addActionListener(this);
-	
-		
+
 		refreshAssistance();
-		
 	}
-	
-	
+
+
 	public void setAssistanceData(int bPartner_ID, boolean assistance, boolean absence, 
 			boolean delay, String motive, String comment, String observation) {
+		
 		setting = true;
 		for (int i=0; i <= studentTable.getRowCount()-1; i++){
-			
+
 			int studentTable_ID = (Integer) studentTable.getValueAt(i, 0);
 			
 			if (studentTable_ID > 0 && studentTable_ID == bPartner_ID){
-				
+
 				studentTable.setValueAt(assistance, i, 3);
 				studentTable.setValueAt(absence, i, 4);
 				studentTable.setValueAt(delay, i, 5);
 				studentTable.setValueAt(selectItemMotive(motive), i, 6);
 				studentTable.setValueAt(selectItemComment(comment), i, 7);
-				
+
 				if (observation == null)
 					studentTable.setValueAt("", i, 8);
 				else
 					studentTable.setValueAt(observation, i, 8);
-				
+
 				break;
 			}
 		}
 		setting = false;
 	}
-	
+
 	public Combobox selectItemComment(String value){
-		
+
 		Combobox commentBox = (Combobox)getComments();
-				
+
 		for (int index = 0; index <= commentBox.getItemCount()-1; index++) {
 			if (value != null && value.equals((String)commentBox.getItemAtIndex(index).getValue())) {
 				commentBox.setSelectedItem(commentBox.getItemAtIndex(index));
@@ -382,11 +358,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		return commentBox;
 	}
-	
+
 	public Combobox selectItemMotive(String value) {
-		
+
 		Combobox motiveBox = (Combobox)getMotive();
-		
+
 		for (int index = 0; index <= motiveBox.getItemCount()-1; index++) {
 			if (value != null && value.equals((String)motiveBox.getItemAtIndex(index).getValue())) {
 				motiveBox.setSelectedItem(motiveBox.getItemAtIndex(index));
@@ -395,15 +371,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		return motiveBox;
 	}
-	
+
 	private void clean()
 	{
-		
+
 	}
-	
+
 	public void setAssistenceRow(int row, int column){
-		setting = true;
 		
+		setting = true;
+
 		int studentTable_ID = (Integer) studentTable.getValueAt(row, 0);
 		boolean assistance = (Boolean) studentTable.getValueAt(row, 3);
 		boolean absence = (Boolean) studentTable.getValueAt(row, 4);
@@ -411,7 +388,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		Combobox motiveBox = (Combobox)studentTable.getValueAt(row, 6);
 		Combobox commentBox = (Combobox)studentTable.getValueAt(row, 7);
 		String observation = (String)studentTable.getValueAt(row, 8);
-		
+
 		if (column == 3 && !assistance) {
 			studentTable.setValueAt(true, row, 3);
 			setting = false;
@@ -437,7 +414,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			studentTable.setValueAt(false, row, 5);
 			assistance = false;
 			delay = false;
-			
+
 		} else if (column == 5 && delay) {
 			studentTable.setValueAt(false, row, 3);
 			studentTable.setValueAt(false, row, 4);
@@ -466,8 +443,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			delay = true;
 		} else 
 			;
-		
-		
+
 		int indexMotive = motiveBox.getSelectedIndex();
 		String motive = "U";
 		if (indexMotive >= 0) {
@@ -476,15 +452,31 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			motiveBox.setSelectedIndex(1);
 			studentTable.setValueAt(motiveBox, row, 6);
 		}
+		
 		int indexComment = commentBox.getSelectedIndex();
 		String comment = null;
 		if (indexComment >= 0) {
 			comment = (String)commentBox.getSelectedItem().getValue();
 		}
-		
+
 		setAssistanceLine(studentTable_ID, assistance, absence, delay, motive, comment, observation);
-		
+
 		setting = false;
 	}
 	
+	@Override
+	public ADForm getForm() {
+		return form;
+	}
+
+	@Override
+	public void showErrorMessage(String message){
+		FDialog.error(form.getWindowNo(), Msg.translate(m_ctx, message));
+	}
+
+	@Override
+	public void dispose(){
+		form.dispose();
+	}
+
 }
