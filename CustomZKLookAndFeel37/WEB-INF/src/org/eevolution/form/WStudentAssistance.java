@@ -166,18 +166,19 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fPeriod.addValueChangeListener(this);
 		if (periodClass != null)
 			fPeriod.setValue(periodClass.getCA_PeriodClass_ID());
-
-		fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, getSubjectMatter(form.getWindowNo()));
-		fSubject.setReadWrite(false);
-		fSubject.addValueChangeListener(this);
-		if (currentSubject != null)
-			fSubject.setValue(currentSubject.getCA_SubjectMatter_ID());
-
+		
 		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
 		fCourse.setReadWrite(false);
 		fCourse.addValueChangeListener(this);
 		if (currentCourse != null)
 			fCourse.setValue(currentCourse.getCA_CourseDef_ID());
+
+		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getMatterAssignment(form.getWindowNo()));
+		fSubject.setReadWrite(false);
+		fSubject.addValueChangeListener(this);
+		if (currentMatterAssignment != null)
+			fSubject.setValue(currentMatterAssignment.get_ID());
+
 	}
 
 
@@ -198,11 +199,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			int CA_PeriodClass_ID = (Integer) value;
 
 			periodClass = new MPeriodClass(m_ctx, CA_PeriodClass_ID, null);
-			currentSubject = currentSubject();
 			currentCourse = currentCourse();
+			currentMatterAssignment = currentMatterAssignment();
 
-			if (currentSubject != null && currentCourse != null) {
-				fSubject.setValue(currentSubject.get_ID());
+			if (currentMatterAssignment != null && currentCourse != null) {
+				fSubject.setValue(currentMatterAssignment.get_ID());
 				fCourse.setValue(currentCourse.get_ID());
 			}
 			else {
