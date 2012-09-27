@@ -57,11 +57,13 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Label lDate = null;
 	private Label lCourse = null;
 	private Label lPeriod = null;
+	public Label lExtraGroup = null;
 
 	private WTableDirEditor fSubject = null;
 	private WDateEditor fDate = null;
 	private WTableDirEditor fCourse = null;
 	private WTableDirEditor fPeriod = null;
+	private WTableDirEditor fExtraGroup = null;
 
 	private boolean setting = false;
 
@@ -108,6 +110,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		lPeriod = new Label();
 		lPeriod.setText(Msg.getMsg(m_ctx, "PeriodClass"));
 
+		lExtraGroup = new Label();
+		lExtraGroup.setText(Msg.getMsg(m_ctx, "Extracurricular"));
+		
 		bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
 
 
@@ -131,11 +136,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lCourse);
 		fCourse.getComponent().setWidth("90%");
 		row.appendChild(fCourse.getComponent());
+		row.appendChild(lExtraGroup);
+		fExtraGroup.getComponent().setWidth("90%");
+		row.appendChild(fExtraGroup.getComponent());
 		row.appendChild(lSubject);
 		fSubject.getComponent().setWidth("90%");
 		row.appendChild(fSubject.getComponent());
 
-
+		
 		Center center = new Center();
 		center.setFlex(true);
 		mainLayout.appendChild(center);
@@ -169,19 +177,69 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
 		fCourse.setReadWrite(false);
-		fCourse.addValueChangeListener(this);
 		if (currentCourse != null)
 			fCourse.setValue(currentCourse.getCA_CourseDef_ID());
 
 		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getMatterAssignment(form.getWindowNo()));
 		fSubject.setReadWrite(false);
-		fSubject.addValueChangeListener(this);
 		if (currentMatterAssignment != null)
 			fSubject.setValue(currentMatterAssignment.get_ID());
 
+
+		fExtraGroup = new WTableDirEditor("CA_ExtraGroupDef_ID", true, false, true, getExtraGroupDef(form.getWindowNo()));
+		fExtraGroup.setReadWrite(false);
+		if (currentExtraGroup != null)
+			fExtraGroup.setValue(currentExtraGroup.get_ID());
+	}
+
+	
+	public void showExtraGroup() {
+
+		parameterLayout.removeChild(parameterLayout.getRows());
+		
+		Rows rows = null;
+		Row row = null;
+		rows = parameterLayout.newRows();
+
+		row = rows.newRow();
+		row.appendChild(lDate);
+		row.appendChild(fDate.getComponent());
+		row.appendChild(lPeriod);
+		fPeriod.getComponent().setWidth("90%");
+		row.appendChild(fPeriod.getComponent());
+
+		row = rows.newRow();
+		row.appendChild(lExtraGroup);
+		fExtraGroup.getComponent().setWidth("90%");
+		row.appendChild(fExtraGroup.getComponent());
 	}
 
 
+	public void hideExtraGroup() {
+	
+		parameterLayout.removeChild(parameterLayout.getRows());
+		
+		Rows rows = null;
+		Row row = null;
+		rows = parameterLayout.newRows();
+		
+		row = rows.newRow();
+		row.appendChild(lDate);
+		row.appendChild(fDate.getComponent());
+		row.appendChild(lPeriod);
+		fPeriod.getComponent().setWidth("90%");
+		row.appendChild(fPeriod.getComponent());
+
+		row = rows.newRow();
+		row.appendChild(lCourse);
+		fCourse.getComponent().setWidth("90%");
+		row.appendChild(fCourse.getComponent());
+		row.appendChild(lSubject);
+		fSubject.getComponent().setWidth("90%");
+		row.appendChild(fSubject.getComponent());
+	}
+	
+	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		String name = evt.getPropertyName();
@@ -201,6 +259,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			periodClass = new MPeriodClass(m_ctx, CA_PeriodClass_ID, null);
 			currentCourse = currentCourse();
 			currentMatterAssignment = currentMatterAssignment();
+			currentExtraGroup = currentExtraGroup();
 
 			if (currentMatterAssignment != null && currentCourse != null) {
 				fSubject.setValue(currentMatterAssignment.get_ID());
@@ -210,6 +269,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fSubject.setValue(null);
 				fCourse.setValue(null);
 			}
+			
+			if (currentExtraGroup != null)
+				fExtraGroup.setValue(currentExtraGroup.get_ID());
+			else
+				fExtraGroup.setValue(null);
 		}
 
 		refreshHeader();
@@ -289,12 +353,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	public void refreshHeader(){
 
-		if(fCourse.getValue()==null || fSubject.getValue()==null) {
-			studentTable.clear();
-			showErrorMessage("No open period");
-			return;
+		if(fCourse.getValue() == null || fSubject.getValue() == null) {
+			
+			if (fExtraGroup.getValue() == null) {
+				hideExtraGroup();
+				studentTable.clear();
+				showErrorMessage("No open period");
+				return;
+			} else {
+				showExtraGroup();
+			}
+		} else {
+			hideExtraGroup();
 		}
-
+		
 		Vector<Vector<Object>> data = getAssistanceData();
 
 		studentTable.clear();
@@ -325,22 +397,22 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		setting = true;
 		for (int i=0; i <= studentTable.getRowCount()-1; i++){
-
+			
 			int studentTable_ID = (Integer) studentTable.getValueAt(i, 0);
 			
 			if (studentTable_ID > 0 && studentTable_ID == bPartner_ID){
-
+				
 				studentTable.setValueAt(assistance, i, 3);
 				studentTable.setValueAt(absence, i, 4);
 				studentTable.setValueAt(delay, i, 5);
 				studentTable.setValueAt(selectItemMotive(motive), i, 6);
 				studentTable.setValueAt(selectItemComment(comment), i, 7);
-
+				
 				if (observation == null)
 					studentTable.setValueAt("", i, 8);
 				else
 					studentTable.setValueAt(observation, i, 8);
-
+				
 				break;
 			}
 		}
