@@ -9,6 +9,8 @@ import org.compiere.util.Env;
 import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
 import org.eevolution.form.AcademicNote;
+import org.eevolution.form.DisciplineNotes;
+import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
@@ -34,12 +36,21 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	private int noteLine_id = 0;
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
+	private X_CA_DisciplineConfig discConfig = null;
+	
+	private boolean isforced = false;
 	private boolean isfinal=false;
+	private boolean isdiscipline=false;
+	private boolean isaverange=false;
+	private String criteria = "";
+	
 
 
 	private Decimalbox decimalBox = new Decimalbox();
+	private BigDecimal oldValue = new BigDecimal("0");
 
 	private AcademicNote academicNote;
+	private DisciplineNotes disciplineNotes;
 
 
 	public WNoteEditor()
@@ -48,7 +59,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		decimalBox.addEventListener(Events.ON_BLUR, new EventListener(){
 			@Override
 			public void onEvent(Event event){
-				saveEx();
+					saveEx();
 			}
 		});
 		init();
@@ -184,60 +195,25 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		this.isfinal = isfinal;
 		decimalBox.setReadonly(isfinal);
 	}
+	
+	@Override
+	public void forceEditable()
+	{
+		isforced = true;
+		decimalBox.setReadonly(false);
+	}
+	
+	public boolean isforced()
+	{
+		return isforced;
+	}
 
 	@Override
 	public boolean isFinal() {
 		return isfinal;
 	}
 
-	@Override
-	public void saveEx() {
-		try{
-			Trx.run(new TrxRunnable() 
-			{
-				public void run(String trxName)
-				{
-					if(!isfinal)
-					{
-						
-						if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
-						{
-							decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
-						}
-							
-						
-						if(noteLine_id==0)
-						{
-							noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
-							noteline.setCA_Note_ID(note.get_ID());
-							noteline.setC_BPartner_ID(student.get_ID());
-							noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
-						}
-						else
-						{
-							noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
-						}
-						noteline.setAmount(decimalBox.getValue());
-						noteline.setIsFinal(false);
-						noteline.saveEx();
-						
-						noteLine_id = noteline.get_ID();
-						
-					}
-				}
-			});
-		}catch (Exception e)
-		{
-
-		}
-		finally{
-			if(!isfinal)
-			{
-				academicNote.refreshFinalNote(student);
-			}
-		}
-	}
-
+	
 
 
 	@Override
@@ -250,6 +226,169 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public int getNoteLine_ID() {
 		return noteLine_id;
+	}
+
+
+
+	@Override
+	public void setIsDiscipline(boolean isdiscipline) {
+		this.isdiscipline = isdiscipline;
+	}
+
+
+
+	@Override
+	public boolean isDiscipline() {
+		return this.isdiscipline;
+	}
+
+
+	@Override
+	public void setDisciplineNoteInstance(DisciplineNotes disciplineNotes) {
+		this.disciplineNotes = disciplineNotes;
+	}
+
+	@Override
+	public DisciplineNotes getDisciplineNoteInstance() {
+		return this.disciplineNotes;
+	}
+	
+	@Override
+	public void setCriteria(String criteria) {
+		this.criteria = criteria;
+	}
+
+	@Override
+	public String getCriteria() {
+		return this.criteria;
+	}
+	
+	@Override
+	public void setDisciplineConfig(X_CA_DisciplineConfig disciplineConfig) {
+		this.discConfig  = disciplineConfig;
+	}
+
+	@Override
+	public X_CA_DisciplineConfig getDisciplineConfig() {
+		return this.discConfig;
+	}
+
+	@Override
+	public void saveEx() {
+		try{
+			Trx.run(new TrxRunnable() 
+			{
+				public void run(String trxName)
+				{
+					if(!isfinal && !isdiscipline)
+					{
+						saveAcademicNote(trxName);
+					}
+					else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
+					{
+						saveDisciplineNote(trxName);
+					}
+				}
+			});
+		}catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally{
+			if(!isfinal && !isdiscipline)
+			{
+				academicNote.refreshFinalNote(student);
+			}
+			else if(isdiscipline)
+			{
+				disciplineNotes.refreshDisciplineNote(student);
+			}
+		}
+	}
+
+
+	private void saveAcademicNote(String trxName)
+	{
+		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
+		{
+			decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
+		}
+			
+		
+		if(noteLine_id==0)
+		{
+			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			noteline.setCA_Note_ID(note.get_ID());
+			noteline.setC_BPartner_ID(student.get_ID());
+			noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+		}
+		else
+		{
+			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+		}
+		noteline.setAmount(decimalBox.getValue());
+		oldValue = decimalBox.getValue();
+		noteline.setIsFinal(false);
+		noteline.saveEx();
+		
+		noteLine_id = noteline.get_ID();
+	}
+
+	private void saveDisciplineNote(String trxName)
+	{
+		if(decimalBox.getValue()==null)
+		{
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+		
+		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
+		{
+			decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
+		}
+		
+		if(noteLine_id==0)
+		{
+			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			noteline.setCA_Note_ID(note.get_ID());
+			noteline.setC_BPartner_ID(student.get_ID());
+			noteline.setIsDiscipline(true);
+			noteline.setIsFinal(isfinal);
+			noteline.setIsAverage(isaverange);
+			noteline.setDcCriteria(criteria);
+		}
+		else
+		{
+			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+		}
+		noteline.setAmount(decimalBox.getValue());
+		oldValue = decimalBox.getValue();
+		noteline.saveEx();
+		
+		noteLine_id = noteline.get_ID();
+		
+	}
+
+
+
+	@Override
+	public void setIsAverange(boolean averange) {
+		this.isaverange = averange;
+	}
+
+	@Override
+	public boolean isAverange() {
+		return this.isaverange;
+	}
+
+
+
+	@Override
+	public boolean haveChanged() {
+
+		if(oldValue.compareTo(decimalBox.getValue())!=0)
+			return true;
+		
+		return false;
 	}
 
 }

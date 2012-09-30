@@ -260,13 +260,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if ("CA_MatterAssignment_ID".equals(name))
 		{
 			fMatterAssignment.setValue(value);
+			refreshHeader();
 		}
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
 		}
 
-		refreshHeader();
+		
 	}
 
 	@Override
