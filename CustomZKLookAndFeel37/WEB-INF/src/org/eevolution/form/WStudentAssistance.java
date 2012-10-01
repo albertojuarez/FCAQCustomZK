@@ -26,6 +26,7 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
+import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.model.MRefList;
@@ -40,6 +41,8 @@ import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Separator;
+
+import com.Verisign.payment.b;
 
 public class WStudentAssistance extends StudentAssistance
 implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
@@ -190,6 +193,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fExtraGroup.setReadWrite(false);
 		if (currentExtraGroup != null)
 			fExtraGroup.setValue(currentExtraGroup.get_ID());
+		
+		bSendAssistance.addActionListener(this);
 	}
 
 	
@@ -313,13 +318,23 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			if (!setting)
 				setAssistenceRow(rowNo, colNo);
 		}
+		
+		else if(event.getTarget().equals(bSendAssistance))
+		{
+			boolean sendAssistance = FDialog.ask(form.getWindowNo(), null, Msg.getMsg(Env.getCtx(), "SureSendAssistance"));
+
+			if(sendAssistance)
+			{
+				if (sendAssistance())
+					refreshHeader();
+			}
+		}
 	}
 
 	@Override
 	public Object getComments() {
 		
 		Combobox commentBox = new Combobox();
-		commentBox.setWidth("100%");
 
 		String name = null;
 		for (MRefList comment : comments) {
@@ -343,7 +358,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	public Object getMotive() {
 		
 		Combobox motiveBox = new Combobox();
-		motiveBox.setWidth("100%");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Justified"), "J");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Unjustified"), "U");
 		motiveBox.addEventListener("onChange", this);
@@ -385,10 +399,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		studentTable.setColumnClass(6, Combobox.class, false);		//  6-Motive
 		studentTable.setColumnClass(7, Combobox.class, false);		//  7-Comment
 		studentTable.setColumnClass(8, String.class, false);		//  8-Observations
-
+		
 		studentTable.addActionListener(this);
-
-		refreshAssistance();
+		
+		bSendAssistance.setDisabled(false);
+		
+		if (refreshAssistance()) {
+			studentTable.setColumnClass(0, IDColumn.class, true);		//  0-ID
+			studentTable.setColumnClass(1, String.class, true);			//  1-Name
+			studentTable.setColumnClass(2, String.class, true);			//  2-Course
+			studentTable.setColumnClass(3, Checkbox.class, true);		//  3-Assistance
+			studentTable.setColumnClass(4, Checkbox.class, true);		//  4-Absence
+			studentTable.setColumnClass(5, Checkbox.class, true); 		//  5-Delay
+			studentTable.setColumnClass(6, Combobox.class, true);		//  6-Motive
+			studentTable.setColumnClass(7, Combobox.class, true);		//  7-Comment
+			studentTable.setColumnClass(8, String.class, true);			//  8-Observations
+			
+			bSendAssistance.setDisabled(true);
+		}
 	}
 
 
@@ -550,6 +578,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public void dispose(){
 		form.dispose();
+		SessionManager.getAppDesktop().closeActiveWindow();
 	}
 
 }
