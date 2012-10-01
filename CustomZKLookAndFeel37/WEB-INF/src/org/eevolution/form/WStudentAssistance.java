@@ -153,6 +153,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		center.appendChild(studentTable);
 		studentTable.setWidth("99%");
 		studentTable.setHeight("99%");
+		studentTable.setFixedLayout(false);
+		studentTable.setVflex(true);
 		center.setStyle("border: none");
 
 
@@ -427,7 +429,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		setting = true;
 		for (int i=0; i <= studentTable.getRowCount()-1; i++){
 			
-			int studentTable_ID = (Integer) studentTable.getValueAt(i, 0);
+			int studentTable_ID = ((IDColumn) studentTable.getValueAt(i, 0)).getRecord_ID();
 			
 			if (studentTable_ID > 0 && studentTable_ID == bPartner_ID){
 				
@@ -483,7 +485,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		setting = true;
 
-		int studentTable_ID = (Integer) studentTable.getValueAt(row, 0);
+		int studentTable_ID = ((IDColumn) studentTable.getValueAt(row, 0)).getRecord_ID();
 		boolean assistance = (Boolean) studentTable.getValueAt(row, 3);
 		boolean absence = (Boolean) studentTable.getValueAt(row, 4);
 		boolean delay = (Boolean) studentTable.getValueAt(row, 5);
