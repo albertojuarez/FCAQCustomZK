@@ -42,7 +42,6 @@ import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Separator;
 
-import com.Verisign.payment.b;
 
 public class WStudentAssistance extends StudentAssistance
 implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
@@ -335,6 +334,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	public Object getComments() {
 		
 		Combobox commentBox = new Combobox();
+		commentBox.setStyle("ipadcombobox");
 
 		String name = null;
 		for (MRefList comment : comments) {
@@ -358,6 +358,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	public Object getMotive() {
 		
 		Combobox motiveBox = new Combobox();
+		motiveBox.setStyle("ipadcombobox");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Justified"), "J");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Unjustified"), "U");
 		motiveBox.addEventListener("onChange", this);
