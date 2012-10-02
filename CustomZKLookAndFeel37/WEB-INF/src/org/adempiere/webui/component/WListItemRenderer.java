@@ -291,7 +291,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				{
 					Combobox combobox =  (Combobox)field;
 					if(combobox!=null && combobox.getItemCount()>0)
-						listcell.setLabel((String)combobox.getItemAtIndex(combobox.getSelectedIndex()).getLabel());
+						listcell.setLabel((String)combobox.getItemAtIndex(combobox.getSelectedIndex()).getValue());
 				}
 			}
 			//END AJC 9 ago 2012
@@ -311,7 +311,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				{
 					WNoteEditor noteeditor =  (WNoteEditor)field;
 					if(noteeditor!=null)
-						listcell.setLabel(noteeditor.getValue().toString());
+						listcell.setLabel(noteeditor.getValue()!=null?noteeditor.getValue().toString():"");
 				}
 			}
 			//END AJC 17 sep 2012
