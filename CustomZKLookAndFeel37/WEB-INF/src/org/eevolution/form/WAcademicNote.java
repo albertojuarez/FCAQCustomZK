@@ -35,6 +35,7 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
+import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MLookup;
@@ -80,6 +81,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Button bShowComments = new Button();
 	private Hbox hboxBtnRight;
 	private Panel pnlBtnRight;
+	
 
 	// Form Components
 	private Label lCourseDef = null;
@@ -215,6 +217,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		noteTable.setHeight("100%");
 		noteTable.setFixedLayout(false);
 		noteTable.setVflex(true);
+		noteTable.setStyle("overflow:auto;");
+		
+		
 
 		isElective.setSelected(false);
 		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
@@ -291,6 +296,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		else if (event.getTarget().equals(isElective))
 		{
+			if(isElective.isSelected())
+				inccol = 1;
+			else
+				inccol = 0;
+			
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 
@@ -346,6 +356,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public void dispose() {
 		form.dispose();
+		SessionManager.getAppDesktop().closeWindow(form.getWindowNo());
+
 	}
 
 	public void repaintParameterPanel()
@@ -406,15 +418,25 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		refreshNotes();
 
+		noteTable.setStyle("sizedByContent=true");
+		
 		noteTable.setColumnClass(0, String.class, true);
+		
+		if(inccol==1)
+		{
+			noteTable.setColumnClass(1, String.class, true);
+		}
+		
 		int index = 1;
-		for(index = 1; index<= headingLines.size(); index++)
+		for(index = 1+inccol; index<= headingLines.size(); index++)
 		{
 			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 		}
 		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 
-
+		noteTable.autoSize();
+		noteTable.setWidth("100%");
+		noteTable.setHeight("100%");
 
 	}
 
