@@ -26,6 +26,7 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
+import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.model.MRefList;
@@ -40,6 +41,7 @@ import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Separator;
+
 
 public class WStudentAssistance extends StudentAssistance
 implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
@@ -151,6 +153,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		center.appendChild(studentTable);
 		studentTable.setWidth("99%");
 		studentTable.setHeight("99%");
+		studentTable.setFixedLayout(false);
+		studentTable.setVflex(true);
 		center.setStyle("border: none");
 
 
@@ -190,6 +194,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fExtraGroup.setReadWrite(false);
 		if (currentExtraGroup != null)
 			fExtraGroup.setValue(currentExtraGroup.get_ID());
+		
+		bSendAssistance.addActionListener(this);
 	}
 
 	
@@ -313,13 +319,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			if (!setting)
 				setAssistenceRow(rowNo, colNo);
 		}
+		
+		else if(event.getTarget().equals(bSendAssistance))
+		{
+			boolean sendAssistance = FDialog.ask(form.getWindowNo(), null, Msg.getMsg(Env.getCtx(), "SureSendAssistance"));
+
+			if(sendAssistance)
+			{
+				if (sendAssistance())
+					refreshHeader();
+			}
+		}
 	}
 
 	@Override
 	public Object getComments() {
 		
 		Combobox commentBox = new Combobox();
-		commentBox.setWidth("100%");
+		commentBox.setStyle("ipadcombobox");
 
 		String name = null;
 		for (MRefList comment : comments) {
@@ -343,7 +360,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	public Object getMotive() {
 		
 		Combobox motiveBox = new Combobox();
-		motiveBox.setWidth("100%");
+		motiveBox.setStyle("ipadcombobox");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Justified"), "J");
 		motiveBox.appendItem(Msg.translate(m_ctx, "Unjustified"), "U");
 		motiveBox.addEventListener("onChange", this);
@@ -385,10 +402,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		studentTable.setColumnClass(6, Combobox.class, false);		//  6-Motive
 		studentTable.setColumnClass(7, Combobox.class, false);		//  7-Comment
 		studentTable.setColumnClass(8, String.class, false);		//  8-Observations
-
+		
 		studentTable.addActionListener(this);
-
-		refreshAssistance();
+		
+		bSendAssistance.setDisabled(false);
+		
+		if (refreshAssistance()) {
+			studentTable.setColumnClass(0, IDColumn.class, true);		//  0-ID
+			studentTable.setColumnClass(1, String.class, true);			//  1-Name
+			studentTable.setColumnClass(2, String.class, true);			//  2-Course
+			studentTable.setColumnClass(3, Checkbox.class, true);		//  3-Assistance
+			studentTable.setColumnClass(4, Checkbox.class, true);		//  4-Absence
+			studentTable.setColumnClass(5, Checkbox.class, true); 		//  5-Delay
+			studentTable.setColumnClass(6, Combobox.class, true);		//  6-Motive
+			studentTable.setColumnClass(7, Combobox.class, true);		//  7-Comment
+			studentTable.setColumnClass(8, String.class, true);			//  8-Observations
+			
+			bSendAssistance.setDisabled(true);
+		}
 	}
 
 
@@ -398,7 +429,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		setting = true;
 		for (int i=0; i <= studentTable.getRowCount()-1; i++){
 			
-			int studentTable_ID = (Integer) studentTable.getValueAt(i, 0);
+			int studentTable_ID = ((IDColumn) studentTable.getValueAt(i, 0)).getRecord_ID();
 			
 			if (studentTable_ID > 0 && studentTable_ID == bPartner_ID){
 				
@@ -454,7 +485,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		setting = true;
 
-		int studentTable_ID = (Integer) studentTable.getValueAt(row, 0);
+		int studentTable_ID = ((IDColumn) studentTable.getValueAt(row, 0)).getRecord_ID();
 		boolean assistance = (Boolean) studentTable.getValueAt(row, 3);
 		boolean absence = (Boolean) studentTable.getValueAt(row, 4);
 		boolean delay = (Boolean) studentTable.getValueAt(row, 5);
@@ -550,6 +581,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public void dispose(){
 		form.dispose();
+		SessionManager.getAppDesktop().closeActiveWindow();
 	}
 
 }
