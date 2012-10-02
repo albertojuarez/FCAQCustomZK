@@ -428,7 +428,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		
 		int index = 1;
-		for(index = 1+inccol; index<= headingLines.size(); index++)
+		for(index = 1+inccol; index<= headingLines.size() + inccol; index++)
 		{
 			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 		}
