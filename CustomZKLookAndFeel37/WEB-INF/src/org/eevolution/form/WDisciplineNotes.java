@@ -1,6 +1,7 @@
 package org.eevolution.form;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.Vector;
 
 import org.adempiere.webui.component.Checkbox;
@@ -247,6 +248,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	private void refreshHeader() {
 
+		System.out.println("Refresh header start At " + new Timestamp(System.currentTimeMillis()));
+
 		((WListbox)noteTable).clear();
 		((WListbox)noteTable).getModel().removeTableModelListener(this); 
 
@@ -263,11 +266,17 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 
+		System.out.println("Load discipline config At " + new Timestamp(System.currentTimeMillis()));
+
 		loadDisciplineConfig();
+		
+		System.out.println("End At " + new Timestamp(System.currentTimeMillis()));
 
 		Vector<String> columns = buildNoteHeading();
 
+		System.out.println("Student Data Start At " + new Timestamp(System.currentTimeMillis()));
 		Vector<Vector<Object>> data = getStudentData();
+		System.out.println("End At " + new Timestamp(System.currentTimeMillis()));
 
 		ListModelTable modelP = new ListModelTable(data);
 
@@ -276,7 +285,9 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 
+		System.out.println("Refresh Notes Start At " + new Timestamp(System.currentTimeMillis()));
 		refreshNotes();
+		System.out.println("End At " + new Timestamp(System.currentTimeMillis()));
 
 
 		noteTable.setColumnClass(0, String.class, true);

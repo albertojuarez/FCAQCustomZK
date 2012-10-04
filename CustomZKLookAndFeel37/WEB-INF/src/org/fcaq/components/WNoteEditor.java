@@ -385,6 +385,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public boolean haveChanged() {
 
+		if(decimalBox.getValue()==null)
+			decimalBox.setValue(new BigDecimal("0"));
+		if(oldValue==null)
+			return true;
 		if(oldValue.compareTo(decimalBox.getValue())!=0)
 			return true;
 		

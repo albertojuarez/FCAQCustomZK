@@ -1,6 +1,7 @@
 package org.eevolution.form;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -75,7 +76,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Grid parameterLayout = GridFactory.newGridLayout();
 	private Panel southPanel = new Panel();
 	private StatusBarPanel statusBar = new StatusBarPanel();
-	private WListbox noteTable = null; // ListboxFactory.newDataTable();
+	//private WListbox noteTable = null; // ListboxFactory.newDataTable();
 	private WListbox noteHeadingTable = ListboxFactory.newDataTable();
 	private Button bSendNotes = new Button();
 	private Button bShowComments = new Button();
@@ -120,14 +121,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		Vector<Vector<Object>> data = getNoteData();
 		Vector<String> columnNames = getEmptyColumn();
 
-		noteTable.clear();
-		noteTable.getModel().removeTableModelListener(this);
+		((WListbox)noteTable).clear();
+		((WListbox)noteTable).getModel().removeTableModelListener(this);
 
 		ListModelTable modelP = new ListModelTable(data);
 		modelP.addTableModelListener(this);
-		noteTable.setData(modelP, columnNames);
+		((WListbox)noteTable).setData(modelP, columnNames);
 
-		noteTable.setColumnClass(0, String.class, true);			//  0-Student
+		((WListbox)noteTable).setColumnClass(0, String.class, true);			//  0-Student
 	}
 
 
@@ -183,9 +184,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		center.setFlex(true);
 		mainLayout.appendChild(center);
 
-		center.appendChild(noteTable);
-		noteTable.setWidth("99%");
-		noteTable.setHeight("99%");
+		center.appendChild(((WListbox)noteTable));
+		((WListbox)noteTable).setWidth("99%");
+		((WListbox)noteTable).setHeight("99%");
 		center.setStyle("border: none");
 
 		South south = new South();
@@ -213,11 +214,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private void dynInit() {
 
 		noteTable = new WListbox();
-		noteTable.setWidth("100%");
-		noteTable.setHeight("100%");
-		noteTable.setFixedLayout(false);
-		noteTable.setVflex(true);
-		noteTable.setStyle("overflow:auto;");
+		((WListbox)noteTable).setWidth("100%");
+		((WListbox)noteTable).setHeight("100%");
+		((WListbox)noteTable).setFixedLayout(false);
+		((WListbox)noteTable).setVflex(true);
+		((WListbox)noteTable).setStyle("overflow:auto;");
 		
 		
 
@@ -387,8 +388,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	@Override
 	public void refreshHeader(){
 
-		noteTable.clear();
-		noteTable.getModel().removeTableModelListener(this); 
+		System.out.println("Refresh Header Start At " + new Timestamp(System.currentTimeMillis()));
+		((WListbox)noteTable).clear();
+		((WListbox)noteTable).getModel().removeTableModelListener(this); 
 
 		if(fCourseDef.getValue()==null || fMatterAssignment.getValue()==null || fParcial.getValue()==null)
 			return;
@@ -414,11 +416,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		ListModelTable modelP = new ListModelTable(data);
 
 		modelP.addTableModelListener(this);
-		noteTable.setData(modelP, columns);
+		((WListbox)noteTable).setData(modelP, columns);
 
 		refreshNotes();
 
-		noteTable.setStyle("sizedByContent=true");
+		((WListbox)noteTable).setStyle("sizedByContent=true");
 		
 		noteTable.setColumnClass(0, String.class, true);
 		
@@ -435,8 +437,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 
 		noteTable.autoSize();
-		noteTable.setWidth("100%");
-		noteTable.setHeight("100%");
+		((WListbox)noteTable).setWidth("100%");
+		((WListbox)noteTable).setHeight("100%");
+		
+		System.out.println("Refresh Header End At " + new Timestamp(System.currentTimeMillis()));
+
 
 	}
 
