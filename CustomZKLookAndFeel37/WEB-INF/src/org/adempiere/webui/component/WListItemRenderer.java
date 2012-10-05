@@ -290,8 +290,12 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				else
 				{
 					Combobox combobox =  (Combobox)field;
-					if(combobox!=null && combobox.getItemCount()>0)
-						listcell.setLabel((String)combobox.getItemAtIndex(combobox.getSelectedIndex()).getValue());
+					if(combobox!=null && combobox.getItemCount()>0) {
+						if (combobox.getSelectedIndex() >= 0)
+							listcell.setLabel((String)combobox.getItemAtIndex(combobox.getSelectedIndex()).getLabel());
+						else
+							listcell.setLabel("");
+					}
 				}
 			}
 			//END AJC 9 ago 2012
