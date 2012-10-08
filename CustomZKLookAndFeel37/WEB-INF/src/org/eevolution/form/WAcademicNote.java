@@ -42,14 +42,19 @@ import org.compiere.model.MBPartner;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.model.MLookupInfo;
+import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.TrxRunnable;
 import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
+import org.fcaq.model.X_CA_ConcatenatedSubject;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_EvaluationPeriod;
+import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
 import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SubjectMatter;
@@ -88,10 +93,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Label lCourseDef = null;
 	private Label lParcial = null;
 	private Label lSubjectMatter = null;
+	private Label lConcat = new Label("");
 
 	private WTableDirEditor fCourseDef = null;
 	private WTableDirEditor fParcial = null;
 	private WTableDirEditor fMatterAssignment = null;
+	private WTableDirEditor fSubject = null;
 
 	private Checkbox isElective = new Checkbox();
 
@@ -176,9 +183,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourseDef.getComponent().setWidth("60%");
 		row = rows.newRow();
 		row.appendChild(lSubjectMatter);
-		row.appendChild(fMatterAssignment.getComponent());
+		row.appendChild(fSubject.getComponent());
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
+		
+		row = rows.newRow();
+		row.appendChild(new Space());
+		row.appendChild(lConcat);
+	
 
 		Center center = new Center();
 		center.setFlex(true);
@@ -231,10 +243,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fMatterAssignment.addValueChangeListener(this);
+		
+		fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),0,0));
+		fSubject.addValueChangeListener(this);
+		
 
 		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
 		fParcial.addValueChangeListener(this);
 		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
+		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+
 
 		bShowComments.addActionListener(this);
 		bSendNotes.addActionListener(this);
@@ -258,10 +276,19 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
+			
+			fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
+					(Integer)fCourseDef.getValue(), ((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")));
+			fSubject.addValueChangeListener(this);
 
 			repaintParameterPanel();
 			refreshHeader();
 
+		}
+		if ("CA_SubjectMatter_ID".equals(name))
+		{
+			fSubject.setValue(value);
+			refreshHeader();
 		}
 		if ("CA_MatterAssignment_ID".equals(name))
 		{
@@ -379,10 +406,23 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(fCourseDef.getComponent());
 		fCourseDef.getComponent().setWidth("60%");
 		row = rows.newRow();
-		row.appendChild(lSubjectMatter);
-		row.appendChild(fMatterAssignment.getComponent());
+		
+		if(isElective.isSelected())
+		{
+			row.appendChild(lSubjectMatter);
+			row.appendChild(fMatterAssignment.getComponent());
+		}
+		else
+		{
+			row.appendChild(lSubjectMatter);
+			row.appendChild(fSubject.getComponent());
+		}
+		
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
+		row = rows.newRow();
+		row.appendChild(new Space());
+		row.appendChild(lConcat);
 	}
 
 	@Override
@@ -392,18 +432,48 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		((WListbox)noteTable).clear();
 		((WListbox)noteTable).getModel().removeTableModelListener(this); 
 
-		if(fCourseDef.getValue()==null || fMatterAssignment.getValue()==null || fParcial.getValue()==null)
+		if(fCourseDef.getValue()==null || fParcial.getValue()==null)
 			return;
 
 		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
-		currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
-
-		if(currentMatterAssignment.getElectiveSubject_ID()>0)
-			currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getElectiveSubject_ID(), null);
-		else
-			currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getCA_SubjectMatter_ID(), null);
-
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+		if(!isElective.isSelected())
+		{
+			if( fSubject.getValue()==null)
+				return;
+
+			currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubject.getValue(), null);
+		}
+		else
+		{
+			
+			if(fMatterAssignment.getValue()==null)
+				return;
+			currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
+			if(currentMatterAssignment.getElectiveSubject_ID()>0)
+				currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getElectiveSubject_ID(), null);
+		}
+		
+		if( currentSubject==null)
+			return;
+		
+		if(!isElective.isSelected())
+		{
+			String where = X_CA_MatterAssignment.COLUMNNAME_CA_SubjectMatter_ID + "=? AND " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + " IN (" +
+					" SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + " FROM " + X_CA_GroupAssignment.Table_Name + " WHERE " + 
+					X_CA_GroupAssignment.COLUMNNAME_CA_CourseDef_ID + "=?)"; 
+					
+					
+			currentMatterAssignment = new Query(m_ctx, X_CA_MatterAssignment.Table_Name, where, null )
+					.setOnlyActiveRecords(true)
+					.setParameters(currentSubject.get_ID(),currentCourse.get_ID())
+					.first();
+		}
+		
+		
+		
+
+		headingLines = null;	
 
 		Vector<String> columns = buildNoteHeading();
 
@@ -544,8 +614,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterCLayout.newRows();
 
 		row = rows.newRow();
-		row.appendChild(lStudent);
-		row.appendChild(fStudent);
+		//row.appendChild(lStudent);
+		//row.appendChild(fStudent);
 
 		Center centerC = new Center();
 		mainCLayout.appendChild(centerC);

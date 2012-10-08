@@ -11,6 +11,7 @@ import org.compiere.util.TrxRunnable;
 import org.eevolution.form.AcademicNote;
 import org.eevolution.form.DisciplineNotes;
 import org.fcaq.model.X_CA_DisciplineConfig;
+import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
@@ -37,6 +38,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
+	private X_CA_MatterAssignment assignment = null;
 	
 	private boolean isforced = false;
 	private boolean isfinal=false;
@@ -393,6 +395,22 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			return true;
 		
 		return false;
+	}
+
+
+
+	@Override
+	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public X_CA_MatterAssignment getMatterAssignment() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
