@@ -15,6 +15,7 @@ import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
+import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WDateEditor;
 import org.adempiere.webui.editor.WTableDirEditor;
@@ -40,7 +41,9 @@ import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
+import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Separator;
+import org.zkoss.zul.Space;
 
 
 public class WStudentAssistance extends StudentAssistance
@@ -51,9 +54,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Panel parameterPanel = new Panel();
 	private Grid parameterLayout = GridFactory.newGridLayout();
 	private Panel southPanel = new Panel();
+	private Hbox hboxBtnRight;
+	private Panel pnlBtnRight;
 	private StatusBarPanel statusBar = new StatusBarPanel();
 	private WListbox studentTable = ListboxFactory.newDataTable();
 	private Button bSendAssistance = new Button();
+	private Button bRefresh = new Button();
 
 	private Label lSubject = null;
 	private Label lDate = null;
@@ -66,6 +72,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor fCourse = null;
 	private WTableDirEditor fPeriod = null;
 	private WTableDirEditor fExtraGroup = null;
+	private Textbox fConcatenated = null;
 
 	private boolean setting = false;
 
@@ -115,7 +122,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		lExtraGroup = new Label();
 		lExtraGroup.setText(Msg.getMsg(m_ctx, "Extracurricular"));
 		
+		fConcatenated = new Textbox();
+		
 		bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
+		
+		bRefresh.setLabel(Msg.getMsg(m_ctx, "Refresh"));
 
 
 		North north = new North();
@@ -144,6 +155,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lSubject);
 		fSubject.getComponent().setWidth("90%");
 		row.appendChild(fSubject.getComponent());
+		fConcatenated.setWidth("90%");
+		fConcatenated.setReadonly(true);
+		row.appendChild(fConcatenated);
 
 		
 		Center center = new Center();
@@ -161,13 +175,29 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		South south = new South();
 		south.setStyle("border: none");
 		Panel southPanel = new Panel();
-		Grid southLayout= GridFactory.newGridLayout();
-		southPanel.appendChild(southLayout);
+		//Grid southLayout= GridFactory.newGridLayout();
+		
 		south.appendChild(southPanel);
-		rows = new Rows();
+		
+		pnlBtnRight = new Panel();
+		pnlBtnRight.setAlign("right");
+		pnlBtnRight.appendChild(bRefresh);
+		pnlBtnRight.appendChild(bSendAssistance);
+
+		hboxBtnRight = new Hbox();
+		hboxBtnRight.appendChild(pnlBtnRight);
+		hboxBtnRight.setWidth("100%");
+		hboxBtnRight.setStyle("text-align:right");
+		
+		
+		southPanel.appendChild(hboxBtnRight);
+		
+		/*rows = new Rows();
 		southLayout.appendChild(rows);
 		row = rows.newRow();
 		row.appendChild(bSendAssistance);
+		row.appendChild(bRefresh);*/
+		
 		mainLayout.appendChild(south);
 	}
 
@@ -189,13 +219,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if (currentMatterAssignment != null)
 			fSubject.setValue(currentMatterAssignment.get_ID());
 
-
 		fExtraGroup = new WTableDirEditor("CA_ExtraGroupDef_ID", true, false, true, getExtraGroupDef(form.getWindowNo()));
 		fExtraGroup.setReadWrite(false);
 		if (currentExtraGroup != null)
 			fExtraGroup.setValue(currentExtraGroup.get_ID());
 		
 		bSendAssistance.addActionListener(this);
+		
+		bRefresh.addActionListener(this);
 	}
 
 	
@@ -210,6 +241,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row = rows.newRow();
 		row.appendChild(lDate);
 		row.appendChild(fDate.getComponent());
+		
+		if (byPeriod && isSustitution)
+			fPeriod.setReadWrite(false);
+		else
+			fPeriod.setReadWrite(true);
+			
 		row.appendChild(lPeriod);
 		fPeriod.getComponent().setWidth("90%");
 		row.appendChild(fPeriod.getComponent());
@@ -233,6 +270,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lDate);
 		row.appendChild(fDate.getComponent());
 		row.appendChild(lPeriod);
+		
+		if (byPeriod && isSustitution)
+			fPeriod.setReadWrite(false);
+		else
+			fPeriod.setReadWrite(true);
+		
 		fPeriod.getComponent().setWidth("90%");
 		row.appendChild(fPeriod.getComponent());
 
@@ -241,8 +284,33 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourse.getComponent().setWidth("90%");
 		row.appendChild(fCourse.getComponent());
 		row.appendChild(lSubject);
-		fSubject.getComponent().setWidth("90%");
-		row.appendChild(fSubject.getComponent());
+		
+		if(concatenatedSubject != null) {
+			fConcatenated.setValue(concatenatedSubject.getCA_SubjectMatter().getName());
+			row.appendChild(fConcatenated);
+		} else {
+			fSubject.getComponent().setWidth("90%");
+			row.appendChild(fSubject.getComponent());
+		}
+	}
+	
+	
+	public void hideSecondaryFields() {
+		
+		parameterLayout.removeChild(parameterLayout.getRows());
+		
+		Rows rows = null;
+		Row row = null;
+		rows = parameterLayout.newRows();
+		
+		row = rows.newRow();
+		row.appendChild(lDate);
+		row.appendChild(fDate.getComponent());
+
+		row = rows.newRow();
+		row.appendChild(lCourse);
+		fCourse.getComponent().setWidth("90%");
+		row.appendChild(fCourse.getComponent());
 	}
 	
 	
@@ -330,6 +398,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					refreshHeader();
 			}
 		}
+		
+		else if(event.getTarget().equals(bRefresh)) {
+			
+			refreshHeader();
+		}
 	}
 
 	@Override
@@ -370,18 +443,28 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	public void refreshHeader(){
 
-		if(fCourse.getValue() == null || fSubject.getValue() == null) {
-			
-			if (fExtraGroup.getValue() == null) {
+		if (byPeriod) {
+			if(fCourse.getValue() == null || fSubject.getValue() == null) {
+
+				if (fExtraGroup.getValue() == null) {
+					hideExtraGroup();
+					studentTable.clear();
+					showErrorMessage("NoOpenPeriod");
+					return;
+				} else {
+					showExtraGroup();
+				}
+			} else {
+				hideExtraGroup();
+			}
+		} else { 
+			if(fCourse.getValue() == null) {
 				hideExtraGroup();
 				studentTable.clear();
-				showErrorMessage("No open period");
+				showErrorMessage("NoCourse");
 				return;
-			} else {
-				showExtraGroup();
 			}
-		} else {
-			hideExtraGroup();
+			hideSecondaryFields();
 		}
 		
 		Vector<Vector<Object>> data = getAssistanceData();
