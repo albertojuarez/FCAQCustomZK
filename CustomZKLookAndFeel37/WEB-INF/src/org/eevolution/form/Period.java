@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.Panel;
+import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
 import org.zkoss.zhtml.Span;
@@ -14,14 +15,20 @@ public class Period extends Panel{
 
 	List<ClassRoom> classRooms = new ArrayList<ClassRoom>();
 	Label lPeriod = new Label();
+	public boolean iseditablemode = false;
+	String realPeriodNo = "";
 
 
-	public Period(int periodNo, List<X_CA_ScheduleDay> days, List<X_CA_SchedulePeriod> periods){
+	public Period(int periodNo, List<X_CA_ScheduleDay> days, List<X_CA_SchedulePeriod> periods, boolean iseditablemode){
 
 		super();
+		
+		this.iseditablemode = iseditablemode;
 
 		lPeriod.setText(String.valueOf(periodNo));
 		lPeriod.setStyle("font-size:20px;");
+		
+		realPeriodNo = "C" + periodNo;
 
 		String style = "";
 
@@ -46,9 +53,10 @@ public class Period extends Panel{
 		for(int x=0; x<=5; x++)
 		{
 
-			ClassRoom classRoom = new ClassRoom(style);		
+			ClassRoom classRoom = new ClassRoom(style,iseditablemode);		
 			classRoom.setDayno(x+1);
-			classRoom.setPeriodno(periodNo);
+			classRoom.setPeriodno(realPeriodNo);
+
 
 
 			span = new Span();
@@ -63,12 +71,12 @@ public class Period extends Panel{
 
 		for(X_CA_SchedulePeriod period : periods)
 		{
-			if(String.valueOf(periodNo).equals(period.getCA_PeriodClass().getName())){
+			if(realPeriodNo.equals(period.getCA_PeriodClass().getName())){
 				for(ClassRoom classroom : classRooms)
 				{
 					for(X_CA_ScheduleDay day : days)
 					{
-						if(classroom.getPeriodno() == periodNo && classroom.getDayno()==day.getDayNo() && period.getCA_ScheduleDay_ID()==day.get_ID())
+						if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day.getDayNo() && period.getCA_ScheduleDay_ID()==day.get_ID())
 						{
 							classroom.setPeriod(period);
 						}

@@ -39,6 +39,7 @@ import org.adempiere.webui.panel.StatusBarPanel;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
+import org.compiere.model.MColumn;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.model.MLookupInfo;
@@ -54,8 +55,10 @@ import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_NoteCategory;
 import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
+import org.fcaq.model.X_CA_NoteType;
 import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.util.AcademicUtil;
@@ -101,8 +104,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor fSubject = null;
 
 	private Checkbox isElective = new Checkbox();
+	
+	private WTableDirEditor noteCategory  = null;
+	private WTableDirEditor noteType = null;
 
 
+	
+	
+	
 	public WAcademicNote()
 	{
 		try
@@ -252,7 +261,15 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fParcial.addValueChangeListener(this);
 		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
-
+		
+		int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
+		int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
+		
+		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, AcademicUtil.buildLookup(noteCategoryColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
+		noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
+		
+		noteCategory.addValueChangeListener(this);
+		noteType.addValueChangeListener(this);
 
 		bShowComments.addActionListener(this);
 		bSendNotes.addActionListener(this);
@@ -272,6 +289,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		if ("CA_CourseDef_ID".equals(name))
 		{
+			isfilterenabled = false;
+
 			fCourseDef.setValue(value);
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
@@ -281,24 +300,97 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					(Integer)fCourseDef.getValue(), ((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")));
 			fSubject.addValueChangeListener(this);
 
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
+			
+			if(tmpCourse!=null)
+			{
+				String section = tmpCourse.getSection();
+				if(Integer.parseInt(section)<=3)
+					isfilterenabled = true;
+
+			}
+			
 			repaintParameterPanel();
 			refreshHeader();
 
 		}
 		if ("CA_SubjectMatter_ID".equals(name))
 		{
+			isfilterenabled = false;
+
 			fSubject.setValue(value);
+			
+			X_CA_SubjectMatter tmpSubject = new X_CA_SubjectMatter(m_ctx,(Integer) fSubject.getValue(), null);
+			
+			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("músic"))
+			{
+				isfilterenabled = true;
+			}
+			
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
+			
+			if(tmpCourse!=null)
+			{
+				String section = tmpCourse.getSection();
+				if(Integer.parseInt(section)<=3)
+					isfilterenabled = true;
+
+			}
+			
+			repaintParameterPanel();
 			refreshHeader();
 		}
 		if ("CA_MatterAssignment_ID".equals(name))
 		{
+			isfilterenabled = false;
+
 			fMatterAssignment.setValue(value);
+			
+			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(m_ctx, (Integer) fMatterAssignment.getValue(), null);
+			
+			X_CA_SubjectMatter tmpSubject = null;
+					
+			if(isElective.isSelected())
+				tmpSubject = (X_CA_SubjectMatter) assignment.getElectiveSubject();
+			else
+				tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
+			
+			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("músic"))
+			{
+				isfilterenabled = true;
+			}
+			
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
+			
+			if(tmpCourse!=null)
+			{
+				String section = tmpCourse.getSection();
+				if(Integer.parseInt(section)<=3)
+					isfilterenabled = true;
+
+			}
+			
+			repaintParameterPanel();
 			refreshHeader();
 		}
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
 		}
+		
+		if("CA_NoteCategory_ID".equals(name))
+		{
+			
+			noteCategory.setValue(value);
+			refreshHeader();
+
+		}
+		if("CA_NoteType_ID".equals(name))
+		{
+			noteType.setValue(value);
+			refreshHeader();
+		}
+		
 
 		
 	}
@@ -420,17 +512,39 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row.appendChild(lConcat);
+
+		
+		if(isfilterenabled)
+		{
+			Label lf1 = new Label(Msg.translate(m_ctx, "notetype"));
+			Label lf2 = new Label(Msg.translate(m_ctx, "notecategory"));
+			
+			row = rows.newRow();
+			row.appendChild(lf1);
+			row.appendChild(noteType.getComponent());
+			row.appendChild(lf2);
+			row.appendChild(noteCategory.getComponent());
+		}
 	}
 
 	@Override
 	public void refreshHeader(){
+		
+		
 
 		System.out.println("Refresh Header Start At " + new Timestamp(System.currentTimeMillis()));
 		((WListbox)noteTable).clear();
 		((WListbox)noteTable).getModel().removeTableModelListener(this); 
+		
+		
+		if(isfilterenabled && (noteType.getValue()==null || noteCategory.getValue()==null))
+			return;
+		
+		if(isfilterenabled)
+		{
+			currentNoteType = new X_CA_NoteType(m_ctx, (Integer)noteType.getValue(),null);
+			currentNoteCategory = new X_CA_NoteCategory(m_ctx,(Integer) noteCategory.getValue(), null);
+		}
 
 		if(fCourseDef.getValue()==null || fParcial.getValue()==null)
 			return;

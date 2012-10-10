@@ -19,12 +19,17 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.window.FDialog;
+import org.compiere.model.MBPartner;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.fcaq.model.X_CA_Schedule;
+import org.fcaq.model.X_CA_ScheduleDay;
+import org.fcaq.model.X_CA_SchedulePeriod;
 import org.zkoss.zhtml.Span;
+import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -51,6 +56,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 	private Button bSave = new Button("Save");
 
 	private Borderlayout scheduleLayout = new Borderlayout();
+	Vbox periodLayout = new Vbox();
+	
+	Center scheduleCenter = new Center();
+
 
 	public WSchedule()
 	{
@@ -76,6 +85,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		fBPartner = new WSearchEditor("C_BPartner_ID", true, false, true, teacher);
 		fBPartner.addValueChangeListener(this);
 
+		/*
 		AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
 		MLookup group = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
 		fGroup= new WTableDirEditor("CA_CourseDef_ID", true, false, true, group);
@@ -84,7 +94,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		AD_Column_ID = 1000934;        //  CA_SubjectMatter.CA_SubjectMatter_ID
 		MLookup subject = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
 		fSubject= new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, subject);
-		fSubject.addValueChangeListener(this);
+		fSubject.addValueChangeListener(this);*/
 	}
 
 
@@ -98,9 +108,9 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		{
 			parameterPanel.appendChild(parameterLayout);
 
-			lGroup = new Label(Msg.getMsg(Env.getCtx(), "Group"));
-			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "BPartner"));
-			lSubject = new Label(Msg.getMsg(Env.getCtx(), "Subject"));
+			//lGroup = new Label(Msg.getMsg(Env.getCtx(), "Group"));
+			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Find"));
+			//lSubject = new Label(Msg.getMsg(Env.getCtx(), "Subject"));
 
 			North north = new North();
 			north.setStyle("border: none");
@@ -115,11 +125,12 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 			row.appendChild(lBPartner);
 			row.appendChild(fBPartner.getComponent());
 
+			/*
 			row.appendChild(lGroup);
 			row.appendChild(fGroup.getComponent());
 
 			row.appendChild(lSubject);
-			row.appendChild(fSubject.getComponent());
+			row.appendChild(fSubject.getComponent());*/
 
 			row = rows.newRow();
 			row.appendChild(new Space());
@@ -188,9 +199,8 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		span.appendChild(header);
 
 
-		Vbox periodLayout = new Vbox();
+		
 
-		Center scheduleCenter = new Center();
 		//scheduleCenter.setFlex(true);
 
 
@@ -200,9 +210,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		scheduleCenter.appendChild(periodLayout);
 		scheduleLayout.appendChild(scheduleCenter);
 
-		for(int x=1; x<=8; x++)
+		for(int x=1; x<=9; x++)
 		{
-			Period period = new Period(x, days, periods);
+			Period period = new Period(x, days, periods, iseditablemode);
+			period.iseditablemode=iseditablemode;
 			periodLayout.appendChild(period);
 		}
 	}
@@ -211,7 +222,50 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
+		String name = evt.getPropertyName();
+		Object value = evt.getNewValue();
 
+		clean();
+	
+		if ("C_BPartner_ID".equals(name))
+		{
+			fBPartner.setValue(value);
+			
+			if(value==null)
+				return;
+			currentBPartner = new MBPartner(ctx, (Integer)fBPartner.getValue(), null);
+			
+			if(currentBPartner.get_ValueAsBoolean("IsStudent"))
+			{
+				schedule = loadStudentSchedule();
+			}
+			else{
+				schedule = loadTeacherSchedule();
+			}
+		}
+		
+		if(schedule!=null)
+		{
+			loadSchedule(schedule);
+		}
+		
+		scheduleLayout.removeChild(scheduleCenter);
+		
+		scheduleCenter = new Center();
+		periodLayout=new Vbox();
+		
+		periodLayout.setHeight("400px");
+		periodLayout.setWidth("99%");
+
+		scheduleCenter.appendChild(periodLayout);
+		scheduleLayout.appendChild(scheduleCenter);
+		
+		for(int x=1; x<=9; x++)
+		{
+			Period period = new Period(x, days, periods, iseditablemode);
+			period.iseditablemode=iseditablemode;
+			periodLayout.appendChild(period);
+		}
 	}
 
 	@Override
@@ -233,5 +287,12 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 	@Override
 	public void dispose() {
 
+	}
+	
+	public void clean()
+	{
+		schedule = null;
+		days = null;
+		periods = null;
 	}
 }
