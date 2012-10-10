@@ -175,7 +175,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		South south = new South();
 		south.setStyle("border: none");
 		Panel southPanel = new Panel();
-		//Grid southLayout= GridFactory.newGridLayout();
 		
 		south.appendChild(southPanel);
 		
@@ -189,14 +188,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		hboxBtnRight.setWidth("100%");
 		hboxBtnRight.setStyle("text-align:right");
 		
-		
 		southPanel.appendChild(hboxBtnRight);
-		
-		/*rows = new Rows();
-		southLayout.appendChild(rows);
-		row = rows.newRow();
-		row.appendChild(bSendAssistance);
-		row.appendChild(bRefresh);*/
 		
 		mainLayout.appendChild(south);
 	}
