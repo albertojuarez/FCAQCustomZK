@@ -43,7 +43,6 @@ import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Separator;
-import org.zkoss.zul.Space;
 
 
 public class WStudentAssistance extends StudentAssistance
@@ -624,11 +623,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			;
 
 		int indexMotive = motiveBox.getSelectedIndex();
-		String motive = "U";
+		String motive = "J";
 		if (indexMotive >= 0) {
 			motive = (String)motiveBox.getSelectedItem().getValue();
 		} else {
-			motiveBox.setSelectedIndex(1);
+			if (currentCourse != null)
+				if (Integer.parseInt(currentCourse.getSection()) < 5)
+					motiveBox.setSelectedIndex(0);
+				else {
+					motiveBox.setSelectedIndex(1);
+					motive = "U";
+				}
+			else
+				motiveBox.setSelectedIndex(0);
+			
 			studentTable.setValueAt(motiveBox, row, 6);
 		}
 		
