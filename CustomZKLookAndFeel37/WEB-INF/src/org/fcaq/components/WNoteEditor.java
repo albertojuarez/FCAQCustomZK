@@ -116,7 +116,41 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(noteLine!=null)
 		{
 			this.noteLine_id = noteLine.get_ID();
-			decimalBox.setValue(noteLine.getAmount());
+			
+			
+			if(isdiscipline)
+			{
+				if(noteLine.getDcCriteria()!=null )
+				{
+					if(noteLine.getDcCriteria().length()>0)
+					{
+						if(discConfig.isAverageCriteria())
+						{
+							if(noteLine.get_Value("Qty")==null)
+								decimalBox.setValue(new BigDecimal("0"));
+							else
+								decimalBox.setValue((BigDecimal)noteLine.get_Value("Qty"));
+						}		
+						else
+						{
+							decimalBox.setValue(noteLine.getAmount());
+						}
+					
+					}
+					else
+					{
+						decimalBox.setValue(noteLine.getAmount());
+					}
+				}
+				else
+				{
+					decimalBox.setValue(noteLine.getAmount());
+				}
+			}
+			else
+			{
+				decimalBox.setValue(noteLine.getAmount());
+			}
 			
 		}
 		else
@@ -311,9 +345,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	private void saveAcademicNote(String trxName)
 	{
-		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
+		if(decimalBox.getValue()==null)
 		{
-			decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+		
+		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
+		{
+			decimalBox.setValue(new BigDecimal("0"));
 		}
 			
 		
@@ -343,10 +382,16 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
 		
-		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0)
+		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
 		{
-			decimalBox.setValue(new BigDecimal(yearConfig.getNoteScale()));
+			decimalBox.setValue(new BigDecimal("0"));
 		}
+		
+		if(!discConfig.isAverageCriteria() && decimalBox.getValue().compareTo(new BigDecimal("4"))>0 && !isfinal)
+		{
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+		
 		
 		if(noteLine_id==0)
 		{
@@ -362,7 +407,36 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
-		noteline.setAmount(decimalBox.getValue());
+		
+		
+		if(!discConfig.isAverageCriteria())
+		{
+			noteline.setAmount(decimalBox.getValue());
+		}
+		else
+		{
+			double tmp = decimalBox.getValue().doubleValue();
+			if(tmp>0 && tmp<=60)
+			{
+				noteline.setAmount(new BigDecimal("1"));
+			}
+			else if(tmp>61 && tmp<=70)
+			{
+				noteline.setAmount(new BigDecimal("2"));
+			}
+			else if(tmp>71 && tmp<=90)
+			{
+				noteline.setAmount(new BigDecimal("3"));
+			}
+			else if(tmp>91 && tmp<=100)
+			{
+				noteline.setAmount(new BigDecimal("4"));
+			}
+			
+			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
+		}
+		
+		
 		oldValue = decimalBox.getValue();
 		noteline.saveEx();
 		

@@ -74,9 +74,9 @@ public class Period extends Panel{
 			if(realPeriodNo.equals(period.getCA_PeriodClass().getName())){
 				for(ClassRoom classroom : classRooms)
 				{
-					for(X_CA_ScheduleDay day : days)
+					for(int day=1; day<=6; day++) // X_CA_ScheduleDay day : days)
 					{
-						if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day.getDayNo() && period.getCA_ScheduleDay_ID()==day.get_ID())
+						if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day && period.getCA_ScheduleDay().getDayNo()==day)
 						{
 							classroom.setPeriod(period);
 						}

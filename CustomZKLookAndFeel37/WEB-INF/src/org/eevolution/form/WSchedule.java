@@ -1,5 +1,6 @@
 package org.eevolution.form;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_Schedule;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
+import org.fcaq.util.DateUtils;
 import org.zkoss.zhtml.Span;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
@@ -57,7 +59,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 	private Borderlayout scheduleLayout = new Borderlayout();
 	Vbox periodLayout = new Vbox();
-	
+
 	Center scheduleCenter = new Center();
 
 
@@ -104,39 +106,39 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		mainLayout.setWidth("99%");
 		mainLayout.setHeight("100%");
 
+		North north = new North();
+		north.setStyle("border: none");
+		mainLayout.appendChild(north);
+		north.appendChild(parameterPanel);
+		Rows rows = null;
+		Row row = null;
+		parameterLayout.setWidth("800px");
+		rows = parameterLayout.newRows();
+
+		parameterPanel.appendChild(parameterLayout);
+
 		if(iseditablemode)
 		{
-			parameterPanel.appendChild(parameterLayout);
 
 			//lGroup = new Label(Msg.getMsg(Env.getCtx(), "Group"));
 			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Find"));
 			//lSubject = new Label(Msg.getMsg(Env.getCtx(), "Subject"));
 
-			North north = new North();
-			north.setStyle("border: none");
-			mainLayout.appendChild(north);
-			north.appendChild(parameterPanel);
-			Rows rows = null;
-			Row row = null;
-			parameterLayout.setWidth("800px");
-			rows = parameterLayout.newRows();
+
 			row = rows.newRow();
 
 			row.appendChild(lBPartner);
 			row.appendChild(fBPartner.getComponent());
 
-			/*
-			row.appendChild(lGroup);
-			row.appendChild(fGroup.getComponent());
-
-			row.appendChild(lSubject);
-			row.appendChild(fSubject.getComponent());*/
-
-			row = rows.newRow();
+			/*row = rows.newRow();
 			row.appendChild(new Space());
-			row.appendChild(bSave);
+			row.appendChild(bSave);*/
 
 		}
+		row = rows.newRow();
+		row.appendChild(new Space());
+		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   Día actual " + DateUtils.getDateNo()));
+
 
 		scheduleLayout.setWidth("99%");
 		scheduleLayout.setHeight("100%");
@@ -199,7 +201,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		span.appendChild(header);
 
 
-		
+
 
 		//scheduleCenter.setFlex(true);
 
@@ -210,11 +212,14 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		scheduleCenter.appendChild(periodLayout);
 		scheduleLayout.appendChild(scheduleCenter);
 
-		for(int x=1; x<=9; x++)
+		if(days!=null && periods!=null)
 		{
-			Period period = new Period(x, days, periods, iseditablemode);
-			period.iseditablemode=iseditablemode;
-			periodLayout.appendChild(period);
+			for(int x=1; x<=9; x++)
+			{
+				Period period = new Period(x, days, periods, iseditablemode);
+				period.iseditablemode=iseditablemode;
+				periodLayout.appendChild(period);
+			}
 		}
 	}
 
@@ -226,15 +231,15 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		Object value = evt.getNewValue();
 
 		clean();
-	
+
 		if ("C_BPartner_ID".equals(name))
 		{
 			fBPartner.setValue(value);
-			
+
 			if(value==null)
 				return;
 			currentBPartner = new MBPartner(ctx, (Integer)fBPartner.getValue(), null);
-			
+
 			if(currentBPartner.get_ValueAsBoolean("IsStudent"))
 			{
 				schedule = loadStudentSchedule();
@@ -243,23 +248,23 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 				schedule = loadTeacherSchedule();
 			}
 		}
-		
+
 		if(schedule!=null)
 		{
 			loadSchedule(schedule);
 		}
-		
+
 		scheduleLayout.removeChild(scheduleCenter);
-		
+
 		scheduleCenter = new Center();
 		periodLayout=new Vbox();
-		
+
 		periodLayout.setHeight("400px");
 		periodLayout.setWidth("99%");
 
 		scheduleCenter.appendChild(periodLayout);
 		scheduleLayout.appendChild(scheduleCenter);
-		
+
 		for(int x=1; x<=9; x++)
 		{
 			Period period = new Period(x, days, periods, iseditablemode);
@@ -288,7 +293,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 	public void dispose() {
 
 	}
-	
+
 	public void clean()
 	{
 		schedule = null;

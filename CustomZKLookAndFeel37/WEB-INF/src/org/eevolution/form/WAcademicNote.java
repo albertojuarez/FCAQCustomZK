@@ -90,7 +90,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Button bShowComments = new Button();
 	private Hbox hboxBtnRight;
 	private Panel pnlBtnRight;
-	
+
 
 	// Form Components
 	private Label lCourseDef = null;
@@ -104,14 +104,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor fSubject = null;
 
 	private Checkbox isElective = new Checkbox();
-	
+
 	private WTableDirEditor noteCategory  = null;
 	private WTableDirEditor noteType = null;
 
 
-	
-	
-	
+
+
+
 	public WAcademicNote()
 	{
 		try
@@ -182,11 +182,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterLayout.newRows();
 
 		row = rows.newRow();
-		
+
 		row.appendChild(new Space());
 		row.appendChild(isElective);
 		isElective.setWidth("39%");
-		
+
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
 		fCourseDef.getComponent().setWidth("60%");
@@ -195,11 +195,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(fSubject.getComponent());
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
-		
+
 		row = rows.newRow();
 		row.appendChild(new Space());
 		row.appendChild(lConcat);
-	
+
 
 		Center center = new Center();
 		center.setFlex(true);
@@ -240,8 +240,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		((WListbox)noteTable).setFixedLayout(false);
 		((WListbox)noteTable).setVflex(true);
 		((WListbox)noteTable).setStyle("overflow:auto;");
-		
-		
+
+
 
 		isElective.setSelected(false);
 		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
@@ -252,22 +252,22 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fMatterAssignment.addValueChangeListener(this);
-		
+
 		fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),0,0));
 		fSubject.addValueChangeListener(this);
-		
+
 
 		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
 		fParcial.addValueChangeListener(this);
 		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
-		
+
 		int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
 		int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
-		
+
 		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, AcademicUtil.buildLookup(noteCategoryColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
 		noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
-		
+
 		noteCategory.addValueChangeListener(this);
 		noteType.addValueChangeListener(this);
 
@@ -295,21 +295,26 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
-			
+
 			fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
 					(Integer)fCourseDef.getValue(), ((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")));
 			fSubject.addValueChangeListener(this);
 
+			fSubject.actionRefresh();
+			fMatterAssignment.actionRefresh();
+
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
-			
+
 			if(tmpCourse!=null)
 			{
 				String section = tmpCourse.getSection();
 				if(Integer.parseInt(section)<=3)
+				{
 					isfilterenabled = true;
-
+					filtertype=2;
+				}
 			}
-			
+
 			repaintParameterPanel();
 			refreshHeader();
 
@@ -319,24 +324,28 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			isfilterenabled = false;
 
 			fSubject.setValue(value);
-			
+
 			X_CA_SubjectMatter tmpSubject = new X_CA_SubjectMatter(m_ctx,(Integer) fSubject.getValue(), null);
-			
-			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("músic"))
+
+			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
+					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
+				filtertype=1;
 				isfilterenabled = true;
 			}
-			
+
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
-			
+
 			if(tmpCourse!=null)
 			{
 				String section = tmpCourse.getSection();
 				if(Integer.parseInt(section)<=3)
+				{
 					isfilterenabled = true;
-
+					filtertype=2;
+				}
 			}
-			
+
 			repaintParameterPanel();
 			refreshHeader();
 		}
@@ -345,31 +354,35 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			isfilterenabled = false;
 
 			fMatterAssignment.setValue(value);
-			
+
 			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(m_ctx, (Integer) fMatterAssignment.getValue(), null);
-			
+
 			X_CA_SubjectMatter tmpSubject = null;
-					
-			if(isElective.isSelected())
+
+			/*if(isElective.isSelected())
 				tmpSubject = (X_CA_SubjectMatter) assignment.getElectiveSubject();
-			else
-				tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
-			
-			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("músic"))
+			else*/
+			tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
+
+			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
+					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
+				filtertype = 1;
 				isfilterenabled = true;
 			}
-			
+
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
-			
+
 			if(tmpCourse!=null)
 			{
 				String section = tmpCourse.getSection();
 				if(Integer.parseInt(section)<=3)
+				{
 					isfilterenabled = true;
-
+					filtertype=2;
+				}
 			}
-			
+
 			repaintParameterPanel();
 			refreshHeader();
 		}
@@ -377,10 +390,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		{
 			fParcial.setValue(value);
 		}
-		
+
 		if("CA_NoteCategory_ID".equals(name))
 		{
-			
+
 			noteCategory.setValue(value);
 			refreshHeader();
 
@@ -390,9 +403,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			noteType.setValue(value);
 			refreshHeader();
 		}
-		
 
-		
+
+
 	}
 
 	@Override
@@ -408,7 +421,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		{
 			saveComments();
 			comments.dispose();
-			
+
 		}
 		else if (event.getTarget().getId().equals("Cancel"))
 		{
@@ -416,13 +429,23 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		else if (event.getTarget().equals(isElective))
 		{
-			if(isElective.isSelected())
-				inccol = 1;
-			else
-				inccol = 0;
-			
+
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
+
+			if(isElective.isSelected())
+			{
+				inccol = 1;
+				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
+				fMatterAssignment.addValueChangeListener(this);
+			}
+			else
+			{
+				fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
+						0, ((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")));
+				fSubject.addValueChangeListener(this);
+				inccol = 0;
+			}
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -493,12 +516,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(new Space());
 		row.appendChild(isElective);
 		isElective.setWidth("39%");
-		
+
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
 		fCourseDef.getComponent().setWidth("60%");
 		row = rows.newRow();
-		
+
 		if(isElective.isSelected())
 		{
 			row.appendChild(lSubjectMatter);
@@ -509,37 +532,44 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			row.appendChild(lSubjectMatter);
 			row.appendChild(fSubject.getComponent());
 		}
-		
+
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
 
-		
+
 		if(isfilterenabled)
 		{
 			Label lf1 = new Label(Msg.translate(m_ctx, "notetype"));
 			Label lf2 = new Label(Msg.translate(m_ctx, "notecategory"));
-			
+
 			row = rows.newRow();
 			row.appendChild(lf1);
 			row.appendChild(noteType.getComponent());
-			row.appendChild(lf2);
-			row.appendChild(noteCategory.getComponent());
+
+			if(filtertype>1)
+			{
+				row.appendChild(lf2);
+				row.appendChild(noteCategory.getComponent());
+			}
 		}
 	}
 
 	@Override
 	public void refreshHeader(){
-		
-		
+
+
 
 		System.out.println("Refresh Header Start At " + new Timestamp(System.currentTimeMillis()));
 		((WListbox)noteTable).clear();
 		((WListbox)noteTable).getModel().removeTableModelListener(this); 
-		
-		
-		if(isfilterenabled && (noteType.getValue()==null || noteCategory.getValue()==null))
+
+
+		if(isfilterenabled && filtertype==2 && (noteType.getValue()==null || noteCategory.getValue()==null))
 			return;
-		
+
+		if(isfilterenabled && filtertype==1 && (noteType.getValue()==null))
+			return;
+
 		if(isfilterenabled)
 		{
 			currentNoteType = new X_CA_NoteType(m_ctx, (Integer)noteType.getValue(),null);
@@ -560,32 +590,32 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 		else
 		{
-			
+
 			if(fMatterAssignment.getValue()==null)
 				return;
 			currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
 			if(currentMatterAssignment.getElectiveSubject_ID()>0)
 				currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getElectiveSubject_ID(), null);
 		}
-		
+
 		if( currentSubject==null)
 			return;
-		
+
 		if(!isElective.isSelected())
 		{
 			String where = X_CA_MatterAssignment.COLUMNNAME_CA_SubjectMatter_ID + "=? AND " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + " IN (" +
 					" SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + " FROM " + X_CA_GroupAssignment.Table_Name + " WHERE " + 
 					X_CA_GroupAssignment.COLUMNNAME_CA_CourseDef_ID + "=?)"; 
-					
-					
+
+
 			currentMatterAssignment = new Query(m_ctx, X_CA_MatterAssignment.Table_Name, where, null )
-					.setOnlyActiveRecords(true)
-					.setParameters(currentSubject.get_ID(),currentCourse.get_ID())
-					.first();
+			.setOnlyActiveRecords(true)
+			.setParameters(currentSubject.get_ID(),currentCourse.get_ID())
+			.first();
 		}
-		
-		
-		
+
+
+
 
 		headingLines = null;	
 
@@ -605,14 +635,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		refreshNotes();
 
 		((WListbox)noteTable).setStyle("sizedByContent=true");
-		
+
 		noteTable.setColumnClass(0, String.class, true);
-		
+
 		if(inccol==1)
 		{
 			noteTable.setColumnClass(1, String.class, true);
 		}
-		
+
 		int index = 1;
 		for(index = 1+inccol; index<= headingLines.size() + inccol; index++)
 		{
@@ -623,7 +653,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		noteTable.autoSize();
 		((WListbox)noteTable).setWidth("100%");
 		((WListbox)noteTable).setHeight("100%");
-		
+
 		System.out.println("Refresh Header End At " + new Timestamp(System.currentTimeMillis()));
 
 
@@ -667,7 +697,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	/// comments in notes
 
 	Window comments = null;
-	
+
 	private void showComments(List<INoteEditor> noteEditors) {
 
 		comments = new Window();
@@ -687,13 +717,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		for(INoteEditor editor : noteEditors)
 		{
-			Vector<Object> row = new Vector<Object>();
+			if(!editor.isFinal())
+			{
+				Vector<Object> row = new Vector<Object>();
 
-			row.add(editor.getNoteHeading()!=null? editor.getNoteHeading().getName():"Final");
-			row.add(editor);
-			row.add(editor.getNoteLine()!=null?(editor.getNoteLine().getComments()!=null?editor.getNoteLine().getComments():""):"");
+				row.add(editor.getNoteHeading()!=null? editor.getNoteHeading().getName():"Final");
+				row.add(editor);
+				row.add(editor.getNoteLine()!=null?(editor.getNoteLine().getComments()!=null?editor.getNoteLine().getComments():""):"");
 
-			data.add(row);
+				data.add(row);
+			}
 		}
 
 
@@ -765,10 +798,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	public void saveComments()
 	{
+
+		MBPartner student = null;
+		boolean hascomments=false;
+
 		for(int row =0;row<=noteHeadingTable.getRowCount()-1; row++)
 		{
 			INoteEditor editor = (INoteEditor)noteHeadingTable.getValueAt(row, 1);
 			String comment = (String)noteHeadingTable.getValueAt(row, 2);
+
+			student = editor.getStudent();
 
 			if(editor.getNoteLine_ID()>0)
 			{
@@ -779,8 +818,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				{
 					noteLine.setComments(comment!=null?comment:"");
 					noteLine.saveEx();
+
+					if(noteLine.getComments().length()>0)
+					{
+						hascomments=true;
+					}
+
 				}	
 			}
 		}
+
+		if(hascomments)
+		{
+			repaintStudentName(student, "*");
+		}
+		else
+		{
+			repaintStudentName(student, "");
+		}
+
 	}
 }

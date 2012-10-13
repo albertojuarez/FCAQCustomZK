@@ -225,7 +225,7 @@ public class RolePanel extends Window implements EventListener, Deferrable
 
 		lblWarehouse = new Label();
 		lblWarehouse.setId("lblWarehouse");
-		lblWarehouse.setValue(res.getString("Warehouse"));
+        lblWarehouse.setValue(Msg.getMsg(m_ctx, "WarehouseLogin")); //res.getString("Warehouse"));
 
 		lstRole = new Combobox();
 		lstRole.setAutocomplete(true);
@@ -293,6 +293,18 @@ public class RolePanel extends Window implements EventListener, Deferrable
 		}
 
 		updateClientList();
+		
+ //begin ajc 12 oct 2012
+        
+        MRole role = new MRole(Env.getCtx(), Integer.parseInt((String)lstRole.getSelectedItem().getValue()), null);
+        
+        if(!role.get_ValueAsBoolean("ViewWarehouseLogin"))
+        {
+        	lstWarehouse.setVisible(false);
+        	lblWarehouse.setVisible(false);
+        }
+        
+        // end
 	}
 
 	private void updateClientList()
