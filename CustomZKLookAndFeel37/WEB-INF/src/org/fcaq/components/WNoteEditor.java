@@ -10,6 +10,7 @@ import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
 import org.eevolution.form.AcademicNote;
 import org.eevolution.form.DisciplineNotes;
+import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Note;
@@ -39,13 +40,13 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
 	private X_CA_MatterAssignment assignment = null;
-	
+
 	private boolean isforced = false;
 	private boolean isfinal=false;
 	private boolean isdiscipline=false;
 	private boolean isaverange=false;
 	private String criteria = "";
-	
+
 
 
 	private Decimalbox decimalBox = new Decimalbox();
@@ -61,7 +62,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		decimalBox.addEventListener(Events.ON_BLUR, new EventListener(){
 			@Override
 			public void onEvent(Event event){
-					saveEx();
+				saveEx();
 			}
 		});
 		init();
@@ -116,8 +117,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(noteLine!=null)
 		{
 			this.noteLine_id = noteLine.get_ID();
-			
-			
+
+
 			if(isdiscipline)
 			{
 				if(noteLine.getDcCriteria()!=null )
@@ -135,7 +136,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						{
 							decimalBox.setValue(noteLine.getAmount());
 						}
-					
+
 					}
 					else
 					{
@@ -151,7 +152,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				decimalBox.setValue(noteLine.getAmount());
 			}
-			
+
 		}
 		else
 		{
@@ -171,12 +172,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public X_CA_NoteLine getNoteLine() {
-		
+
 		if(noteLine_id>0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
 		}
-		
+
 		return noteline;
 	}
 
@@ -231,14 +232,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		this.isfinal = isfinal;
 		decimalBox.setReadonly(isfinal);
 	}
-	
+
 	@Override
 	public void forceEditable()
 	{
 		isforced = true;
 		decimalBox.setReadonly(false);
 	}
-	
+
 	public boolean isforced()
 	{
 		return isforced;
@@ -249,7 +250,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		return isfinal;
 	}
 
-	
+
 
 
 	@Override
@@ -288,7 +289,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public DisciplineNotes getDisciplineNoteInstance() {
 		return this.disciplineNotes;
 	}
-	
+
 	@Override
 	public void setCriteria(String criteria) {
 		this.criteria = criteria;
@@ -298,7 +299,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	public String getCriteria() {
 		return this.criteria;
 	}
-	
+
 	@Override
 	public void setDisciplineConfig(X_CA_DisciplineConfig disciplineConfig) {
 		this.discConfig  = disciplineConfig;
@@ -349,13 +350,32 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
+
 		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-			
-		
+
+		if(note!=null)
+		{
+			X_CA_CourseDef course = (X_CA_CourseDef)note.getCA_CourseDef();
+			if(course!=null)
+			{
+				String section = course.getSection();
+				if(section!=null)
+				{
+					if(Integer.parseInt(section)<=3 )
+					{
+						if(decimalBox.getValue().compareTo(new BigDecimal("5"))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
+						{
+							decimalBox.setValue(new BigDecimal("0"));
+						}
+					}
+				}
+			}
+		}
+
+
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -371,7 +391,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		oldValue = decimalBox.getValue();
 		noteline.setIsFinal(false);
 		noteline.saveEx();
-		
+
 		noteLine_id = noteline.get_ID();
 	}
 
@@ -381,18 +401,18 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
+
 		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
+
 		if(!discConfig.isAverageCriteria() && decimalBox.getValue().compareTo(new BigDecimal("4"))>0 && !isfinal)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
-		
+
+
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -407,8 +427,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
-		
-		
+
+
 		if(!discConfig.isAverageCriteria())
 		{
 			noteline.setAmount(decimalBox.getValue());
@@ -432,16 +452,16 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				noteline.setAmount(new BigDecimal("4"));
 			}
-			
+
 			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
 		}
-		
-		
+
+
 		oldValue = decimalBox.getValue();
 		noteline.saveEx();
-		
+
 		noteLine_id = noteline.get_ID();
-		
+
 	}
 
 
@@ -467,7 +487,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			return true;
 		if(oldValue.compareTo(decimalBox.getValue())!=0)
 			return true;
-		
+
 		return false;
 	}
 
@@ -476,7 +496,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 

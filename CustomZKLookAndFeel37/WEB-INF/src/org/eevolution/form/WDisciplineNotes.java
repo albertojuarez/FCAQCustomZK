@@ -2,6 +2,7 @@ package org.eevolution.form;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Vector;
 
 import org.adempiere.webui.component.Checkbox;
@@ -12,6 +13,7 @@ import org.adempiere.webui.component.ListModelTable;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
+import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
@@ -24,14 +26,17 @@ import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
+import org.compiere.model.Query;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SubjectMatter;
+import org.fcaq.model.X_CA_TeacherAssignment;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -325,6 +330,44 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	private void repaintParameterPanel() {
 
+		Textbox lclassroom = new Textbox("");
+		lclassroom.setReadonly(true);
+		
+		if(fCourseDef.getValue()!=null)
+		{
+			X_CA_CourseDef course = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+			
+			if(course.getSection().equals("04")) // Solo en primaria
+			{
+				
+				String whereClause = X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
+						" IN (SELECT " + X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + " FROM " + X_CA_MatterAssignment.Table_Name +
+						" WHERE " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + 
+						" IN (SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + " FROM " + X_CA_GroupAssignment.Table_Name + 
+						" WHERE " + X_CA_GroupAssignment.COLUMNNAME_CA_CourseDef_ID + "=? ) AND " +
+						X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
+						" IN (SELECT " + X_CA_TeacherAssignment.COLUMNNAME_CA_MatterAssignment_ID + " FROM " + X_CA_TeacherAssignment.Table_Name +
+						" WHERE " + X_CA_TeacherAssignment.COLUMNNAME_C_BPartner_ID + "=?))";
+				
+				List<X_CA_MatterAssignment> assignments = new Query(m_ctx, X_CA_MatterAssignment.Table_Name, whereClause, null)
+						.setOnlyActiveRecords(true).setParameters(course.get_ID(), currentBPartner.get_ID()).setOrderBy(X_CA_MatterAssignment.COLUMNNAME_Created)
+						.list();
+				
+				if(assignments.size()>0)
+				{
+					fMatterAssignment.setValue(assignments.get(0).get_ID());
+					lclassroom.setText("ES".equals(assignments.get(0).getAD_Language())?"Espa\u00F1ol":"English");
+				}
+			}
+			else
+			{
+				lclassroom.setText("");
+			}
+		}
+		
+		
+		
+		
 		parameterLayout.removeChild(parameterLayout.getRows());
 		Rows rows = null;
 		Row row = null;
@@ -338,9 +381,20 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		row = rows.newRow();
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
-		fCourseDef.getComponent().setWidth("60%");
-		row.appendChild(lSubjectMatter);
-		row.appendChild(fMatterAssignment.getComponent());
+		fCourseDef.getComponent().setWidth("50%");
+		
+		if(lclassroom.getValue().length()>0)
+		{
+			row.appendChild(new Label("Aula"));
+			row.appendChild(lclassroom);
+		}
+		else
+		{
+			row.appendChild(lSubjectMatter);
+			row.appendChild(fMatterAssignment.getComponent());
+		}
+		
+		
 
 
 		row = rows.newRow();

@@ -359,9 +359,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			X_CA_SubjectMatter tmpSubject = null;
 
-			/*if(isElective.isSelected())
-				tmpSubject = (X_CA_SubjectMatter) assignment.getElectiveSubject();
-			else*/
+			
 			tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
 
 			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
@@ -395,6 +393,15 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		{
 
 			noteCategory.setValue(value);
+			
+			int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
+			
+			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
+					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " + (Integer)noteCategory.getValue() + ")" ;
+			
+			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND CreatedBy=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
+			noteType.addValueChangeListener(this);
+			repaintParameterPanel();
 			refreshHeader();
 
 		}
@@ -539,17 +546,17 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		if(isfilterenabled)
 		{
-			Label lf1 = new Label(Msg.translate(m_ctx, "notetype"));
-			Label lf2 = new Label(Msg.translate(m_ctx, "notecategory"));
+			Label lf1 = new Label(Msg.translate(m_ctx, "notecategory"));
+			Label lf2 = new Label(Msg.translate(m_ctx, "notetype"));
 
 			row = rows.newRow();
 			row.appendChild(lf1);
-			row.appendChild(noteType.getComponent());
+			row.appendChild(noteCategory.getComponent());
 
 			if(filtertype>1)
 			{
 				row.appendChild(lf2);
-				row.appendChild(noteCategory.getComponent());
+				row.appendChild(noteType.getComponent());
 			}
 		}
 	}
@@ -567,13 +574,15 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if(isfilterenabled && filtertype==2 && (noteType.getValue()==null || noteCategory.getValue()==null))
 			return;
 
-		if(isfilterenabled && filtertype==1 && (noteType.getValue()==null))
+		if(isfilterenabled && filtertype==1 && (noteCategory.getValue()==null))
 			return;
 
 		if(isfilterenabled)
 		{
-			currentNoteType = new X_CA_NoteType(m_ctx, (Integer)noteType.getValue(),null);
+			
 			currentNoteCategory = new X_CA_NoteCategory(m_ctx,(Integer) noteCategory.getValue(), null);
+			if(filtertype==2)
+				currentNoteType = new X_CA_NoteType(m_ctx, (Integer)noteType.getValue(),null);
 		}
 
 		if(fCourseDef.getValue()==null || fParcial.getValue()==null)
