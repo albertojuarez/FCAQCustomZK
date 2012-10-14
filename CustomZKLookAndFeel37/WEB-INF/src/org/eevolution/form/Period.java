@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.Panel;
+import org.compiere.model.MBPartner;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
@@ -17,13 +18,17 @@ public class Period extends Panel{
 	Label lPeriod = new Label();
 	public boolean iseditablemode = false;
 	String realPeriodNo = "";
+	
+
+	MBPartner currentBPartner = null;
 
 
-	public Period(int periodNo, List<X_CA_ScheduleDay> days, List<X_CA_SchedulePeriod> periods, boolean iseditablemode){
+	public Period(int periodNo, List<X_CA_ScheduleDay> days, List<X_CA_SchedulePeriod> periods, boolean iseditablemode, MBPartner teacher){
 
 		super();
 		
 		this.iseditablemode = iseditablemode;
+		this.currentBPartner = teacher;
 
 		lPeriod.setText(String.valueOf(periodNo));
 		lPeriod.setStyle("font-size:20px;");
@@ -56,9 +61,7 @@ public class Period extends Panel{
 			ClassRoom classRoom = new ClassRoom(style,iseditablemode);		
 			classRoom.setDayno(x+1);
 			classRoom.setPeriodno(realPeriodNo);
-
-
-
+			classRoom.setTeacher(currentBPartner);
 			span = new Span();
 			span.setParent(this);
 			span.setStyle("height: 99%; display: inline-block; width: 14%;");
@@ -69,23 +72,25 @@ public class Period extends Panel{
 
 		}
 
-		for(X_CA_SchedulePeriod period : periods)
+		if(periods!=null)
 		{
-			if(realPeriodNo.equals(period.getCA_PeriodClass().getName())){
-				for(ClassRoom classroom : classRooms)
-				{
-					for(int day=1; day<=6; day++) // X_CA_ScheduleDay day : days)
+			for(X_CA_SchedulePeriod period : periods)
+			{
+				if(realPeriodNo.equals(period.getCA_PeriodClass().getName())){
+					for(ClassRoom classroom : classRooms)
 					{
-						if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day && period.getCA_ScheduleDay().getDayNo()==day)
+						for(int day=1; day<=6; day++) // X_CA_ScheduleDay day : days)
 						{
-							classroom.setPeriod(period);
+							if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day && period.getCA_ScheduleDay().getDayNo()==day)
+							{
+								classroom.setPeriod(period);
+							}
 						}
 					}
 				}
 			}
+
 		}
-
-
 
 	}
 

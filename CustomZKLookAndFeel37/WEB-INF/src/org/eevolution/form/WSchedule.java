@@ -62,6 +62,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 	Center scheduleCenter = new Center();
 
+	
+	North scheduleNorth = new North();
+
+	
 
 	public WSchedule()
 	{
@@ -82,21 +86,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 	private void dynInit()
 	{
-		int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
+		int AD_Column_ID = 2893;  
 		MLookup teacher = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
 		fBPartner = new WSearchEditor("C_BPartner_ID", true, false, true, teacher);
 		fBPartner.addValueChangeListener(this);
-
-		/*
-		AD_Column_ID = 1000734;        //  CA_CourseDef.CA_CourseDef_ID
-		MLookup group = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
-		fGroup= new WTableDirEditor("CA_CourseDef_ID", true, false, true, group);
-		fGroup.addValueChangeListener(this);
-
-		AD_Column_ID = 1000934;        //  CA_SubjectMatter.CA_SubjectMatter_ID
-		MLookup subject = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
-		fSubject= new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, subject);
-		fSubject.addValueChangeListener(this);*/
 	}
 
 
@@ -120,24 +113,15 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		if(iseditablemode)
 		{
 
-			//lGroup = new Label(Msg.getMsg(Env.getCtx(), "Group"));
 			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Find"));
-			//lSubject = new Label(Msg.getMsg(Env.getCtx(), "Subject"));
-
-
 			row = rows.newRow();
-
 			row.appendChild(lBPartner);
 			row.appendChild(fBPartner.getComponent());
-
-			/*row = rows.newRow();
-			row.appendChild(new Space());
-			row.appendChild(bSave);*/
 
 		}
 		row = rows.newRow();
 		row.appendChild(new Space());
-		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   Día actual " + DateUtils.getDateNo()));
+		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   D\u00EDa actual " + DateUtils.getDateNo()));
 
 
 		scheduleLayout.setWidth("99%");
@@ -148,57 +132,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		mainCenter.setFlex(true);
 		mainCenter.appendChild(scheduleLayout);
 		mainLayout.appendChild(mainCenter);
+		
+		renderNorth();
 
-		Panel schedulePanelNorth = new Panel();
-
-		North scheduleNorth = new North();
-		scheduleNorth.appendChild(schedulePanelNorth);
-		scheduleLayout.appendChild(scheduleNorth);
-		scheduleNorth.setStyle("border: none");
-
-		Span span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width:10%;");
-		Label header = new Label("Period");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 1");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 2");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 3");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 4");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 5");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
-		span = new Span();
-		span.setParent(schedulePanelNorth);
-		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label("Day 6");
-		header.setStyle("font-size:20px;");
-		span.appendChild(header);
+		
 
 
 
@@ -216,7 +153,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		{
 			for(int x=1; x<=9; x++)
 			{
-				Period period = new Period(x, days, periods, iseditablemode);
+				Period period = new Period(x, days, periods, iseditablemode, (MBPartner) periods.get(0).getC_BPartner());
 				period.iseditablemode=iseditablemode;
 				periodLayout.appendChild(period);
 			}
@@ -225,13 +162,72 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 
 
+	private void renderNorth() {
+		
+		scheduleLayout.removeChild(scheduleNorth);
+		
+		scheduleNorth = new North();
+		
+		Panel schedulePanelNorth = new Panel();
+
+		scheduleNorth.appendChild(schedulePanelNorth);
+		scheduleLayout.appendChild(scheduleNorth);
+		scheduleNorth.setStyle("border: none");
+
+		
+		
+		Span span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width:10%;");
+		Label header = new Label("Period");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 1":"Monday");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 2":"Tuesday");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 3":"Wednesday");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 4":"Thursday");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 5":"Friday");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+		span = new Span();
+		span.setParent(schedulePanelNorth);
+		span.setStyle("height: 99%; display: inline-block; width: 14%;");
+		header = new Label(drawmode==0?"Day 6":"");
+		header.setStyle("font-size:20px;");
+		span.appendChild(header);
+	}
+
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		String name = evt.getPropertyName();
 		Object value = evt.getNewValue();
 
 		clean();
-
+		
 		if ("C_BPartner_ID".equals(name))
 		{
 			fBPartner.setValue(value);
@@ -254,6 +250,8 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 			loadSchedule(schedule);
 		}
 
+		renderNorth();
+		
 		scheduleLayout.removeChild(scheduleCenter);
 
 		scheduleCenter = new Center();
@@ -267,8 +265,17 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 		for(int x=1; x<=9; x++)
 		{
-			Period period = new Period(x, days, periods, iseditablemode);
-			period.iseditablemode=iseditablemode;
+			Period period = null;
+			if(!currentBPartner.get_ValueAsBoolean("IsStudent"))
+			{
+				period = new Period(x, days, periods, iseditablemode,currentBPartner);
+				period.iseditablemode=iseditablemode;
+			}
+			else
+			{
+				period = new Period(x, days, periods, false,currentBPartner);
+				period.iseditablemode=false;
+			}
 			periodLayout.appendChild(period);
 		}
 	}
