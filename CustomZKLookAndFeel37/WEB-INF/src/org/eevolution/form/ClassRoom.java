@@ -1,5 +1,7 @@
 package org.eevolution.form;
 
+import java.util.List;
+
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
@@ -58,10 +60,11 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	public boolean iseditablemode = false;
 
 	MBPartner currentBPartner = null;
-	
+
 	Button bsave = new Button("Save");
-	
-	
+	Button bdelete = new Button("Delete");
+
+
 	public void setTeacher(MBPartner teacher)
 	{
 		this.currentBPartner = teacher;
@@ -81,6 +84,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 		isElective.setLabel("Es electivo");
 		isElective.addActionListener(this);
 		bsave.addActionListener(this);
+		bdelete.addActionListener(this);
 
 		this.iseditablemode = editablemode;
 		this.setStyle(style);
@@ -181,7 +185,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	public void onEvent(Event event) throws Exception {
 		if(event.getTarget().equals(edit))
 		{
-			
+			editWindow = new Window();
 			showEditWindow();
 			AEnv.showCenterScreen(editWindow);
 		}
@@ -190,16 +194,62 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 
 			fGroup = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(0,currentBPartner.get_ID(), isElective.isSelected()));
 			fGroup.addValueChangeListener(this);
-			
+
 			showEditWindow();
-			
+
 		}
 		else if(event.getTarget().equals(bsave))
 		{
 			createSchedule();
+			editWindow.dispose();
+		}
+		else if(event.getTarget().equals(bdelete))
+		{
+			deleteCurrentPeriod();
+			lSubject.setText("");
+			lGroup.setText("");
+			lTeacher.setText("");
+			editWindow.dispose();
 		}
 	}
 
+	private void deleteCurrentPeriod() {
+		if(period!=null)
+		{
+
+			try{
+
+
+				X_CA_Schedule schedule = new Query(Env.getCtx(), X_CA_Schedule.Table_Name, X_CA_Schedule.COLUMNNAME_CA_CourseDef_ID+ "=?", null)
+				.setOnlyActiveRecords(true).setParameters(period.getCA_CourseDef_ID()).first();
+
+				X_CA_ScheduleDay day = new Query(Env.getCtx(), X_CA_ScheduleDay.Table_Name, X_CA_ScheduleDay.COLUMNNAME_DayNo + "=? AND " + X_CA_ScheduleDay.COLUMNNAME_CA_Schedule_ID + "=?", null)
+				.setOnlyActiveRecords(true).setParameters(dayno, schedule.getCA_Schedule_ID()).first();
+
+				List<X_CA_SchedulePeriod> tmpperiods = new Query(Env.getCtx(), X_CA_SchedulePeriod.Table_Name, X_CA_SchedulePeriod.COLUMNNAME_CA_ScheduleDay_ID+"=? AND " +
+						X_CA_SchedulePeriod.COLUMNNAME_C_BPartner_ID+"=? AND " + 
+						X_CA_SchedulePeriod.COLUMNNAME_CA_SubjectMatter_ID + "=? AND "+
+						X_CA_SchedulePeriod.COLUMNNAME_ElectiveSubject_ID + "=? AND " + 
+						X_CA_SchedulePeriod.COLUMNNAME_CA_PeriodClass_ID + "=?", null)
+				.setOnlyActiveRecords(true)
+				.setParameters(day.get_ID(), currentBPartner.get_ID(), period.getCA_SubjectMatter_ID(), period.getElectiveSubject_ID(), period.getCA_PeriodClass_ID())
+				.list();
+
+				for(X_CA_SchedulePeriod tmpperiod : tmpperiods )
+				{
+					tmpperiod.deleteEx(true);
+				}
+
+
+				period.deleteEx(true);
+				period = null;
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
 	private void showEditWindow()
 	{
 
@@ -252,6 +302,9 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 
 		row = rows.newRow();
 		row.appendChild(bsave);
+		row = rows.newRow();
+		row.appendChild(bdelete);
+		
 
 
 		return parameter;
@@ -280,6 +333,8 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 
 
 	private void createSchedule() {
+		
+		deleteCurrentPeriod();
 
 		boolean success = createStandardSchedule();
 
@@ -385,7 +440,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 			schPeriod.saveEx();
 
 			this.setPeriod(schPeriod);
-			
+
 			return true;
 
 		}
@@ -499,7 +554,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 
 			if(iselective)
 			{
-				
+
 				/*
 				whereClause = X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
 						" IN ( Select " +  X_CA_TeacherAssignment.COLUMNNAME_CA_MatterAssignment_ID +
