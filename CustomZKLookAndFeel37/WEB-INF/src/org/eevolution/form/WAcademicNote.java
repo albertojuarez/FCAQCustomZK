@@ -327,7 +327,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			X_CA_SubjectMatter tmpSubject = new X_CA_SubjectMatter(m_ctx,(Integer) fSubject.getValue(), null);
 
-			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
+			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
 					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
 				filtertype=1;
@@ -362,7 +362,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
 
-			if(tmpSubject.getName().toLowerCase().contains("music") || tmpSubject.getName().toLowerCase().contains("deport") || tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
+			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
 					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
 				filtertype = 1;

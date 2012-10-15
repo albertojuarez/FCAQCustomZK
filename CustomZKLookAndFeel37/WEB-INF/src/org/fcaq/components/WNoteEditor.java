@@ -62,7 +62,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		decimalBox.addEventListener(Events.ON_BLUR, new EventListener(){
 			@Override
 			public void onEvent(Event event){
-				saveEx();
+				if(decimalBox.getValue()!=null)
+				{
+					saveEx();
+				}	
 			}
 		});
 		init();
