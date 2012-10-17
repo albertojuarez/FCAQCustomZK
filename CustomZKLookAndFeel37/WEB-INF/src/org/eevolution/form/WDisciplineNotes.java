@@ -234,6 +234,15 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 		if (event.getTarget().equals(isElective))
 		{
+			if(isElective.isSelected())
+			{
+				inccol=1;
+			}
+			else
+			{
+				inccol=0;
+			}
+			
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 
@@ -243,7 +252,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		else if(event.getTarget().equals(noteTable))
 		{
 			int row = noteTable.getSelectedRow();
-			MBPartner selectedstudent = ((INoteEditor)noteTable.getValueAt(row, 1)).getStudent();
+			MBPartner selectedstudent = ((INoteEditor)noteTable.getValueAt(row, 1+inccol)).getStudent();
 			refreshDelayInfo(selectedstudent);
 			displayAbsenceInfo(String.valueOf(assisNo), String.valueOf(delayNo));
 			double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
@@ -296,13 +305,13 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 		noteTable.setColumnClass(0, String.class, true);
-		noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(5, String.class, true);
-		noteTable.setColumnClass(6, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(7, String.class, true);
+		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(4+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(5+inccol, String.class, true);
+		noteTable.setColumnClass(6+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(7+inccol, String.class, true);
 
 	}
 
@@ -313,10 +322,10 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		try{
 			for(int x=0;x<=noteTable.getRowCount()-1; x++)
 			{
-				INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, 2);
+				INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, 2+inccol);
 				if(editor.getStudent().get_ID() == studen.get_ID())
 				{
-					editor = (INoteEditor)noteTable.getValueAt(x, 6);
+					editor = (INoteEditor)noteTable.getValueAt(x, 6+inccol);
 					editor.setFValue(new BigDecimal(value));
 				}
 			}
@@ -423,10 +432,10 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		{
 			for(int row = 0; row<=noteTable.getRowCount(); row++)
 			{
-				INoteEditor editor = (INoteEditor)noteTable.getValueAt(row, 2);
+				INoteEditor editor = (INoteEditor)noteTable.getValueAt(row, 2+inccol);
 				if(editor.getStudent().get_ID() == student.get_ID())
 				{
-					noteTable.setValueAt(String.valueOf(discount), row, 5);
+					noteTable.setValueAt(String.valueOf(discount), row, 5+inccol);
 				}
 			}
 		}catch(Exception e)
