@@ -365,7 +365,13 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 				if(assignments.size()>0)
 				{
 					fMatterAssignment.setValue(assignments.get(0).get_ID());
-					lclassroom.setText("ES".equals(assignments.get(0).getAD_Language())?"Espa\u00F1ol":"English");
+					if("ES".equals(assignments.get(0).getAD_Language()))
+						lclassroom.setText("Espa\u00F1ol");
+					else if("EN".equals(assignments.get(0).getAD_Language()))
+						lclassroom.setText("English");
+						
+						
+					//lclassroom.setText("ES".equals(assignments.get(0).getAD_Language())?"Espa\u00F1ol":"English");
 				}
 			}
 			else

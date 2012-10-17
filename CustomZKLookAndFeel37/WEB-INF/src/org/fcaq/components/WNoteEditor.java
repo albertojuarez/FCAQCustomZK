@@ -328,6 +328,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					{
 						saveDisciplineNote(trxName);
 					}
+					
+					if(isdiscipline)
+					{
+						disciplineNotes.refreshDisciplineNote(student, trxName);
+					}
 				}
 			});
 		}catch (Exception e)
@@ -339,10 +344,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				academicNote.refreshFinalNote(student);
 			}
-			else if(isdiscipline)
-			{
-				disciplineNotes.refreshDisciplineNote(student);
-			}
+			
 		}
 	}
 
@@ -432,7 +434,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
-		if(!discConfig.isAverageCriteria())
+		if(!discConfig.isAverageCriteria() || isaverange)
 		{
 			noteline.setAmount(decimalBox.getValue());
 		}
@@ -463,6 +465,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		oldValue = decimalBox.getValue();
 		noteline.saveEx();
 
+		disciplineNotes.copyToAlternateNotes(student, note, noteline, trxName);
+		
 		noteLine_id = noteline.get_ID();
 
 	}
