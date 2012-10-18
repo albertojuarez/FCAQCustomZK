@@ -66,6 +66,33 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				{
 					saveEx();
 				}	
+				else
+				{
+					try
+					{
+						
+						
+						
+						noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+						noteline.deleteEx(true);
+						noteline=null;
+						noteLine_id=0;
+						
+						if(!isfinal && !isdiscipline)
+						{
+							//saveAcademicNote(null);
+						}
+						else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
+						{
+							disciplineNotes.refreshDisciplineNote(student, null);
+						}
+						
+					}
+					catch(Exception e)
+					{
+						//System.out.println("Nothing to do, just ignore");
+					}
+				}
 			}
 		});
 		init();
@@ -327,12 +354,9 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
 					{
 						saveDisciplineNote(trxName);
-					}
-					
-					if(isdiscipline)
-					{
 						disciplineNotes.refreshDisciplineNote(student, trxName);
 					}
+				
 				}
 			});
 		}catch (Exception e)
