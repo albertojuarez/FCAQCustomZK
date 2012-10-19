@@ -35,6 +35,7 @@ import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.MPeriodClass;
+import org.fcaq.model.X_CA_CourseDef;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -200,8 +201,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if (periodClass != null)
 			fPeriod.setValue(periodClass.getCA_PeriodClass_ID());
 		
-		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseDef(form.getWindowNo()));
-		fCourse.setReadWrite(false);
+		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
+		fCourse.addValueChangeListener(this);
 		if (currentCourse != null)
 			fCourse.setValue(currentCourse.getCA_CourseDef_ID());
 
@@ -315,8 +316,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if (value == null)
 			return;
 
-		if ("CA_PeriodClass_ID".equals(name))
-		{
+		if ("CA_PeriodClass_ID".equals(name)) {
+			
 			fPeriod.setValue(value);
 
 			int CA_PeriodClass_ID = (Integer) value;
@@ -325,12 +326,46 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			currentCourse = currentCourse();
 			currentMatterAssignment = currentMatterAssignment();
 			currentExtraGroup = currentExtraGroup();
-
+			
 			if (currentMatterAssignment != null && currentCourse != null) {
+				
+				fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
+				fCourse.addValueChangeListener(this);
+				
 				fSubject.setValue(currentMatterAssignment.get_ID());
 				fCourse.setValue(currentCourse.get_ID());
 			}
 			else {
+				
+				fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
+				fCourse.addValueChangeListener(this);
+				
+				fSubject.setValue(null);
+				fCourse.setValue(null);
+			}
+			
+			if (currentExtraGroup != null)
+				fExtraGroup.setValue(currentExtraGroup.get_ID());
+			else
+				fExtraGroup.setValue(null);
+			
+		} else if ("CA_CourseDef_ID".equals(name)) {
+			
+			fCourse.setValue(value);
+			
+			int CA_CourseDef_ID = (Integer) value;
+			
+			currentCourse = new X_CA_CourseDef(m_ctx, CA_CourseDef_ID, null);
+			currentMatterAssignment = currentMatterAssignment();
+			currentExtraGroup = currentExtraGroup();
+			
+			if (currentMatterAssignment != null && currentCourse != null) {
+				
+				fSubject.setValue(currentMatterAssignment.get_ID());
+				fCourse.setValue(currentCourse.get_ID());
+			}
+			else {
+				
 				fSubject.setValue(null);
 				fCourse.setValue(null);
 			}
@@ -341,6 +376,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fExtraGroup.setValue(null);
 		}
 
+		
 		refreshHeader();
 	}
 
