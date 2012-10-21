@@ -31,11 +31,13 @@ import org.zkoss.zul.Div;
 public class WNoteEditor extends Div  implements INoteEditor{
 
 	private static final long serialVersionUID = 299456427772228471L;
-	private X_CA_Note note = null;
-	private X_CA_NoteLine noteline = null;
+	
+	//private X_CA_Note note = null;
+	//private X_CA_NoteLine noteline = null;
+	
 	private MBPartner student = null;
 	private X_CA_NoteHeadingLine noteHeadingLine = null;
-	private int noteLine_id = 0;
+	
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
@@ -47,6 +49,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	private boolean isaverange=false;
 	private String criteria = "";
 
+	private int noteLine_id = 0;
+	private int note_id=0;
 
 
 	private Decimalbox decimalBox = new Decimalbox();
@@ -73,7 +77,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						
 						
 						
-						noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+						X_CA_NoteLine noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
 						noteline.deleteEx(true);
 						noteline=null;
 						noteLine_id=0;
@@ -84,7 +88,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						}
 						else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
 						{
-							disciplineNotes.refreshDisciplineNote(student, null);
+							
+							
+							if(discConfig.isAverageCriteria() || (!discConfig.isAverageCriteria()  && isaverange ))
+							{
+								disciplineNotes.refreshDisciplineNote(student);
+							}
 						}
 						
 					}
@@ -139,7 +148,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setNote(X_CA_Note note) {
-		this.note = note;
+		this.note_id = note.get_ID();
 	}
 
 	@Override
@@ -197,7 +206,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public X_CA_Note getNote() {
-		return note;
+		return new X_CA_Note(Env.getCtx(), note_id, null);
 	}
 
 	@Override
@@ -205,10 +214,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 		if(noteLine_id>0)
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+			return new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
 		}
 
-		return noteline;
+		return null;
 	}
 
 	@Override
@@ -354,7 +363,6 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
 					{
 						saveDisciplineNote(trxName);
-						disciplineNotes.refreshDisciplineNote(student, trxName);
 					}
 				
 				}
@@ -368,9 +376,18 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				academicNote.refreshFinalNote(student);
 			}
+			else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
+			{
+				if(discConfig.isAverageCriteria() || (!discConfig.isAverageCriteria()  && isaverange ))
+				{
+					disciplineNotes.refreshDisciplineNote(student);
+				}
+			}
 			
 		}
 	}
+	
+	
 
 
 	private void saveAcademicNote(String trxName)
@@ -384,6 +401,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
+		
+		X_CA_Note note = getNote();
 
 		if(note!=null)
 		{
@@ -405,6 +424,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
+		X_CA_NoteLine noteline = null;
+		
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -424,7 +445,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		noteLine_id = noteline.get_ID();
 	}
 
-	private void saveDisciplineNote(String trxName)
+	public void saveDisciplineNote(String trxName)
 	{
 		if(decimalBox.getValue()==null)
 		{
@@ -442,10 +463,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
+		X_CA_NoteLine noteline = null;
+		
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
-			noteline.setCA_Note_ID(note.get_ID());
+			noteline.setCA_Note_ID(getNote().get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
 			noteline.setIsDiscipline(true);
 			noteline.setIsFinal(isfinal);
@@ -489,7 +512,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		oldValue = decimalBox.getValue();
 		noteline.saveEx();
 
-		disciplineNotes.copyToAlternateNotes(student, note, noteline, trxName);
+		disciplineNotes.copyToAlternateNotes(student, getNote(), noteline, trxName);
 		
 		noteLine_id = noteline.get_ID();
 
@@ -527,7 +550,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 
@@ -537,5 +560,9 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+
+
+
 
 }
