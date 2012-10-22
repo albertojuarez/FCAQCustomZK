@@ -253,7 +253,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		{
 			int row = noteTable.getSelectedRow();
 			MBPartner selectedstudent = ((INoteEditor)noteTable.getValueAt(row, 1+inccol)).getStudent();
-			refreshDelayInfo(selectedstudent);
+			refreshDelayInfo(selectedstudent,currentMatterAssignment);
 			displayAbsenceInfo(String.valueOf(assisNo), String.valueOf(delayNo));
 			double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
 			setDiscontInfo(selectedstudent, discount);
