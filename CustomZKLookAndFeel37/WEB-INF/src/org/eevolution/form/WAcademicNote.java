@@ -265,8 +265,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
 		int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
 
-		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, AcademicUtil.buildLookup(noteCategoryColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
-		noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND CreatedBy=" + currentUser.get_ID(), form.getWindowNo()));
+		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, AcademicUtil.buildLookup(noteCategoryColumn_ID, " AND User1_ID=" + currentUser.get_ID(), form.getWindowNo()));
+		noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID(), form.getWindowNo()));
 
 		noteCategory.addValueChangeListener(this);
 		noteType.addValueChangeListener(this);
@@ -399,7 +399,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
 					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " + (Integer)noteCategory.getValue() + ")" ;
 			
-			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND CreatedBy=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
+			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
 			noteType.addValueChangeListener(this);
 			repaintParameterPanel();
 			refreshHeader();

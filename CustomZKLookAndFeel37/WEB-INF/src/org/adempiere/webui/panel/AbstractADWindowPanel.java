@@ -1850,7 +1850,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			return;
 
 		//	Query
-		MQuery query = new MQuery(curTabx.getTableName());
+		MQuery query = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
 		//	Link for detail records
 		String queryColumn = curTabx.getLinkColumnName();
 		//	Current row otherwise
