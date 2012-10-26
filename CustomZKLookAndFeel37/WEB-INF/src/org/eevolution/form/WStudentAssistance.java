@@ -34,7 +34,7 @@ import org.compiere.model.MRefList;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.fcaq.model.MPeriodClass;
+import org.fcaq.model.MCAPeriodClass;
 import org.fcaq.model.X_CA_CourseDef;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -322,7 +322,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			int CA_PeriodClass_ID = (Integer) value;
 
-			periodClass = new MPeriodClass(m_ctx, CA_PeriodClass_ID, null);
+			periodClass = new MCAPeriodClass(m_ctx, CA_PeriodClass_ID, null);
 			currentCourse = currentCourse();
 			currentMatterAssignment = currentMatterAssignment();
 			currentExtraGroup = currentExtraGroup();
