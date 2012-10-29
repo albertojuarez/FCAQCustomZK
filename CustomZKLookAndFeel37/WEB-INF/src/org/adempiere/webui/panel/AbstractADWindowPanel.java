@@ -1544,6 +1544,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	        }
 
 	        curTabx.dataRefresh(false); // Elaine 2008/07/25
+	        onRefresh();
         }
         focusToActivePanel();
     }
