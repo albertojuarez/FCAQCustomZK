@@ -52,6 +52,7 @@ import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
 import org.fcaq.model.X_CA_ConcatenatedSubject;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
@@ -60,6 +61,7 @@ import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
 import org.fcaq.model.X_CA_NoteType;
 import org.fcaq.model.X_CA_Parcial;
+import org.fcaq.model.X_CA_SubjectConfig;
 import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
@@ -84,7 +86,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Grid parameterLayout = GridFactory.newGridLayout();
 	private Panel southPanel = new Panel();
 	private StatusBarPanel statusBar = new StatusBarPanel();
-	//private WListbox noteTable = null; // ListboxFactory.newDataTable();
 	private WListbox noteHeadingTable = ListboxFactory.newDataTable();
 	private Button bSendNotes = new Button();
 	private Button bShowComments = new Button();
@@ -327,19 +328,36 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			X_CA_SubjectMatter tmpSubject = new X_CA_SubjectMatter(m_ctx,(Integer) fSubject.getValue(), null);
 
-			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
-					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
-			{
-				filtertype=1;
-				isfilterenabled = true;
-			}
+
 
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
 
-			if(tmpCourse!=null)
+			X_CA_DisciplineConfig generalconfig = AcademicUtil.getParticularConfigByGroup(tmpCourse);
+
+			if(generalconfig!=null) // if null asuming default config
 			{
-				String section = tmpCourse.getSection();
-				if(Integer.parseInt(section)<=3)
+				if(generalconfig.getFilterType().equals(X_CA_DisciplineConfig.FILTERTYPE_Category))
+				{
+					isfilterenabled = true;
+					filtertype=1;
+				}
+				else if(generalconfig.getFilterType().equals(X_CA_DisciplineConfig.FILTERTYPE_Subcategory))
+				{
+					isfilterenabled = true;
+					filtertype=2;
+				}
+			}
+
+			X_CA_SubjectConfig subjectconfig = AcademicUtil.getParticularConfigByGroupAndSubject(tmpCourse, tmpSubject);
+
+			if(subjectconfig!=null) // if null asuming last config
+			{
+				if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
+				{
+					isfilterenabled = true;
+					filtertype=1;
+				}
+				else if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Subcategory))
 				{
 					isfilterenabled = true;
 					filtertype=2;
@@ -357,29 +375,42 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(m_ctx, (Integer) fMatterAssignment.getValue(), null);
 
-			X_CA_SubjectMatter tmpSubject = null;
-
-			
-			tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
-
-			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
-					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
-			{
-				filtertype = 1;
-				isfilterenabled = true;
-			}
-
+			X_CA_SubjectMatter tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
 
-			if(tmpCourse!=null)
+			X_CA_DisciplineConfig generalconfig = AcademicUtil.getParticularConfigByGroup(tmpCourse);
+
+
+			if(generalconfig!=null) // if null asuming default config
 			{
-				String section = tmpCourse.getSection();
-				if(Integer.parseInt(section)<=3)
+				if(generalconfig.getFilterType().equals(X_CA_DisciplineConfig.FILTERTYPE_Category))
+				{
+					isfilterenabled = true;
+					filtertype=1;
+				}
+				else if(generalconfig.getFilterType().equals(X_CA_DisciplineConfig.FILTERTYPE_Subcategory))
 				{
 					isfilterenabled = true;
 					filtertype=2;
 				}
 			}
+
+			X_CA_SubjectConfig subjectconfig = AcademicUtil.getParticularConfigByGroupAndSubject(tmpCourse, tmpSubject);
+
+			if(subjectconfig!=null) // if null asuming last config
+			{
+				if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
+				{
+					isfilterenabled = true;
+					filtertype=1;
+				}
+				else if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Subcategory))
+				{
+					isfilterenabled = true;
+					filtertype=2;
+				}
+			}
+
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -387,18 +418,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			repaintParameterPanel();
+			refreshHeader();
 		}
 
 		if("CA_NoteCategory_ID".equals(name))
 		{
 
 			noteCategory.setValue(value);
-			
+
 			int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
-			
+
 			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
 					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " + (Integer)noteCategory.getValue() + ")" ;
-			
+
 			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
 			noteType.addValueChangeListener(this);
 			repaintParameterPanel();
@@ -579,7 +612,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		if(isfilterenabled)
 		{
-			
+
 			currentNoteCategory = new X_CA_NoteCategory(m_ctx,(Integer) noteCategory.getValue(), null);
 			if(filtertype==2)
 				currentNoteType = new X_CA_NoteType(m_ctx, (Integer)noteType.getValue(),null);
@@ -589,6 +622,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			return;
 
 		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+
+
+
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 		if(!isElective.isSelected())
 		{
@@ -623,10 +659,17 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			.first();
 		}
 
+		if(headingLines!=null)
+			headingLines.clear();
 
+		headingLines = null;
 
+		if(currentCourse.isSport())
+		{
+			loadAsSport();
+			return;
+		}
 
-		headingLines = null;	
 
 		Vector<String> columns = buildNoteHeading();
 
@@ -668,6 +711,42 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	}
 
+
+
+	private void loadAsSport() {
+
+		Vector<String> columns = buildSportNoteHeading();
+
+
+		Vector<Vector<Object>> data = getStudentData();
+
+		ListModelTable modelP = new ListModelTable(data);
+
+		modelP.addTableModelListener(this);
+		((WListbox)noteTable).setData(modelP, columns);
+
+		refreshNotes();
+
+		((WListbox)noteTable).setStyle("sizedByContent=true");
+
+		noteTable.setColumnClass(0, String.class, true);
+
+		noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+
+		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
+
+		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
+
+		noteTable.autoSize();
+		((WListbox)noteTable).setWidth("100%");
+		((WListbox)noteTable).setHeight("100%");
+
+		System.out.println("Refresh Header End At " + new Timestamp(System.currentTimeMillis()));
+
+	}
 
 
 	@Override

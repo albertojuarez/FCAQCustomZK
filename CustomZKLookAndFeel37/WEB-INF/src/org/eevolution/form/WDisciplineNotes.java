@@ -52,11 +52,6 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 	private Panel parameterPanel = new Panel();
 	private Grid parameterLayout = GridFactory.newGridLayout();
 
-
-	private Panel southPanel = new Panel();
-	private StatusBarPanel statusBar = new StatusBarPanel();
-	// ListboxFactory.newDataTable();
-
 	// Form Components
 
 	private Checkbox isElective = new Checkbox();
@@ -219,6 +214,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			refreshHeader();
 		}
 
 	}

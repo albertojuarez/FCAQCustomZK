@@ -31,9 +31,7 @@ import org.zkoss.zul.Div;
 public class WNoteEditor extends Div  implements INoteEditor{
 
 	private static final long serialVersionUID = 299456427772228471L;
-	
-	//private X_CA_Note note = null;
-	//private X_CA_NoteLine noteline = null;
+
 	
 	private MBPartner student = null;
 	private X_CA_NoteHeadingLine noteHeadingLine = null;
@@ -41,13 +39,13 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
-	private X_CA_MatterAssignment assignment = null;
 
 	private boolean isforced = false;
 	private boolean isfinal=false;
 	private boolean isdiscipline=false;
 	private boolean isaverange=false;
-	private String criteria = "";
+	private String dccriteria = "";
+	private String sportCriteria="";
 
 	private int noteLine_id = 0;
 	private int note_id=0;
@@ -58,6 +56,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	private AcademicNote academicNote;
 	private DisciplineNotes disciplineNotes;
+	private String DTString = "";
 
 
 	public WNoteEditor()
@@ -84,12 +83,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 						
 						if(!isfinal && !isdiscipline)
 						{
-							//saveAcademicNote(null);
+							academicNote.refreshFinalNote(student);
 						}
 						else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
 						{
-							
-							
 							if(discConfig.isAverageCriteria() || (!discConfig.isAverageCriteria()  && isaverange ))
 							{
 								disciplineNotes.refreshDisciplineNote(student);
@@ -331,12 +328,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setCriteria(String criteria) {
-		this.criteria = criteria;
+		this.dccriteria = criteria;
 	}
 
 	@Override
 	public String getCriteria() {
-		return this.criteria;
+		return this.dccriteria;
 	}
 
 	@Override
@@ -431,7 +428,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(note.get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
-			noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+			if(noteHeadingLine!=null)
+				noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+			noteline.setSportCriteria(sportCriteria);
+			noteline.setDtString(DTString);
 		}
 		else
 		{
@@ -473,7 +473,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			noteline.setIsDiscipline(true);
 			noteline.setIsFinal(isfinal);
 			noteline.setIsAverage(isaverange);
-			noteline.setDcCriteria(criteria);
+			noteline.setDcCriteria(dccriteria);
 		}
 		else
 		{
@@ -488,19 +488,19 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		else
 		{
 			double tmp = decimalBox.getValue().doubleValue();
-			if(tmp>0 && tmp<=60)
+			if(tmp>=0 && tmp<=60)
 			{
 				noteline.setAmount(new BigDecimal("1"));
 			}
-			else if(tmp>61 && tmp<=70)
+			else if(tmp>60 && tmp<=70)
 			{
 				noteline.setAmount(new BigDecimal("2"));
 			}
-			else if(tmp>71 && tmp<=90)
+			else if(tmp>70 && tmp<=90)
 			{
 				noteline.setAmount(new BigDecimal("3"));
 			}
-			else if(tmp>91 && tmp<=100)
+			else if(tmp>90 && tmp<=100)
 			{
 				noteline.setAmount(new BigDecimal("4"));
 			}
@@ -549,7 +549,6 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -557,8 +556,35 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public X_CA_MatterAssignment getMatterAssignment() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+
+
+	@Override
+	public void setSportCriteria(String sportCriteria) {
+		this.sportCriteria=sportCriteria;
+	}
+
+
+
+	@Override
+	public String getSportCriteria() {
+		return sportCriteria;
+	}
+
+
+
+	@Override
+	public void setDTString(String dtstring) {
+		this.DTString = dtstring;
+	}
+
+
+
+	@Override
+	public String getDTString() {
+		return DTString;
 	}
 
 
