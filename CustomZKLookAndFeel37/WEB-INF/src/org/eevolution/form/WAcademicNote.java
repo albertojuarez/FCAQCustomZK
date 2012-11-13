@@ -698,7 +698,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		int index = 1;
 		for(index = 1+inccol; index<= headingLines.size() + inccol; index++)
 		{
-			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			noteTable.setColumnClass(index, org.fcaq.components.WNoteEditor.class, false);
 		}
 		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 
@@ -785,6 +785,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	/// comments in notes
 
 	Window comments = null;
+	Checkbox isWaiting = new Checkbox();
 
 	private void showComments(List<INoteEditor> noteEditors) {
 
@@ -800,6 +801,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		//Form components
 		Label lStudent = new Label();
 		Textbox fStudent = new Textbox();
+		isWaiting.setSelected(false);
+		isWaiting.setLabel("Pendiente de Envio");
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 
@@ -812,6 +815,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				row.add(editor.getNoteHeading()!=null? editor.getNoteHeading().getName():"Final");
 				row.add(editor);
 				row.add(editor.getNoteLine()!=null?(editor.getNoteLine().getComments()!=null?editor.getNoteLine().getComments():""):"");
+				if(editor.getNoteLine()!=null)
+				{
+					isWaiting.setSelected(editor.getNoteLine().isWaiting());
+				}
 
 				data.add(row);
 			}
@@ -849,8 +856,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterCLayout.newRows();
 
 		row = rows.newRow();
-		//row.appendChild(lStudent);
-		//row.appendChild(fStudent);
+		row.appendChild(isWaiting);
 
 		Center centerC = new Center();
 		mainCLayout.appendChild(centerC);
@@ -880,7 +886,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		comments.appendChild(mainCLayout);
 
 		AEnv.showCenterScreen(comments);
-		//Falta poner todo en el FDialog o el que corresponda y mostrar la forma
 	}
 
 
@@ -904,9 +909,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 				if(noteLine!=null)
 				{
+					noteLine.setIsWaiting(isWaiting.isSelected());
 					noteLine.setComments(comment!=null?comment:"");
 					noteLine.saveEx();
-
+					
+					
+					
 					if(noteLine.getComments().length()>0)
 					{
 						hascomments=true;
@@ -916,7 +924,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			}
 		}
 
-		if(hascomments)
+		if(hascomments || isWaiting.isSelected())
 		{
 			repaintStudentName(student, "*");
 		}

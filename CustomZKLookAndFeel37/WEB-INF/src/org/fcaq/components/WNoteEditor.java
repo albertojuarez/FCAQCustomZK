@@ -153,7 +153,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(noteLine!=null)
 		{
 			this.noteLine_id = noteLine.get_ID();
-
+			decimalBox.setReadonly(!"O".equals((noteLine.getDocStatus())));
 
 			if(isdiscipline)
 			{
