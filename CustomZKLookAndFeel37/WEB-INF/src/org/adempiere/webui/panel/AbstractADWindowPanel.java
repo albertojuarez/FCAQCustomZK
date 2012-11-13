@@ -1134,6 +1134,8 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		curTabpanel.getGlobalToolbar().setCurrentTab(curTabpanel);
 		curTabpanel.getGlobalToolbar().setActualPanel(curTabpanel);
 
+		onRefresh(); // E-evolution	13/11/2012
+		
 		if (curTabpanel instanceof ADSortTab)
 		{
 			((ADSortTab)curTabpanel).registerAPanel(this);
