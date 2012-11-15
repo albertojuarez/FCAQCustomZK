@@ -1125,7 +1125,8 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		}
 		else
 		{
-		    newTabpanel.refresh();
+			//newTabpanel.refresh();
+			newTabpanel.getGridTab().dataRefreshAll();
 		}
 
 		curTabIndex = newTabIndex;
@@ -1133,8 +1134,6 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 
 		curTabpanel.getGlobalToolbar().setCurrentTab(curTabpanel);
 		curTabpanel.getGlobalToolbar().setActualPanel(curTabpanel);
-	
-		onRefresh();
 
 		if (curTabpanel instanceof ADSortTab)
 		{
