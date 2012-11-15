@@ -117,7 +117,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	{
 		try
 		{
-
+			Env.setContext(Env.getCtx(), "GradeWindowNo", form.getWindowNo());
 			loadStartData();
 
 			dynInit();
@@ -220,7 +220,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		pnlBtnRight = new Panel();
 		pnlBtnRight.setAlign("right");
 		pnlBtnRight.appendChild(bShowComments);
-		pnlBtnRight.appendChild(bSendNotes);
+		//pnlBtnRight.appendChild(bSendNotes);
 
 		hboxBtnRight = new Hbox();
 		hboxBtnRight.appendChild(pnlBtnRight);
@@ -273,7 +273,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		noteType.addValueChangeListener(this);
 
 		bShowComments.addActionListener(this);
-		bSendNotes.addActionListener(this);
+		//bSendNotes.addActionListener(this);
 		isElective.addActionListener(this);
 	}
 
@@ -538,6 +538,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	@Override
 	public void dispose() {
+		Env.setContext(Env.getCtx(), "IsGradeEnabled", 0);
+		
 		form.dispose();
 		SessionManager.getAppDesktop().closeWindow(form.getWindowNo());
 
