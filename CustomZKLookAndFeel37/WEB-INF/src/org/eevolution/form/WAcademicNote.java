@@ -387,6 +387,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			repaintParameterPanel();
+			refreshHeader();
 		}
 
 		if("CA_NoteCategory_ID".equals(name))
