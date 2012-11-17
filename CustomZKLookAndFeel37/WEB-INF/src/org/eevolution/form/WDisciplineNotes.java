@@ -219,6 +219,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			refreshHeader();
 		}
 
 	}
