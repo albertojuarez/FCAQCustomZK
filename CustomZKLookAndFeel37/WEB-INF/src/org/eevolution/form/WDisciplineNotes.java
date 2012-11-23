@@ -73,6 +73,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			loadStartData();
 			dynInit();
 			zkInit();
+			Env.setContext(Env.getCtx(), "DisciplineWindowNo", form.getWindowNo());
+
 		}
 		catch(Exception e)
 		{
@@ -181,6 +183,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	@Override
 	public void dispose() {
+		Env.setContext(Env.getCtx(), "IsGradeEnabled", 0);
 		form.dispose();
 	}
 
@@ -301,12 +304,12 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 		noteTable.setColumnClass(0, String.class, true);
-		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(4+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(4+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(5+inccol, String.class, true);
-		noteTable.setColumnClass(6+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(6+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(7+inccol, String.class, true);
 
 	}

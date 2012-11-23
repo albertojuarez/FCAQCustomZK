@@ -16,10 +16,13 @@ import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
+import org.adempiere.webui.session.SessionManager;
+import org.adempiere.webui.window.FDialog;
 import org.compiere.model.Query;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Parcial;
@@ -156,8 +159,15 @@ implements IFormController, EventListener, ValueChangeListener
 
 	@Override
 	public void showErrorMessage(String message) {
-
+		FDialog.error(form.getWindowNo(), message);
 	}
+	
+	@Override
+	public void showInfoMessage(String message) {
+		FDialog.info(form.getWindowNo(), null, message);
+	}
+	
+	
 	@Override
 	public void dispose() {
 
@@ -246,6 +256,18 @@ implements IFormController, EventListener, ValueChangeListener
 	public void onEvent(Event event) throws Exception {
 		if (event.getTarget()==sendButton)
 		{
+			
+			
+			int GradeWindowNo = Env.getContextAsInt(Env.getCtx(), "GradeWindowNo");
+			int DisciplineWindowNo =  Env.getContextAsInt(Env.getCtx(), "DisciplineWindowNo");
+			
+			
+
+			if(GradeWindowNo >0)
+				SessionManager.getAppDesktop().closeWindow(GradeWindowNo);
+			if(DisciplineWindowNo >0)
+				SessionManager.getAppDesktop().closeWindow(DisciplineWindowNo);
+			
 			prepareSendNotes();
 			loadStudentData();
 			sendNotes();
@@ -254,6 +276,21 @@ implements IFormController, EventListener, ValueChangeListener
 		else if (event.getTarget()==cancelButton)
 		{
 			dispose();	
+		}
+		else if (event.getTarget().equals(isElective))
+		{
+
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+			fCourseDef.addValueChangeListener(this);
+
+			if(isElective.isSelected())
+			{
+				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
+				fMatterAssignment.addValueChangeListener(this);
+			}
+
+
+			repaintParameterPanel();
 		}
 	}
 
