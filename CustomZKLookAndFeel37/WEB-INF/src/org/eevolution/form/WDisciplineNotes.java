@@ -102,9 +102,9 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fMatterAssignment.addValueChangeListener(this);
 
-		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
+		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
 		fParcial.addValueChangeListener(this);
-		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
+		//fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx,0).get_ID());
 
 		isElective.addActionListener(this);
 		((WListbox)noteTable).addActionListener(this);
@@ -200,6 +200,10 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		if ("CA_CourseDef_ID".equals(name))
 		{
 			fCourseDef.setValue(value);
+			
+			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
+			fParcial.addValueChangeListener(this);
+			fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);

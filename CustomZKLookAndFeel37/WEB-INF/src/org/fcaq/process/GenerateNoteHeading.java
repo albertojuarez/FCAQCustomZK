@@ -27,7 +27,7 @@ public class GenerateNoteHeading extends SvrProcess{
 		user_id = Env.getContextAsInt(this.getCtx(), "#AD_User_ID");
 		MUser user = new MUser(this.getCtx(), user_id, this.get_TrxName());
 		currentBPartner = (MBPartner)user.getC_BPartner();
-		parcial = AcademicUtil.getCurrentParcial(getCtx());
+		parcial = null; //AcademicUtil.getCurrentParcial(getCtx());
 		
 	}
 

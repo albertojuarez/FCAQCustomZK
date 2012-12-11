@@ -99,10 +99,10 @@ import org.zkoss.zul.Space;
 			fMatterAssignment.addValueChangeListener(this);
 
 
-			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
+			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
 			fParcial.addValueChangeListener(this);
-			fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
-			currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+			//fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx,0).get_ID());
+			//currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 
 			isElective.addActionListener(this);
 			
@@ -203,6 +203,11 @@ import org.zkoss.zul.Space;
 
 
 				fCourseDef.setValue(value);
+				
+				fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
+				fParcial.addValueChangeListener(this);
+				fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
+				currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 
 				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookupByCourseDef(form.getWindowNo(),(Integer)value));
 				fMatterAssignment.addValueChangeListener(this);

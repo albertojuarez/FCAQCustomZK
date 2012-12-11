@@ -93,9 +93,8 @@ implements IFormController, EventListener, ValueChangeListener
 		fMatterAssignment.addValueChangeListener(this);
 
 
-		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
+		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
 		fParcial.addValueChangeListener(this);
-		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 
 		isElective.addActionListener(this);
