@@ -5,12 +5,14 @@ import java.math.BigDecimal;
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
+import org.compiere.model.Query;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
 import org.eevolution.form.AcademicNote;
 import org.eevolution.form.DisciplineNotes;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_DiscCalc;
 import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Note;
@@ -32,10 +34,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	private static final long serialVersionUID = 299456427772228471L;
 
-	
+
 	private MBPartner student = null;
 	private X_CA_NoteHeadingLine noteHeadingLine = null;
-	
+
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
@@ -73,14 +75,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				{
 					try
 					{
-						
-						
-						
+
+
+
 						X_CA_NoteLine noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
 						noteline.deleteEx(true);
 						noteline=null;
 						noteLine_id=0;
-						
+
 						if(!isfinal && !isdiscipline)
 						{
 							academicNote.refreshFinalNote(student);
@@ -92,7 +94,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 								disciplineNotes.refreshDisciplineNote(student);
 							}
 						}
-						
+
 					}
 					catch(Exception e)
 					{
@@ -361,7 +363,6 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					{
 						saveDisciplineNote(trxName);
 					}
-				
 				}
 			});
 		}catch (Exception e)
@@ -380,11 +381,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					disciplineNotes.refreshDisciplineNote(student);
 				}
 			}
-			
+
 		}
 	}
-	
-	
+
+
 
 
 	private void saveAcademicNote(String trxName)
@@ -398,7 +399,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
+
 		X_CA_Note note = getNote();
 
 		if(note!=null)
@@ -422,7 +423,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 		X_CA_NoteLine noteline = null;
-		
+
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -440,10 +441,41 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		noteline.setAmount(decimalBox.getValue());
 		oldValue = decimalBox.getValue();
 		noteline.setIsFinal(false);
-		noteline.saveEx();
+		
+		if(noteline.getDocStatus().equals("O"))
+		{
+			noteline.saveEx();
+			
+			setNeedRecalculated();
+		}
 
 		noteLine_id = noteline.get_ID();
 	}
+
+	private void setNeedRecalculated() {
+		
+		String whereClause = X_CA_DiscCalc.COLUMNNAME_C_BPartner_ID + "=? AND " + X_CA_DiscCalc.COLUMNNAME_CA_Parcial_ID + "=?";
+
+		X_CA_DiscCalc calc = new Query(student.getCtx(), X_CA_DiscCalc.Table_Name, whereClause, student.get_TrxName())
+		.setOnlyActiveRecords(true)
+		.setParameters(student.get_ID(), getNote().getCA_Parcial_ID())
+		.first();
+		
+		if(calc==null)
+		{
+			calc = new X_CA_DiscCalc(student.getCtx(), 0, student.get_TrxName());
+		}
+		
+		calc.setC_BPartner_ID(student.get_ID());
+		calc.setCA_Parcial_ID(getNote().getCA_Parcial_ID());
+		calc.setAverange1(new BigDecimal("0"));
+		calc.setAverange2(new BigDecimal("0"));
+		calc.setIsNeed(true);
+		
+		calc.saveEx();
+	}
+
+
 
 	public void saveDisciplineNote(String trxName)
 	{
@@ -457,6 +489,15 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
 
+		if(discConfig.isAverageCriteria() 
+				&& X_CA_CourseDef.SECTION_Kinder.equals(getNote().getCA_CourseDef().getSection())    
+				&& X_CA_CourseDef.MODALITY_Nacional.equals(getNote().getCA_CourseDef().getModality())  
+				&& decimalBox.getValue().compareTo(new BigDecimal("5"))>0)
+		{
+
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+
 		if(!discConfig.isAverageCriteria() && decimalBox.getValue().compareTo(new BigDecimal("4"))>0 && !isfinal)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
@@ -464,7 +505,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 		X_CA_NoteLine noteline = null;
-		
+
 		if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
@@ -510,10 +551,15 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 		oldValue = decimalBox.getValue();
-		noteline.saveEx();
+		
+		if(noteline.getDocStatus().equals("O"))
+		{
+			noteline.saveEx();
+			setNeedRecalculated();
+		}
 
 		disciplineNotes.copyToAlternateNotes(student, getNote(), noteline, trxName);
-		
+
 		noteLine_id = noteline.get_ID();
 
 	}
@@ -549,7 +595,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
-		
+
 	}
 
 
