@@ -166,7 +166,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					{
 						if(discConfig.isAverageCriteria())
 						{
-							if(noteLine.get_Value("Qty")==null)
+							
+							if(noteLine.getCA_Note().isSent() && noteLine.get_Value("Qty")==null)
+							{
+								decimalBox.setValue(noteLine.getAmount());
+							}
+							else if(noteLine.get_Value("Qty")==null)
 								decimalBox.setValue(new BigDecimal("0"));
 							else
 								decimalBox.setValue((BigDecimal)noteLine.get_Value("Qty"));
@@ -453,6 +458,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 		if(decimalBox.getValue().compareTo(new BigDecimal(yearConfig.getNoteScale()))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
+		{
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+		
+		if(discConfig.isAverageCriteria() 
+				&& X_CA_CourseDef.SECTION_Kinder.equals(getNote().getCA_CourseDef().getSection())    
+				&& X_CA_CourseDef.MODALITY_Nacional.equals(getNote().getCA_CourseDef().getModality())  
+				&& decimalBox.getValue().compareTo(new BigDecimal("5"))>0)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}

@@ -1125,7 +1125,8 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		}
 		else
 		{
-		    newTabpanel.refresh();
+			//newTabpanel.refresh();
+			newTabpanel.getGridTab().dataRefreshAll();
 		}
 
 		curTabIndex = newTabIndex;

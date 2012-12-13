@@ -265,7 +265,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
 		int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
 
-		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, AcademicUtil.buildLookup(noteCategoryColumn_ID, " AND User1_ID=" + currentUser.get_ID(), form.getWindowNo()));
+		
+		String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
+				" IN ( SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
+				" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE IsActive='Y') ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
+		
+		
+		MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), noteCategoryColumn_ID, DisplayType.TableDir);
+		MLookup lookup = new MLookup(info,0);
+		String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+		sql = sql + whereClause;
+		info.Query = sql;		
+		
+		
+		noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
 		noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID(), form.getWindowNo()));
 
 		noteCategory.addValueChangeListener(this);
@@ -327,8 +340,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			X_CA_SubjectMatter tmpSubject = new X_CA_SubjectMatter(m_ctx,(Integer) fSubject.getValue(), null);
 
-			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
-					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
+			if((tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
 				filtertype=1;
 				isfilterenabled = true;
@@ -362,8 +374,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
 
-			if(tmpSubject.getName().toLowerCase().contains("music") || /*tmpSubject.getName().toLowerCase().contains("deport") ||*/ tmpSubject.getName().toLowerCase().contains("m\u00FAsic")
-					|| (tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
+			if((tmpSubject.getName().toLowerCase().contains("educac") && tmpSubject.getName().toLowerCase().contains("sica")))
 			{
 				filtertype = 1;
 				isfilterenabled = true;
