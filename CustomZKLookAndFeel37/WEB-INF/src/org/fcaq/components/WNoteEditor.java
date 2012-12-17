@@ -433,6 +433,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
 			noteline.setSportCriteria(sportCriteria);
 			noteline.setDtString(DTString);
+			noteline.setDocStatus("O");
 		}
 		else
 		{
@@ -515,6 +516,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			noteline.setIsFinal(isfinal);
 			noteline.setIsAverage(isaverange);
 			noteline.setDcCriteria(dccriteria);
+			noteline.setDocStatus("O");
 		}
 		else
 		{

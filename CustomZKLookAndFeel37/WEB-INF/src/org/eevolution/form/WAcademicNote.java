@@ -3,6 +3,7 @@ package org.eevolution.form;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -26,6 +27,7 @@ import org.adempiere.webui.component.WListItemRenderer;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.component.WTableColumn;
 import org.adempiere.webui.component.Window;
+import org.adempiere.webui.editor.WDateEditor;
 import org.adempiere.webui.editor.WSearchEditor;
 import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
@@ -109,6 +111,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor noteCategory  = null;
 	private WTableDirEditor noteType = null;
 
+	private WDateEditor fDate = new WDateEditor();
 
 
 
@@ -167,11 +170,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		lSubjectMatter = new Label();
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
 
-
-
 		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
 		bSendNotes.setLabel(Msg.getMsg(Env.getCtx(), "SendNotes"));
-
+		
+		fDate.setValue(new Date());
 
 		North north = new North();
 		north.setStyle("border: none");
@@ -242,7 +244,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		((WListbox)noteTable).setVflex(true);
 		((WListbox)noteTable).setStyle("overflow:auto;");
 
-
+		fDate.setValue(new Timestamp(date.getTime()));
+		fDate.addValueChangeListener(this);
 
 		isElective.setSelected(false);
 		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
@@ -464,6 +467,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			noteType.setValue(value);
 			refreshHeader();
 		}
+		if("Date".equals(name))
+		{
+			date = (Timestamp) fDate.getValue();
+			refreshHeader();
+
+		}
 
 
 
@@ -615,6 +624,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				row.appendChild(noteType.getComponent());
 			}
 		}
+		
+		if(fCourseDef.getValue()==null)
+			return;
+		
+		currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+		
+		if(currentCourse.isSport())
+		{
+			row.appendChild(fDate.getComponent());
+		}
 	}
 
 	@Override
@@ -752,6 +771,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	private void loadAsSport() {
 
+		date = (Timestamp)fDate.getValue();
 		Vector<String> columns = buildSportNoteHeading();
 
 
