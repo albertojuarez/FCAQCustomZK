@@ -312,7 +312,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), (Integer)fCourseDef.getValue()));
 			fParcial.addValueChangeListener(this);
-			fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
+			
+			if(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue())!=null)
+				fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
+			
 			currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 			
 
@@ -704,8 +707,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		try
 		{
 			if( !(currentParcial.getParcialAction().equals(X_CA_Parcial.PARCIALACTION_OpenParcial)) || 
-					((Timestamp)currentParcial.get_Value("DateStart")).getTime()>System.currentTimeMillis() ||  
-					((Timestamp)currentParcial.get_Value("DateEnd")).getTime()< System.currentTimeMillis() )
+					((Timestamp)currentParcial.get_Value("DateFrom")).getTime()>System.currentTimeMillis() ||  
+					((Timestamp)currentParcial.get_Value("DateTo")).getTime()< System.currentTimeMillis() )
 			{
 				FDialog.warn(form.getWindowNo(), "El periodo de ingreso de notas esta cerrado");
 			}
