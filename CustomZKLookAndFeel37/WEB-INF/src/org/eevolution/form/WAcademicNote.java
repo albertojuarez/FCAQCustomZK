@@ -314,9 +314,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			fParcial.addValueChangeListener(this);
 			
 			if(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue())!=null)
+			{
 				fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
-			
-			currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+				currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+			}
 			
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
