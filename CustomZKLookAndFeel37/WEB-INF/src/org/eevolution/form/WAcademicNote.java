@@ -520,7 +520,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			else
 			{
 				fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
-						0, ((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")));
+						0,
+						currentParcial!=null?
+						((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")
+						:0));
+				
 				fSubject.addValueChangeListener(this);
 				inccol = 0;
 			}
