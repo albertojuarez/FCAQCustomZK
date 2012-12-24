@@ -171,7 +171,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
 		bSendNotes.setLabel(Msg.getMsg(Env.getCtx(), "SendNotes"));
 
-
 		North north = new North();
 		north.setStyle("border: none");
 		mainLayout.appendChild(north);

@@ -509,11 +509,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			{
 				noteline.setAmount(new BigDecimal("2"));
 			}
-			else if(tmp>71 && tmp<=90)
+			else if(tmp>70 && tmp<=90)
 			{
 				noteline.setAmount(new BigDecimal("3"));
 			}
-			else if(tmp>91 && tmp<=100)
+			else if(tmp>90 && tmp<=100)
 			{
 				noteline.setAmount(new BigDecimal("4"));
 			}
