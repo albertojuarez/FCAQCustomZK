@@ -527,6 +527,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(!discConfig.isAverageCriteria() || isaverange)
 		{
 			noteline.setAmount(decimalBox.getValue());
+			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
 		}
 		else
 		{
