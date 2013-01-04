@@ -57,6 +57,7 @@ import org.zkoss.zul.Space;
 
 		private Checkbox isElective = new Checkbox();
 		private Checkbox isDiscipline = new Checkbox();
+		private Checkbox fSelectAll = new Checkbox();
 
 
 		public WOpenNotes()
@@ -90,9 +91,12 @@ import org.zkoss.zul.Space;
 			
 			isDiscipline.setSelected(false);
 			isDiscipline.setLabel(Msg.getMsg(Env.getCtx(), "Is Discipline"));
+			
+			fSelectAll.setSelected(true);
+			fSelectAll.setLabel(Msg.getMsg(Env.getCtx(), "Select All"));
 
 
-			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getSecretaryCourseLookup(form.getWindowNo(),0, isElective.isSelected()));
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getSecretaryCourseLookup(form.getWindowNo(),Env.getContextAsInt(m_ctx, "#AD_User_ID"), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookupByCourseDef(form.getWindowNo(),0));
@@ -108,6 +112,7 @@ import org.zkoss.zul.Space;
 			
 			sendButton.addActionListener(this);
 			cancelButton.addActionListener(this);
+			fSelectAll.addActionListener(this);
 			
 		}
 
@@ -147,7 +152,7 @@ import org.zkoss.zul.Space;
 			row.appendChild(new Space());
 			row.appendChild(isDiscipline);
 			isDiscipline.setWidth("39%");
-
+			row = rows.newRow();
 			row.appendChild(lCourseDef);
 			row.appendChild(fCourseDef.getComponent());
 			fCourseDef.getComponent().setWidth("60%");
@@ -158,8 +163,8 @@ import org.zkoss.zul.Space;
 			row.appendChild(fParcial.getComponent());
 			row = rows.newRow();
 			row.appendChild(sendButton);
-			row.appendChild(cancelButton);
-			
+			//row.appendChild(cancelButton);
+			row.appendChild(fSelectAll);
 			Center center = new Center();
 			center.setFlex(true);
 			mainLayout.appendChild(center);
@@ -291,7 +296,8 @@ import org.zkoss.zul.Space;
 			row.appendChild(new Space());
 			row.appendChild(isDiscipline);
 			isDiscipline.setWidth("39%");
-
+			row = rows.newRow();
+			
 			row.appendChild(lCourseDef);
 			row.appendChild(fCourseDef.getComponent());
 			fCourseDef.getComponent().setWidth("60%");
@@ -305,7 +311,8 @@ import org.zkoss.zul.Space;
 			
 			row = rows.newRow();
 			row.appendChild(sendButton);
-			row.appendChild(cancelButton);
+			//row.appendChild(cancelButton);
+			row.appendChild(fSelectAll);
 		}
 
 
@@ -336,6 +343,14 @@ import org.zkoss.zul.Space;
 
 
 				repaintParameterPanel();
+			}
+			else if (event.getTarget().equals(fSelectAll))
+			{
+				int rows = studentTable.getRowCount();
+				for (int row=0 ; row<=rows-1; row++)
+				{
+					studentTable.setValueAt(fSelectAll.isSelected(), row, 0);
+				}
 			}
 		}
 
