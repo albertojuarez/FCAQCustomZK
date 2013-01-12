@@ -148,6 +148,20 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setNote(X_CA_Note note) {
 		this.note_id = note.get_ID();
+
+		try{
+			long currentTime = System.currentTimeMillis();
+
+			if(!(note.getCA_Parcial().getDateFrom().getTime()<= currentTime &&
+					note.getCA_Parcial().getDateTo().getTime()>=currentTime))
+			{
+				decimalBox.setReadonly(true);
+			}}
+		catch(Exception e)
+		{
+			//Nothing to do, just ignore
+		}
+
 	}
 
 	@Override
@@ -442,11 +456,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		noteline.setAmount(decimalBox.getValue());
 		oldValue = decimalBox.getValue();
 		noteline.setIsFinal(false);
-		
+
 		if(noteline.getDocStatus().equals("O"))
 		{
 			noteline.saveEx();
-			
+
 			setNeedRecalculated();
 		}
 
@@ -454,25 +468,25 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	}
 
 	private void setNeedRecalculated() {
-		
+
 		String whereClause = X_CA_DiscCalc.COLUMNNAME_C_BPartner_ID + "=? AND " + X_CA_DiscCalc.COLUMNNAME_CA_Parcial_ID + "=?";
 
 		X_CA_DiscCalc calc = new Query(student.getCtx(), X_CA_DiscCalc.Table_Name, whereClause, student.get_TrxName())
 		.setOnlyActiveRecords(true)
 		.setParameters(student.get_ID(), getNote().getCA_Parcial_ID())
 		.first();
-		
+
 		if(calc==null)
 		{
 			calc = new X_CA_DiscCalc(student.getCtx(), 0, student.get_TrxName());
 		}
-		
+
 		calc.setC_BPartner_ID(student.get_ID());
 		calc.setCA_Parcial_ID(getNote().getCA_Parcial_ID());
 		calc.setAverange1(new BigDecimal("0"));
 		calc.setAverange2(new BigDecimal("0"));
 		calc.setIsNeed(true);
-		
+
 		calc.saveEx();
 	}
 
@@ -554,7 +568,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 		oldValue = decimalBox.getValue();
-		
+
 		if(noteline.getDocStatus().equals("O"))
 		{
 			noteline.saveEx();

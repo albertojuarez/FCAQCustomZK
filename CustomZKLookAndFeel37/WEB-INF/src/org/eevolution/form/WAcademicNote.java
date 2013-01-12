@@ -462,7 +462,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
 
 			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
-					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " + (Integer)noteCategory.getValue() + ")" ;
+					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " 
+					+ (Integer)noteCategory.getValue() + ") ORDER BY " + X_CA_NoteType.COLUMNNAME_SeqNo;
 
 			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
 			noteType.addValueChangeListener(this);
