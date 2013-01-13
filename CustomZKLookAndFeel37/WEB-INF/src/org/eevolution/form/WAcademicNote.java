@@ -716,9 +716,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		try
 		{
-			if( !(currentParcial.getParcialAction().equals(X_CA_Parcial.PARCIALACTION_OpenParcial)) || 
-					((Timestamp)currentParcial.get_Value("DateFrom")).getTime()>System.currentTimeMillis() ||  
-					((Timestamp)currentParcial.get_Value("DateTo")).getTime()< System.currentTimeMillis() )
+			if( (currentParcial.getParcialAction().equals(X_CA_Parcial.PARCIALACTION_OpenParcial)) || 
+					((Timestamp)currentParcial.get_Value("DateStart")).getTime()>System.currentTimeMillis() &&  
+					((Timestamp)currentParcial.get_Value("DateEnd")).getTime()< System.currentTimeMillis() )
 			{
 				FDialog.warn(form.getWindowNo(), "El periodo de ingreso de notas esta cerrado");
 			}
