@@ -1,6 +1,8 @@
 package org.fcaq.components;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.window.FDialog;
@@ -521,7 +523,36 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 		X_CA_NoteLine noteline = null;
 
-		if(noteLine_id==0)
+
+		String whereClause = X_CA_NoteLine.COLUMNNAME_CA_Note_ID + "=? AND " +
+				X_CA_NoteLine.COLUMNNAME_C_BPartner_ID + "=? AND " + 
+				X_CA_NoteLine.COLUMNNAME_IsDiscipline + "=? AND " + 
+				X_CA_NoteLine.COLUMNNAME_IsFinal + "=? AND " + 
+				X_CA_NoteLine.COLUMNNAME_IsAverage + "=? ";
+
+		List<Object> parameters = new ArrayList<Object>();
+
+		parameters.add(getNote().get_ID());
+		parameters.add(student.get_ID());
+		parameters.add(true);
+		parameters.add(isfinal);
+		parameters.add(isaverange);
+
+
+
+		if(!isfinal)
+		{
+			whereClause += " AND " + X_CA_NoteLine.COLUMNNAME_DcCriteria + " =? ";
+			parameters.add(dccriteria);
+		}
+
+		noteline = new Query(Env.getCtx(), X_CA_NoteLine.Table_Name, whereClause, trxName)
+		.setOnlyActiveRecords(true)
+		.setParameters(parameters)
+		.first();
+
+		if(noteline==null)
+			//if(noteLine_id==0)
 		{
 			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(getNote().get_ID());
@@ -531,48 +562,53 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			noteline.setIsAverage(isaverange);
 			noteline.setDcCriteria(dccriteria);
 			noteline.setDocStatus("O");
+			//}
+			//else
+			//{
+			//	noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
-		else
-		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
-		}
-
-
-		if(!discConfig.isAverageCriteria() || isaverange)
-		{
-			noteline.setAmount(decimalBox.getValue());
-			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
-		}
-		else
-		{
-			double tmp = decimalBox.getValue().doubleValue();
-			if(tmp>=0 && tmp<=60)
-			{
-				noteline.setAmount(new BigDecimal("1"));
-			}
-			else if(tmp>60 && tmp<=70)
-			{
-				noteline.setAmount(new BigDecimal("2"));
-			}
-			else if(tmp>70 && tmp<=90)
-			{
-				noteline.setAmount(new BigDecimal("3"));
-			}
-			else if(tmp>90 && tmp<=100)
-			{
-				noteline.setAmount(new BigDecimal("4"));
-			}
-
-			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
-		}
-
-
-		oldValue = decimalBox.getValue();
-
 		if(noteline.getDocStatus().equals("O"))
 		{
+
+			if(!discConfig.isAverageCriteria() || isaverange)
+			{
+				noteline.setAmount(decimalBox.getValue());
+				noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
+			}
+			else
+			{
+				double tmp = decimalBox.getValue().doubleValue();
+				if(tmp>=0 && tmp<=60)
+				{
+					noteline.setAmount(new BigDecimal("1"));
+				}
+				else if(tmp>60 && tmp<=70)
+				{
+					noteline.setAmount(new BigDecimal("2"));
+				}
+				else if(tmp>70 && tmp<=90)
+				{
+					noteline.setAmount(new BigDecimal("3"));
+				}
+				else if(tmp>90 && tmp<=100)
+				{
+					noteline.setAmount(new BigDecimal("4"));
+				}
+
+				noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
+			}
+
+
+			oldValue = decimalBox.getValue();
+
+
 			noteline.saveEx();
 			setNeedRecalculated();
+		}
+		else
+		{
+			decimalBox.setValue(noteline.getAmount());
+			oldValue = decimalBox.getValue();
 		}
 
 		disciplineNotes.copyToAlternateNotes(student, getNote(), noteline, trxName);
