@@ -384,7 +384,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			if(subjectconfig!=null) // if null asuming last config
 			{
-				if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
+				/*if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
 				{
 					isfilterenabled = true;
 					filtertype=1;
@@ -393,7 +393,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				{
 					isfilterenabled = true;
 					filtertype=2;
-				}
+				}*/
 			}
 
 			repaintParameterPanel();
@@ -431,7 +431,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			if(subjectconfig!=null) // if null asuming last config
 			{
-				if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
+				/*if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
 				{
 					isfilterenabled = true;
 					filtertype=1;
@@ -440,7 +440,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				{
 					isfilterenabled = true;
 					filtertype=2;
-				}
+				}*/
 			}
 
 

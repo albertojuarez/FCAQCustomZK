@@ -5,7 +5,6 @@
 import java.util.Vector;
 import java.util.logging.Level;
 
-import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
@@ -18,6 +17,8 @@ import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
+import org.adempiere.webui.event.WTableModelEvent;
+import org.adempiere.webui.event.WTableModelListener;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
@@ -25,8 +26,8 @@ import org.adempiere.webui.window.FDialog;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_MatterAssignment;
-import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -36,7 +37,7 @@ import org.zkoss.zkex.zul.North;
 import org.zkoss.zul.Space;
 
 	public class WEvaluationTest extends EvaluationTest
-	implements IFormController, EventListener, ValueChangeListener
+	implements IFormController, EventListener, ValueChangeListener, WTableModelListener
 	{
 
 		// Layout components
@@ -44,20 +45,16 @@ import org.zkoss.zul.Space;
 		private Borderlayout mainLayout = new Borderlayout();
 		private Panel parameterPanel = new Panel();
 		private Grid parameterLayout = GridFactory.newGridLayout();
-		private Button sendButton = new Button("Open");
-		private Button cancelButton = new Button("Cancel");
-
 
 		private Label lCourseDef = null;
-		private Label lParcial = null;
+		private Label lEvaluation = null;
 		private Label lSubjectMatter = null;
 
 		private WTableDirEditor fCourseDef = null;
-		private WTableDirEditor fParcial = null;
+		private WTableDirEditor fEvaluation = null;
 		private WTableDirEditor fMatterAssignment = null;
 
 		private Checkbox isElective = new Checkbox();
-		private Checkbox isDiscipline = new Checkbox();
 
 
 		public WEvaluationTest()
@@ -88,26 +85,22 @@ import org.zkoss.zul.Space;
 			
 			isElective.setSelected(false);
 			isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
-			
-			isDiscipline.setSelected(false);
-			isDiscipline.setLabel(Msg.getMsg(Env.getCtx(), "Is Discipline"));
 
 
-			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getSecretaryCourseLookup(form.getWindowNo(),Env.getContextAsInt(m_ctx, "#AD_User_ID"), isElective.isSelected()));
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 
-			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookupByCourseDef(form.getWindowNo(),0));
+			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
 			fMatterAssignment.addValueChangeListener(this);
 
 
-			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
-			fParcial.addValueChangeListener(this);
+			fEvaluation = new WTableDirEditor("CA_EvaluationPeriod_ID", true, false, true, AcademicUtil.getEvaluationPeriodLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
+			fEvaluation.addValueChangeListener(this);
 
 
 			isElective.addActionListener(this);
 			
-			sendButton.addActionListener(this);
-			cancelButton.addActionListener(this);
+
 			
 		}
 
@@ -124,8 +117,8 @@ import org.zkoss.zul.Space;
 			lCourseDef = new Label();
 			lCourseDef.setText(Msg.getMsg(Env.getCtx(), "Group"));
 
-			lParcial = new Label();
-			lParcial.setText(Msg.getMsg(Env.getCtx(), "Parcial"));
+			lEvaluation = new Label();
+			lEvaluation.setText(Msg.getMsg(Env.getCtx(), "Quimestre"));
 
 			lSubjectMatter = new Label();
 			lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
@@ -144,8 +137,6 @@ import org.zkoss.zul.Space;
 			row.appendChild(new Space());
 			row.appendChild(isElective);
 			isElective.setWidth("39%");
-			row.appendChild(new Space());
-
 
 			row.appendChild(lCourseDef);
 			row.appendChild(fCourseDef.getComponent());
@@ -153,8 +144,8 @@ import org.zkoss.zul.Space;
 			row = rows.newRow();
 			row.appendChild(lSubjectMatter);
 			row.appendChild(fMatterAssignment.getComponent());
-			row.appendChild(lParcial);
-			row.appendChild(fParcial.getComponent());
+			row.appendChild(lEvaluation);
+			row.appendChild(fEvaluation.getComponent());
 			row = rows.newRow();
 			
 			Center center = new Center();
@@ -201,15 +192,15 @@ import org.zkoss.zul.Space;
 
 				fCourseDef.setValue(value);
 				
-				fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
-				fParcial.addValueChangeListener(this);
-				if(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue())!=null)
+				fEvaluation = new WTableDirEditor("CA_EvaluationPeriod_ID", true, false, true, AcademicUtil.getEvaluationPeriodLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
+				fEvaluation.addValueChangeListener(this);
+				if(AcademicUtil.getCurrentEvaluationPeriod(m_ctx, (Integer)fCourseDef.getValue())!=null)
 				{
-					fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
-					currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+					fEvaluation.setValue(AcademicUtil.getCurrentEvaluationPeriod(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
+					currentEvaluation = new X_CA_EvaluationPeriod(m_ctx, (Integer)fEvaluation.getValue(), null);
 				}
 				
-				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookupByCourseDef(form.getWindowNo(),(Integer)value));
+				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 				fMatterAssignment.addValueChangeListener(this);
 
 				fMatterAssignment.actionRefresh();
@@ -228,9 +219,9 @@ import org.zkoss.zul.Space;
 				refreshStudentTable();
 
 			}
-			if ("CA_Parcial_ID".equals(name))
+			if ("CA_EvaluationPeriod_ID".equals(name))
 			{
-				fParcial.setValue(value);
+				fEvaluation.setValue(value);
 				refreshStudentTable();
 
 			}
@@ -238,9 +229,9 @@ import org.zkoss.zul.Space;
 
 
 		private void refreshStudentTable() {
-			prepareSendNotes();
+			prepareLoadTable();
 			
-			if(currentCourse!=null &&   currentParcial !=null && currentMatterAssignment!=null)
+			if(currentCourse!=null &&   currentEvaluation !=null && currentMatterAssignment!=null)
 			{
 				Vector<String> columns = buildNoteHeading();
 
@@ -252,13 +243,16 @@ import org.zkoss.zul.Space;
 				((WListbox)studentTable).setData(modelP, columns);
 
 				((WListbox)studentTable).setStyle("sizedByContent=true");
+				
+				modelP.addTableModelListener(this);
+
 
 				studentTable.setColumnClass(0, String.class, true);
-				studentTable.setColumnClass(1, String.class, true);
-				studentTable.setColumnClass(2, BigDecimal.class, false);
-				studentTable.setColumnClass(3, BigDecimal.class, false);
+				studentTable.setColumnClass(1, Object.class, true);
+				studentTable.setColumnClass(2, BigDecimal.class, true);
+				studentTable.setColumnClass(3, BigDecimal.class, true);
+				studentTable.setColumnClass(4, BigDecimal.class, false);
 				
-
 				studentTable.autoSize();
 				((WListbox)studentTable).setWidth("100%");
 				((WListbox)studentTable).setHeight("100%");
@@ -291,8 +285,8 @@ import org.zkoss.zul.Space;
 			row.appendChild(lSubjectMatter);
 			row.appendChild(fMatterAssignment.getComponent());
 
-			row.appendChild(lParcial);
-			row.appendChild(fParcial.getComponent());
+			row.appendChild(lEvaluation);
+			row.appendChild(fEvaluation.getComponent());
 			
 			
 		}
@@ -300,54 +294,44 @@ import org.zkoss.zul.Space;
 
 		@Override
 		public void onEvent(Event event) throws Exception {
-			if (event.getTarget()==sendButton)
-			{
-				prepareSendNotes();
-				loadStudentData();
-			
-
-			}
-			else if (event.getTarget()==cancelButton)
-			{
-				dispose();	
-			}
-			else if (event.getTarget().equals(isElective))
+			if (event.getTarget().equals(isElective))
 			{
 
-				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getSecretaryCourseLookup(form.getWindowNo(),0, isElective.isSelected()));
+				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true,AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 				fCourseDef.addValueChangeListener(this);
-
-				if(isElective.isSelected())
-				{
-					fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookupByCourseDef(form.getWindowNo(),0));
-					fMatterAssignment.addValueChangeListener(this);
-				}
 
 
 				repaintParameterPanel();
 			}
 		}
 
-		private void prepareSendNotes() {
+		private void prepareLoadTable() {
 
-			if(fCourseDef.getValue()==null || fParcial.getValue()==null)
+			if(fCourseDef.getValue()==null || fEvaluation.getValue()==null)
 				return;
 
 			currentCourse  = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
 
-			currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+			currentEvaluation = new X_CA_EvaluationPeriod(m_ctx, (Integer)fEvaluation.getValue(), null);
 
 			if(fMatterAssignment.getValue()==null)
 				return;
 			currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
-			
-			isdiscipline = isDiscipline.isSelected();
 		}
 
 		@Override
 		public ADForm getForm() {
 
 			return form;
+		}
+
+		@Override
+		public void tableChanged(WTableModelEvent event) {
+			if(event.getIndex0()>=0)
+			{
+				String studentname = (String) studentTable.getValueAt(event.getIndex0(),1);
+				System.out.println(studentname);
+			}
 		}
 
 	}
