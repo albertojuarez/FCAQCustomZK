@@ -23,6 +23,8 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.window.FDialog;
+import org.compiere.model.MBPartner;
+import org.compiere.model.Query;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
@@ -329,8 +331,21 @@ import org.zkoss.zul.Space;
 		public void tableChanged(WTableModelEvent event) {
 			if(event.getIndex0()>=0)
 			{
-				String studentname = (String) studentTable.getValueAt(event.getIndex0(),1);
-				System.out.println(studentname);
+				String studentvalue = (String) studentTable.getValueAt(event.getIndex0(),0);
+				BigDecimal newValue = (BigDecimal)studentTable.getValueAt(event.getIndex0(), 4);
+
+				MBPartner student = new Query(Env.getCtx(), MBPartner.Table_Name, MBPartner.COLUMNNAME_Value+"=?", null)
+				.setOnlyActiveRecords(true)
+				.setParameters(studentvalue)
+				.first();
+				
+				if(student!=null)
+				{
+					refreshTestEvaluationPeriod(student, newValue);
+					
+				}
+					
+			
 			}
 		}
 
