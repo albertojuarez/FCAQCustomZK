@@ -1221,7 +1221,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public void afterSave(boolean onSaveEvent) {
 		if (!includedPanel.isEmpty()) {
         	for (EmbeddedPanel panel : includedPanel)
-        		panel.tabPanel.query(false, 0, 0);
+        		panel.tabPanel.getGridTab().dataRefreshAll() ;  //panel.tabPanel.query(false, 0, 0);
         }
 	}
 
