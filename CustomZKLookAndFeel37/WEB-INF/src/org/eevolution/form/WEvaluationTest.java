@@ -252,8 +252,9 @@ import org.zkoss.zul.Space;
 				studentTable.setColumnClass(0, String.class, true);
 				studentTable.setColumnClass(1, Object.class, true);
 				studentTable.setColumnClass(2, BigDecimal.class, true);
-				studentTable.setColumnClass(3, BigDecimal.class, true);
-				studentTable.setColumnClass(4, BigDecimal.class, false);
+				studentTable.setColumnClass(3, BigDecimal.class, false);
+				studentTable.setColumnClass(4, BigDecimal.class, true);
+				studentTable.setColumnClass(5, BigDecimal.class, true);
 				
 				studentTable.autoSize();
 				((WListbox)studentTable).setWidth("100%");
@@ -332,20 +333,35 @@ import org.zkoss.zul.Space;
 			if(event.getIndex0()>=0)
 			{
 				String studentvalue = (String) studentTable.getValueAt(event.getIndex0(),0);
-				BigDecimal newValue = (BigDecimal)studentTable.getValueAt(event.getIndex0(), 4);
+				BigDecimal newValue = (BigDecimal)studentTable.getValueAt(event.getIndex0(), 3);
 
 				MBPartner student = new Query(Env.getCtx(), MBPartner.Table_Name, MBPartner.COLUMNNAME_Value+"=?", null)
 				.setOnlyActiveRecords(true)
 				.setParameters(studentvalue)
 				.first();
 				
-				if(student!=null)
+				if(student!=null && loopblock==false)
 				{
-					refreshTestEvaluationPeriod(student, newValue);
+					loopblock = true;
 					
+					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
+					{
+						newValue = BigDecimal.ZERO;
+						
+					}
+					
+					refreshTestEvaluationPeriod( student, newValue, event.getIndex0());
+					
+					if(newValue.compareTo(BigDecimal.ZERO)==0)
+					{
+						loopblock=true;
+						studentTable.setValueAt(newValue, event.getIndex0(), 3);
+					}
 				}
-					
-			
+				else
+				{
+					loopblock=false;
+				}
 			}
 		}
 
