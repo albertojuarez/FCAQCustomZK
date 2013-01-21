@@ -347,15 +347,12 @@ import org.zkoss.zul.Space;
 					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
 					{
 						newValue = BigDecimal.ZERO;
-						
-					}
-					
-					refreshTestEvaluationPeriod( student, newValue, event.getIndex0());
-					
-					if(newValue.compareTo(BigDecimal.ZERO)==0)
-					{
-						loopblock=true;
 						studentTable.setValueAt(newValue, event.getIndex0(), 3);
+
+					}
+					else
+					{
+						refreshTestEvaluationPeriod( student, newValue, event.getIndex0());
 					}
 				}
 				else
