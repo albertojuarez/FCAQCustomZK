@@ -204,6 +204,7 @@ import org.zkoss.zul.Space;
 				
 				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 				fMatterAssignment.addValueChangeListener(this);
+				currentMatterAssignment=null;
 
 				fMatterAssignment.actionRefresh();
 

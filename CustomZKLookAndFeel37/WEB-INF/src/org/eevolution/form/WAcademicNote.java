@@ -272,8 +272,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 
 		String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
-				" IN ( SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
-				" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE IsActive='Y') ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
+				" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
+				" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
+				" INNER JOIN CA_NoteHeading h on hl.CA_NoteHeading_ID = h.CA_NoteHeading_ID "+
+				" WHERE h.CA_CourseDef_ID=0 AND hl.IsActive='Y' " +
+				")" +
+				" ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
 
 
 
@@ -346,7 +350,28 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				}
 			}
 			
+			String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
+				" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
+				" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
+				" INNER JOIN CA_NoteHeading h on hl.CA_NoteHeading_ID = h.CA_NoteHeading_ID "+
+				" WHERE h.CA_CourseDef_ID="  + ((Integer)fCourseDef.getValue()) + " AND hl.IsActive='Y' " +
+				" AND h.CA_Parcial_ID=" + ((Integer)fParcial.getValue()) +
+				")" +
+				" ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
 			
+			int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
+
+			
+			MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), noteCategoryColumn_ID, DisplayType.TableDir);
+			MLookup lookup = new MLookup(info,0);
+			String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+			sql = sql + whereClause;
+			info.Query = sql;
+			
+
+			noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
+			
+			noteCategory.addValueChangeListener(this);
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -450,6 +475,30 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			
+			String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
+					" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
+					" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
+					" INNER JOIN CA_NoteHeading h on hl.CA_NoteHeading_ID = h.CA_NoteHeading_ID "+
+					" WHERE h.CA_CourseDef_ID="  + ((Integer)fCourseDef.getValue()) + " AND hl.IsActive='Y' " +
+					" AND h.CA_Parcial_ID=" + ((Integer)fParcial.getValue()) +
+					")" +
+					" ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
+				
+				int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
+
+				
+				MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), noteCategoryColumn_ID, DisplayType.TableDir);
+				MLookup lookup = new MLookup(info,0);
+				String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+				sql = sql + whereClause;
+				info.Query = sql;
+				
+
+				noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
+				
+				noteCategory.addValueChangeListener(this);
+			
 			repaintParameterPanel();
 			refreshHeader();
 		}
@@ -461,12 +510,19 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			int noteTypeColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID);
 
-			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
-					" FROM " + X_CA_NoteHeadingLine.Table_Name + " WHERE " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " 
-					+ (Integer)noteCategory.getValue() + ") ORDER BY " + X_CA_NoteType.COLUMNNAME_SeqNo;
+			String whereClause = " AND " + X_CA_NoteType.COLUMNNAME_CA_NoteType_ID + " IN (SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteType_ID + 
+					" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
+					" INNER JOIN CA_NoteHeading h on hl.CA_NoteHeading_ID = h.CA_NoteHeading_ID "+
+					" WHERE h.CA_CourseDef_ID="  + ((Integer)fCourseDef.getValue()) + " AND hl.IsActive='Y' " +
+					" AND " + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + "= " 
+					+ (Integer)noteCategory.getValue() + 
+					" AND h.CA_Parcial_ID=" + ((Integer)fParcial.getValue()) +
+					") ORDER BY " + X_CA_NoteType.COLUMNNAME_SeqNo;
 
 			noteType = new WTableDirEditor("CA_NoteType_ID", true, false, true, AcademicUtil.buildLookup(noteTypeColumn_ID, " AND User1_ID=" + currentUser.get_ID() + whereClause, form.getWindowNo()));
 			noteType.addValueChangeListener(this);
+			
+			
 			repaintParameterPanel();
 			refreshHeader();
 
