@@ -841,36 +841,39 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private void loadAsSport() {
 
 		date = (Timestamp)fDate.getValue();
-		Vector<String> columns = buildSportNoteHeading();
-
-
-		Vector<Vector<Object>> data = getStudentData();
-
-		ListModelTable modelP = new ListModelTable(data);
-
-		modelP.addTableModelListener(this);
-		((WListbox)noteTable).setData(modelP, columns);
-
-		refreshNotes();
-
-		((WListbox)noteTable).setStyle("sizedByContent=true");
-
-		noteTable.setColumnClass(0, String.class, true);
-
-		noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-
-		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
-
-		noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
-
-		noteTable.autoSize();
-		((WListbox)noteTable).setWidth("100%");
-		((WListbox)noteTable).setHeight("100%");
-
-		System.out.println("Refresh Header End At " + new Timestamp(System.currentTimeMillis()));
+		if(isValidDate(date, currentCourse))
+		{
+			Vector<String> columns = buildSportNoteHeading();
+	
+	
+			Vector<Vector<Object>> data = getStudentData();
+	
+			ListModelTable modelP = new ListModelTable(data);
+	
+			modelP.addTableModelListener(this);
+			((WListbox)noteTable).setData(modelP, columns);
+	
+			refreshNotes();
+	
+			((WListbox)noteTable).setStyle("sizedByContent=true");
+	
+			noteTable.setColumnClass(0, String.class, true);
+	
+			noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+	
+			noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
+	
+			noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
+	
+			noteTable.autoSize();
+			((WListbox)noteTable).setWidth("100%");
+			((WListbox)noteTable).setHeight("100%");
+	
+			System.out.println("Refresh Header End At " + new Timestamp(System.currentTimeMillis()));
+		}
 
 	}
 
