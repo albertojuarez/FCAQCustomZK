@@ -21,7 +21,9 @@ import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
 import org.fcaq.model.X_CA_NoteLine;
 import org.fcaq.model.X_CA_NoteRule;
+import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SchoolYearConfig;
+import org.fcaq.util.AcademicUtil;
 import org.zkoss.zhtml.Table;
 import org.zkoss.zhtml.Td;
 import org.zkoss.zhtml.Tr;
@@ -470,12 +472,18 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	}
 
 	private void setNeedRecalculated() {
+		
+		X_CA_CourseDef course = (X_CA_CourseDef) AcademicUtil.getGroupCourse(student.getCtx(), student, student.get_TrxName()).getCA_CourseDef();
+		
+		X_CA_Parcial realparcial = AcademicUtil.getRealParcial(course, 
+				getNote().getCA_Parcial().getCA_EvaluationPeriod().getSeqNo().toString(),  
+				getNote().getCA_Parcial().getSeqNo().toString());
 
 		String whereClause = X_CA_DiscCalc.COLUMNNAME_C_BPartner_ID + "=? AND " + X_CA_DiscCalc.COLUMNNAME_CA_Parcial_ID + "=?";
 
 		X_CA_DiscCalc calc = new Query(student.getCtx(), X_CA_DiscCalc.Table_Name, whereClause, student.get_TrxName())
 		.setOnlyActiveRecords(true)
-		.setParameters(student.get_ID(), getNote().getCA_Parcial_ID())
+		.setParameters(student.get_ID(), realparcial.getCA_Parcial_ID())
 		.first();
 
 		if(calc==null)
@@ -484,7 +492,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 		calc.setC_BPartner_ID(student.get_ID());
-		calc.setCA_Parcial_ID(getNote().getCA_Parcial_ID());
+		calc.setCA_Parcial_ID(realparcial.getCA_Parcial_ID());
 		calc.setAverange1(new BigDecimal("0"));
 		calc.setAverange2(new BigDecimal("0"));
 		calc.setIsNeed(true);
