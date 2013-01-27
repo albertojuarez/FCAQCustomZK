@@ -603,10 +603,10 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
                     }
                     else
                     {
-                    	comp.dynamicDisplay();
                         boolean rw = mField.isEditable(true);   //  r/w - check Context
                         comp.setReadWrite(rw);
                         comp.setMandatory(mField.isMandatory(true));    //  check context
+                        comp.dynamicDisplay();
                         dis = !rw;
                         
                     }
@@ -1221,7 +1221,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public void afterSave(boolean onSaveEvent) {
 		if (!includedPanel.isEmpty()) {
         	for (EmbeddedPanel panel : includedPanel)
-        		panel.tabPanel.getGridTab().dataRefreshAll() ;  //panel.tabPanel.query(false, 0, 0);
+        		panel.tabPanel.getGridTab().dataRefreshAll() ; //panel.tabPanel.query(false, 0, 0);
         }
 	}
 

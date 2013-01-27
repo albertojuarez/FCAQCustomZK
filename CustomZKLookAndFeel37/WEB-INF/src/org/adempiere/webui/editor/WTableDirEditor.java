@@ -240,7 +240,7 @@ ContextMenuListener, IZoomableEditor
     	if (getComponent().getItemCount() > 0)
     		getComponent().removeAllItems();
 
-    	if (isReadWrite() || !isReadWrite())
+    	if (isReadWrite())
     	{
 	        if (lookup != null)
 	        {
@@ -423,5 +423,7 @@ ContextMenuListener, IZoomableEditor
     {    	
 		if ((lookup != null) && (!lookup.isValidated() || !lookup.isLoaded()))
 			this.actionRefresh();
+		
+		refreshList();
     }
 }
