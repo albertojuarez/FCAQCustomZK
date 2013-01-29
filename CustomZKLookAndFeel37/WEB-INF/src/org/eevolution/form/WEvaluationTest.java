@@ -194,6 +194,10 @@ import org.zkoss.zul.Space;
 
 				fCourseDef.setValue(value);
 				
+				currentCourse = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
+				
+				isSport = currentCourse.isSport();
+				
 				fEvaluation = new WTableDirEditor("CA_EvaluationPeriod_ID", true, false, true, AcademicUtil.getEvaluationPeriodLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
 				fEvaluation.addValueChangeListener(this);
 				if(AcademicUtil.getCurrentEvaluationPeriod(m_ctx, (Integer)fCourseDef.getValue())!=null)
@@ -207,6 +211,8 @@ import org.zkoss.zul.Space;
 				currentMatterAssignment=null;
 
 				fMatterAssignment.actionRefresh();
+				
+				
 
 				repaintParameterPanel();
 				refreshStudentTable();
