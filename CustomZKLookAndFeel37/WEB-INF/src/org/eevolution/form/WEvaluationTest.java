@@ -238,6 +238,7 @@ import org.zkoss.zul.Space;
 
 
 		private void refreshStudentTable() {
+			completed=false;
 			prepareLoadTable();
 			
 			if(currentCourse!=null &&   currentEvaluation !=null && currentMatterAssignment!=null)
@@ -259,7 +260,7 @@ import org.zkoss.zul.Space;
 				studentTable.setColumnClass(0, String.class, true);
 				studentTable.setColumnClass(1, Object.class, true);
 				studentTable.setColumnClass(2, BigDecimal.class, true);
-				studentTable.setColumnClass(3, BigDecimal.class, false);
+				studentTable.setColumnClass(3, BigDecimal.class, completed);
 				studentTable.setColumnClass(4, BigDecimal.class, true);
 				studentTable.setColumnClass(5, BigDecimal.class, true);
 				
@@ -317,6 +318,8 @@ import org.zkoss.zul.Space;
 
 		private void prepareLoadTable() {
 
+			studentTable.setRowCount(0);
+			
 			if(fCourseDef.getValue()==null || fEvaluation.getValue()==null)
 				return;
 
