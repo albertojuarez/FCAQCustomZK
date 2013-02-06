@@ -104,7 +104,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor fCourseDef = null;
 	private WTableDirEditor fParcial = null;
 	private WTableDirEditor fMatterAssignment = null;
-	private WTableDirEditor fSubject = null;
+	//private WTableDirEditor fSubject = null;
 
 	private Checkbox isElective = new Checkbox();
 
@@ -195,7 +195,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourseDef.getComponent().setWidth("60%");
 		row = rows.newRow();
 		row.appendChild(lSubjectMatter);
-		row.appendChild(fSubject.getComponent());
+		row.appendChild(fMatterAssignment.getComponent());
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
 
@@ -257,8 +257,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fMatterAssignment.addValueChangeListener(this);
 
-		fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),0,0));
-		fSubject.addValueChangeListener(this);
+		//fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),0,0));
+		//fSubject.addValueChangeListener(this);
 
 
 		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), 0));
@@ -327,7 +327,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
 
-			fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
+			/*fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
 					(Integer)fCourseDef.getValue(), 
 					currentParcial!=null?
 							((X_CA_EvaluationPeriod)currentParcial.getCA_EvaluationPeriod()).get_ValueAsInt("SeqNo")
@@ -335,7 +335,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			fSubject.addValueChangeListener(this);
 
-			fSubject.actionRefresh();
+			fSubject.actionRefresh();*/
 			fMatterAssignment.actionRefresh();
 
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
@@ -377,7 +377,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			refreshHeader();
 
 		}
-		if ("CA_SubjectMatter_ID".equals(name))
+		/*if ("CA_SubjectMatter_ID".equals(name))
 		{
 			isfilterenabled = false;
 
@@ -409,7 +409,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			if(subjectconfig!=null) // if null asuming last config
 			{
-				/*if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
+				if(subjectconfig.getFilterType().equals(X_CA_SubjectConfig.FILTERTYPE_Category))
 				{
 					isfilterenabled = true;
 					filtertype=1;
@@ -418,12 +418,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				{
 					isfilterenabled = true;
 					filtertype=2;
-				}*/
+				}
 			}
 
 			repaintParameterPanel();
 			refreshHeader();
-		}
+		}*/
 		if ("CA_MatterAssignment_ID".equals(name))
 		{
 			isfilterenabled = false;
@@ -568,12 +568,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 
-			if(isElective.isSelected())
-			{
+			//if(isElective.isSelected())
+			//{
 				inccol = 1;
 				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
 				fMatterAssignment.addValueChangeListener(this);
-			}
+			/*}
 			else
 			{
 				fSubject = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.getSubjectLookup(form.getWindowNo(),currentBPartner.get_ID(),
@@ -584,7 +584,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				
 				fSubject.addValueChangeListener(this);
 				inccol = 0;
-			}
+			}*/
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -663,16 +663,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourseDef.getComponent().setWidth("60%");
 		row = rows.newRow();
 
-		if(isElective.isSelected())
-		{
+		//if(isElective.isSelected())
+		//{
 			row.appendChild(lSubjectMatter);
 			row.appendChild(fMatterAssignment.getComponent());
-		}
+		/*}
 		else
 		{
 			row.appendChild(lSubjectMatter);
 			row.appendChild(fSubject.getComponent());
-		}
+		}*/
 
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
@@ -737,7 +737,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
-		if(!isElective.isSelected())
+		
+		/*if(!isElective.isSelected())
 		{
 			if( fSubject.getValue()==null)
 				return;
@@ -745,19 +746,21 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)fSubject.getValue(), null);
 		}
 		else
-		{
+		{*/
 
 			if(fMatterAssignment.getValue()==null)
 				return;
 			currentMatterAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)fMatterAssignment.getValue(), null);
 			if(currentMatterAssignment.getElectiveSubject_ID()>0)
 				currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getElectiveSubject_ID(), null);
-		}
+			else
+				currentSubject = (X_CA_SubjectMatter) currentMatterAssignment.getCA_SubjectMatter();
+		//}
 
 		if( currentSubject==null)
 			return;
 
-		if(!isElective.isSelected())
+		/*if(!isElective.isSelected())
 		{
 			String where = X_CA_MatterAssignment.COLUMNNAME_CA_SubjectMatter_ID + "=? AND " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + " IN (" +
 					" SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + " FROM " + X_CA_GroupAssignment.Table_Name + " WHERE " + 
@@ -768,7 +771,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			.setOnlyActiveRecords(true)
 			.setParameters(currentSubject.get_ID(),currentCourse.get_ID())
 			.first();
-		}
+		}*/
 
 		try
 		{

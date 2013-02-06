@@ -19,6 +19,7 @@ import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
+import org.fcaq.model.MCANoteLine;
 import org.fcaq.model.X_CA_NoteLine;
 import org.fcaq.model.X_CA_NoteRule;
 import org.fcaq.model.X_CA_Parcial;
@@ -82,7 +83,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 
-						X_CA_NoteLine noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+						MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
 						noteline.deleteEx(true);
 						noteline=null;
 						noteLine_id=0;
@@ -227,11 +228,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	}
 
 	@Override
-	public X_CA_NoteLine getNoteLine() {
+	public MCANoteLine getNoteLine() {
 
 		if(noteLine_id>0)
 		{
-			return new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+			return new MCANoteLine(Env.getCtx(), noteLine_id, null);
 		}
 
 		return null;
@@ -440,11 +441,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
-		X_CA_NoteLine noteline = null;
+		MCANoteLine noteline = null;
 
 		if(noteLine_id==0)
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			noteline = new MCANoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(note.get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
 			if(noteHeadingLine!=null)
@@ -455,7 +456,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 		else
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+			noteline = new MCANoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
 		noteline.setAmount(decimalBox.getValue());
 		oldValue = decimalBox.getValue();
@@ -529,14 +530,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
-		X_CA_NoteLine noteline = null;
+		MCANoteLine noteline = null;
 
 
-		String whereClause = X_CA_NoteLine.COLUMNNAME_CA_Note_ID + "=? AND " +
-				X_CA_NoteLine.COLUMNNAME_C_BPartner_ID + "=? AND " + 
-				X_CA_NoteLine.COLUMNNAME_IsDiscipline + "=? AND " + 
-				X_CA_NoteLine.COLUMNNAME_IsFinal + "=? AND " + 
-				X_CA_NoteLine.COLUMNNAME_IsAverage + "=? ";
+		String whereClause = MCANoteLine.COLUMNNAME_CA_Note_ID + "=? AND " +
+				MCANoteLine.COLUMNNAME_C_BPartner_ID + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsDiscipline + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsFinal + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsAverage + "=? ";
 
 		List<Object> parameters = new ArrayList<Object>();
 
@@ -550,11 +551,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 		if(!isfinal)
 		{
-			whereClause += " AND " + X_CA_NoteLine.COLUMNNAME_DcCriteria + " =? ";
+			whereClause += " AND " + MCANoteLine.COLUMNNAME_DcCriteria + " =? ";
 			parameters.add(dccriteria);
 		}
 
-		noteline = new Query(Env.getCtx(), X_CA_NoteLine.Table_Name, whereClause, trxName)
+		noteline = new Query(Env.getCtx(), MCANoteLine.Table_Name, whereClause, trxName)
 		.setOnlyActiveRecords(true)
 		.setParameters(parameters)
 		.first();
@@ -562,7 +563,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(noteline==null)
 			//if(noteLine_id==0)
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			noteline = new MCANoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(getNote().get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
 			noteline.setIsDiscipline(true);
