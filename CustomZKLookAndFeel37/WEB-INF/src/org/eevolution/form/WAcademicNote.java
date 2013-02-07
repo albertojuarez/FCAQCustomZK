@@ -182,6 +182,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		Rows rows = null;
 		Row row = null;
 		parameterLayout.setWidth("800px");
+		parameterLayout.setHeight("110px");
+
 		rows = parameterLayout.newRows();
 
 		row = rows.newRow();
