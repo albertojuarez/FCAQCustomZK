@@ -126,7 +126,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     private boolean			  uiCreated = false;
 
-    private GridPanel		  listPanel;
+    public GridPanel		  listPanel;
 
     private Map<String, List<org.zkoss.zul.Row>> fieldGroupContents = new HashMap<String, List<org.zkoss.zul.Row>>();
 
@@ -1221,7 +1221,9 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public void afterSave(boolean onSaveEvent) {
 		if (!includedPanel.isEmpty()) {
         	for (EmbeddedPanel panel : includedPanel)
-        		panel.tabPanel.getGridTab().dataRefreshAll() ; //panel.tabPanel.query(false, 0, 0);
+        		//panel.tabPanel.getGridTab().dataRefreshAll()
+        		panel.tabPanel.query(false, 0, 0);
+        		
         }
 	}
 

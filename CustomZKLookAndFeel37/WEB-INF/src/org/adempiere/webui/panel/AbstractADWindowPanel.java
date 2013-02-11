@@ -1431,6 +1431,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
     {
     	GridTab curTabg = toolbar.getCurrentTab().getGridTab();
     	//CWindowToolbar gToolbar = curTabg.getGlobalToolbar();
+    	((ADTabpanel)toolbar.getCurrentTab()).listPanel.refresh(curTabg);
     	
         if (!curTabg.isInsertRecord())
         {
@@ -1442,10 +1443,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
         	return;
         }
 
+        
         newRecord = curTabg.dataNew(false);
         if (newRecord)
         {
-            curTabpanel.dynamicDisplay(0);
+            //curTabpanel.dynamicDisplay(0);
+            toolbar.getCurrentTab().dynamicDisplay(0);
             toolbar.enableChanges(false);
             toolbar.enableDelete(false);
     		toolbar.enableDeleteSelection(false);
@@ -1611,10 +1614,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	            return false;
 	        } else if (!onSaveEvent) //need manual refresh
 	        {
-	        	curTabx.setCurrentRow(curTab.getCurrentRow());
+	        	curTabx.setCurrentRow(curTabx.getCurrentRow());
 	        }
-	        curTabpanel.dynamicDisplay(0);
-	        curTabpanel.afterSave(onSaveEvent);
+	        //curTabpanel.dynamicDisplay(0);
+	        //curTabpanel.afterSave(onSaveEvent);
+	        toolbar.getCurrentTab().dynamicDisplay(0);
+	        toolbar.getCurrentTab().afterSave(onSaveEvent);
 	        return true;
     	}
     }
