@@ -121,7 +121,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		}
 		row = rows.newRow();
 		row.appendChild(new Space());
-		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   D\u00EDa actual " + DateUtils.getDateNo()));
+		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   D\u00EDa actual " + DateUtils.getDayNo()));
 
 
 		scheduleLayout.setWidth("99%");
