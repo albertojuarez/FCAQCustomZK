@@ -36,6 +36,8 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.MCAPeriodClass;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_SubjectMatter;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -61,6 +63,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Button bSendAssistance = new Button();
 	private Button bRefresh = new Button();
 
+	private Label lDay = null;
+	private Label lDayNo = null;
 	private Label lSubject = null;
 	private Label lDate = null;
 	private Label lCourse = null;
@@ -101,6 +105,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		parameterPanel.appendChild(parameterLayout);
 
+		lDay = new Label();
+		lDay.setText(Msg.getMsg(m_ctx, "Day"));
+		lDayNo = new Label();
+		lDayNo.setText("" + dayNo);
+		
 		lSubject = new Label();
 		lSubject.setText(Msg.getMsg(m_ctx, "SubjectMatter"));
 
@@ -109,7 +118,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fDate = new WDateEditor();
 		fDate.setValue(new Timestamp(System.currentTimeMillis()));
 		fDate.setReadWrite(false);
-
+		
 		lCourse = new Label();
 		lCourse.setText(Msg.getMsg(m_ctx, "Group"));
 
@@ -130,6 +139,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		parameterLayout.setWidth("99%");
 		rows = parameterLayout.newRows();
 
+		row = rows.newRow();
+		row.appendChild(lDay);
+		row.appendChild(lDayNo);
+		
 		row = rows.newRow();
 		row.appendChild(lDate);
 		row.appendChild(fDate.getComponent());
@@ -191,15 +204,16 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourse.addValueChangeListener(this);
 		if (getCurrentCourse(true) != null) {
 			if (isDuplicate()) 
-				fCourse.setValue(getCurrentMatterAssignment().getCA_GroupAssignment().getCA_CourseDef_ID());
+				fCourse.setValue(getCurrentMatterAssignment().get(0).getCA_GroupAssignment().getCA_CourseDef_ID());
 			else
 				fCourse.setValue(getCurrentCourse(false).getCA_CourseDef_ID());
 		}
 
-		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getMatterAssignment(form.getWindowNo()));
-		fSubject.setReadWrite(false);
-		if (getCurrentMatterAssignment() != null)
-			fSubject.setValue(getCurrentMatterAssignment().get_ID());
+		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+		//fSubject.setReadWrite(false);
+		fSubject.addValueChangeListener(this);
+		if (getCurrentMatterAssignment().size()>0)
+			fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
 		
 		bSendAssistance.addActionListener(this);
 		
@@ -213,6 +227,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		Rows rows = null;
 		Row row = null;
 		rows = parameterLayout.newRows();
+		
+		row = rows.newRow();
+		row.appendChild(lDay);
+		row.appendChild(lDayNo);
 		
 		row = rows.newRow();
 		row.appendChild(lDate);
@@ -279,12 +297,15 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
 				fCourse.addValueChangeListener(this);
 				
-				if (getCurrentMatterAssignment() != null) {
+				if (getCurrentMatterAssignment().size()>0) {
+					
+					fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+					fSubject.addValueChangeListener(this);
 				
-					fSubject.setValue(getCurrentMatterAssignment().get_ID());
+					fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
 					
 					if (isDuplicate()) 
-						fCourse.setValue(getCurrentMatterAssignment().getCA_GroupAssignment().getCA_CourseDef_ID());
+						fCourse.setValue(getCurrentMatterAssignment().get(0).getCA_GroupAssignment().getCA_CourseDef_ID());
 					else
 						fCourse.setValue(getCurrentCourse(false).get_ID());
 				}
@@ -309,9 +330,13 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			setCurrentCourse(m_ctx, CA_CourseDef_ID, null);
 			//currentMatterAssignment = currentMatterAssignment();
 			
-			if (getCurrentMatterAssignment() != null && getCurrentCourse(false) != null) {
+			fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+			//fSubject.setReadWrite(false);
+			fSubject.addValueChangeListener(this);
+			
+			if (getCurrentMatterAssignment().size()>0 && getCurrentCourse(false) != null) {
 				
-				fSubject.setValue(getCurrentMatterAssignment().get_ID());
+				fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
 				fCourse.setValue(getCurrentCourse(false).get_ID());
 			}
 			else {
@@ -319,7 +344,13 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fSubject.setValue(null);
 				fCourse.setValue(null);
 			}
+		} else if ("CA_MatterAssignment_ID".equals(name))
+		{
+			fSubject.setValue(value);
+			setCurrentMatterAssignment(m_ctx, (Integer)value, null);				
 		}
+		
+		
 
 		refreshHeader();
 	}
