@@ -573,6 +573,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			//if(isElective.isSelected())
 			//{
 				inccol = 1;
+				isHeaderElective  =  true ;
 				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
 				fMatterAssignment.addValueChangeListener(this);
 			/*}
@@ -590,8 +591,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			repaintParameterPanel();
 			refreshHeader();
-		}
-		else if (event.getTarget().equals(bShowComments)) 
+		} else if (event.getTarget().equals(fDate)){
+			isHeaderSport =   true ;
+		}else if (event.getTarget().equals(bShowComments)) 
 		{
 			int row = noteTable.getSelectedRow();
 
@@ -703,6 +705,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		if(currentCourse.isSport())
 		{
+			isHeaderSport  = true ;
 			row.appendChild(fDate.getComponent());
 		}
 	}
@@ -820,7 +823,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		noteTable.setColumnClass(0, String.class, true);
 
-		if(inccol==1)
+		//if(inccol==1)
+		if(isHeaderElective &&  inccol>0)	
 		{
 			noteTable.setColumnClass(1, String.class, true);
 		}
@@ -868,6 +872,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 			noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
 			noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			
+			noteTable.setColumnClass(5, org.fcaq.components.WNoteEditor.class, false);
 	
 			noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 	
@@ -895,7 +901,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		try{
 			for(int x=0;x<=noteTable.getRowCount()-1; x++)
 			{
-				INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-2);
+				INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()- (isHeaderSport?3:2) );
 				if(editor.getStudent().get_ID() == studen.get_ID())
 				{
 					editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-1);
@@ -908,6 +914,28 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		}
 	}
 
+	@Override
+	public void repaintFinalSportHeding(MBPartner studen, String value) {
+		try{
+			for(int x=0;x<=noteTable.getRowCount()-1; x++)
+			{											
+				//   ojo   cambio     fuerte     								
+				INoteEditor editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()- 3 );										
+				if(editor.getStudent().get_ID() == studen.get_ID())
+				{
+					System.out.println("  Estudinate   notas      fila      Fila: "+x +" Columna: "+  (noteTable.getColumnCount()-2));
+					editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-2);
+					editor.setFValue(new BigDecimal(value));
+				}
+				
+			}
+		}catch(Exception e)
+		{
+			//Nothing to do, just ignore
+		}
+		
+	}
+	
 	private void clean()
 	{
 
