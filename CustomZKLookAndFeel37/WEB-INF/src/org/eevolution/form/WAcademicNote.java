@@ -850,7 +850,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private void loadAsSport() {
 
 		date = (Timestamp)fDate.getValue();
-		if(isValidDate(date, currentCourse))
+		if(isValidDate(date, currentCourse) &&isValidateParcial(currentParcial) )
 		{
 			Vector<String> columns = buildSportNoteHeading();
 	
