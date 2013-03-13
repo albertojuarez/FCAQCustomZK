@@ -31,7 +31,9 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
+import org.fcaq.model.X_CA_ConcatenatedSubject;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Parcial;
@@ -284,6 +286,22 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getCA_SubjectMatter_ID(), null);
 
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+		
+		String whereClause =  X_CA_ConcatenatedSubject.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + X_CA_ConcatenatedSubject.COLUMNNAME_IsConcatenated + "=?";
+
+		X_CA_ConcatenatedSubject csubject = new Query(m_ctx, X_CA_ConcatenatedSubject.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true).setParameters(currentMatterAssignment.get_ID(), "N").first();
+
+
+		if(csubject!=null)
+		{
+			X_CA_EvaluationPeriod evaperiod = (X_CA_EvaluationPeriod) csubject.getCA_EvaluationPeriod();
+			X_CA_EvaluationPeriod p_evaperiod = (X_CA_EvaluationPeriod) currentParcial.getCA_EvaluationPeriod();
+
+			if(evaperiod.getSeqNo().intValue() == p_evaperiod.getSeqNo().intValue())
+				return;
+		}
+
 
 		System.out.println("Load discipline config At " + new Timestamp(System.currentTimeMillis()));
 
