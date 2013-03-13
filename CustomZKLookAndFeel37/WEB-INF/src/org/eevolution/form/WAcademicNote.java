@@ -762,18 +762,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if( currentSubject==null)
 			return;
 
-		/*if(!isElective.isSelected())
+		String whereClause =  X_CA_ConcatenatedSubject.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + X_CA_ConcatenatedSubject.COLUMNNAME_IsConcatenated + "=?";
+
+		X_CA_ConcatenatedSubject csubject = new Query(m_ctx, X_CA_ConcatenatedSubject.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true).setParameters(currentMatterAssignment.get_ID(), "N").first();
+
+
+		if(csubject!=null)
 		{
-			String where = X_CA_MatterAssignment.COLUMNNAME_CA_SubjectMatter_ID + "=? AND " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + " IN (" +
-					" SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + " FROM " + X_CA_GroupAssignment.Table_Name + " WHERE " + 
-					X_CA_GroupAssignment.COLUMNNAME_CA_CourseDef_ID + "=?)"; 
+			X_CA_EvaluationPeriod evaperiod = (X_CA_EvaluationPeriod) csubject.getCA_EvaluationPeriod();
+			X_CA_EvaluationPeriod p_evaperiod = (X_CA_EvaluationPeriod) currentParcial.getCA_EvaluationPeriod();
 
-
-			currentMatterAssignment = new Query(m_ctx, X_CA_MatterAssignment.Table_Name, where, null )
-			.setOnlyActiveRecords(true)
-			.setParameters(currentSubject.get_ID(),currentCourse.get_ID())
-			.first();
-		}*/
+			if(evaperiod.getSeqNo().intValue() == p_evaperiod.getSeqNo().intValue())
+				return;
+		}
 
 		try
 		{
