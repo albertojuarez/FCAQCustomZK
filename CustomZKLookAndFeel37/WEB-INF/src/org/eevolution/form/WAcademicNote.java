@@ -925,7 +925,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				{
 					System.out.println("  Estudinate   notas      fila      Fila: "+x +" Columna: "+  (noteTable.getColumnCount()-2));
 					editor = (INoteEditor)noteTable.getValueAt(x, noteTable.getColumnCount()-2);
-					editor.setFValue(new BigDecimal(value));
+					if (value.equalsIgnoreCase("-1")){
+						editor.setFValue(null);	
+					}else  {
+						editor.setFValue(new BigDecimal(value));
+					}
 				}
 				
 			}
