@@ -958,6 +958,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private void showComments(List<INoteEditor> noteEditors) {
 
 		comments = new Window();
+		
+		if(currentCourse==null)
+			return;
 
 		// Layout components
 		Borderlayout mainCLayout = new Borderlayout();
@@ -969,10 +972,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		//Form components
 		Label lStudent = new Label();
 		Textbox fStudent = new Textbox();
-		isWaiting.setSelected(false);
-		isWaiting.setLabel("Pendiente de Envio");
+
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		
+		
 
 		for(INoteEditor editor : noteEditors)
 		{
@@ -980,13 +984,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			{
 				Vector<Object> row = new Vector<Object>();
 
-				row.add(editor.getNoteHeading()!=null? editor.getNoteHeading().getName():"Final");
+				row.add(editor.getNoteHeading()!=null? editor.getNoteHeading().getName():currentCourse.isSport()?editor.getSportCriteria(): "Final");
 				row.add(editor);
 				row.add(editor.getNoteLine()!=null?(editor.getNoteLine().getComments()!=null?editor.getNoteLine().getComments():""):"");
-				if(editor.getNoteLine()!=null)
-				{
-					isWaiting.setSelected(editor.getNoteLine().isWaiting());
-				}
+
 
 				data.add(row);
 			}
@@ -1022,9 +1023,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		Row row = null;
 		parameterCLayout.setWidth("99%");
 		rows = parameterCLayout.newRows();
-
-		row = rows.newRow();
-		row.appendChild(isWaiting);
 
 		Center centerC = new Center();
 		mainCLayout.appendChild(centerC);
