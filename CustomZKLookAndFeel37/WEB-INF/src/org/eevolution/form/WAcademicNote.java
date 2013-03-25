@@ -779,6 +779,14 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			if(evaperiod.getSeqNo().intValue() == p_evaperiod.getSeqNo().intValue())
 				return;
 		}
+		
+		 csubject = new Query(m_ctx, X_CA_ConcatenatedSubject.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true).setParameters(currentMatterAssignment.get_ID(), "Y").first();
+
+		if(csubject!=null)
+		{
+			currentSubject = (X_CA_SubjectMatter) csubject.getCA_SubjectMatter();
+		}
 
 		try
 		{
