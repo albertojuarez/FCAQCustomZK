@@ -74,6 +74,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			public void onEvent(Event event){
 				if(decimalBox.getValue()!=null)
 				{
+					MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
+					decimalBox.setValue(AcademicUtil.applyRound(decimalBox.getValue(), noteline.getDocStatus()));
 					saveEx();
 				}	
 				else
@@ -266,7 +268,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setSchoolYearConfig(X_CA_SchoolYearConfig yearConfig) {
 		this.yearConfig = yearConfig;
-		decimalBox.setFormat(yearConfig.getFormatPattern());
+		//decimalBox.setFormat(yearConfig.getFormatPattern());
 	}
 
 	@Override
