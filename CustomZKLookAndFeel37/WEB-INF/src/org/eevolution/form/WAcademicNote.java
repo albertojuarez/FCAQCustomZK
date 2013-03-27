@@ -783,8 +783,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		 csubject = new Query(m_ctx, X_CA_ConcatenatedSubject.Table_Name, whereClause, null)
 		.setOnlyActiveRecords(true).setParameters(currentMatterAssignment.get_ID(), "Y").first();
 
+		oldSubject_ID=0;
 		if(csubject!=null)
 		{
+			oldSubject_ID = currentSubject.get_ID();
 			currentSubject = (X_CA_SubjectMatter) csubject.getCA_SubjectMatter();
 		}
 
