@@ -578,6 +578,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			//{
 			//	noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
+		
+		BigDecimal rValue = AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue()!=null?decimalBox.getValue():BigDecimal.ZERO	, noteline.getDocStatus());
+		decimalBox.setValue(rValue);
+		
 		if(noteline.getDocStatus().equals("O"))
 		{
 
