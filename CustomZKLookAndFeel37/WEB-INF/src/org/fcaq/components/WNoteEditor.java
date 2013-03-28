@@ -75,7 +75,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				if(decimalBox.getValue()!=null)
 				{
 					MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
-					decimalBox.setValue(AcademicUtil.applyRound(decimalBox.getValue(), noteline.getDocStatus()));
+					decimalBox.setValue(AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue(), noteline.getDocStatus()));
 					saveEx();
 				}	
 				else
