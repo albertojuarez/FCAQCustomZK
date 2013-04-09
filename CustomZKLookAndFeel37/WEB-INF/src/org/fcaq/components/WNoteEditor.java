@@ -1,7 +1,10 @@
 package org.fcaq.components;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.adempiere.webui.apps.AEnv;
@@ -75,7 +78,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				if(decimalBox.getValue()!=null)
 				{
 					MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
-					decimalBox.setValue(AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue(), noteline.getDocStatus()));
+					if(noteline.getDocStatus().equals("O"))
+						decimalBox.setValue(AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue(), noteline.getDocStatus()));
 					saveEx();
 				}	
 				else
@@ -157,10 +161,23 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		this.note_id = note.get_ID();
 
 		try{
+			
+			DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+
+			Date parcialEnd  = note.getCA_Parcial().getDateTo();
+
+			String dateString = df.format(parcialEnd);
+			
+			dateString  = dateString +  " 23:59:59"; 
+		     
+		    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"); 
+		    parcialEnd = dateFormat.parse(dateString); 
+			
+			
 			long currentTime = System.currentTimeMillis();
 
 			if(!(note.getCA_Parcial().getDateFrom().getTime()<= currentTime &&
-					note.getCA_Parcial().getDateTo().getTime()>=currentTime))
+					parcialEnd.getTime()>=(currentTime)))
 			{
 				decimalBox.setReadonly(true);
 			}}
@@ -460,12 +477,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			noteline = new MCANoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
-		noteline.setAmount(decimalBox.getValue());
-		oldValue = decimalBox.getValue();
-		noteline.setIsFinal(false);
 
 		if(noteline.getDocStatus().equals("O"))
 		{
+			noteline.setAmount(decimalBox.getValue());
+			oldValue = decimalBox.getValue();
+			noteline.setIsFinal(false);
 			noteline.saveEx();
 
 			setNeedRecalculated();
@@ -580,10 +597,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 		
 		BigDecimal rValue = AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue()!=null?decimalBox.getValue():BigDecimal.ZERO	, noteline.getDocStatus());
-		decimalBox.setValue(rValue);
+
+		
 		
 		if(noteline.getDocStatus().equals("O"))
 		{
+			decimalBox.setValue(rValue);
 
 			if(!discConfig.isAverageCriteria() || isaverange)
 			{
@@ -622,7 +641,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 		else
 		{
-			decimalBox.setValue(noteline.getAmount());
+			//decimalBox.setValue(noteline.getAmount());
 			oldValue = decimalBox.getValue();
 		}
 
