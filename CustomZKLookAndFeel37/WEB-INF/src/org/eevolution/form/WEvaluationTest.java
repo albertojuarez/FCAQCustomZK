@@ -30,6 +30,7 @@ import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -243,6 +244,10 @@ import org.zkoss.zul.Space;
 			
 			if(currentCourse!=null &&   currentEvaluation !=null && currentMatterAssignment!=null)
 			{
+				
+				if(!canEdit(currentEvaluation))
+					return;
+				
 				Vector<String> columns = buildNoteHeading();
 
 				Vector<Vector<Object>> data = getStudentData();
@@ -270,9 +275,31 @@ import org.zkoss.zul.Space;
 			}
 		}
 
-		
 
-		
+		private boolean canEdit(X_CA_EvaluationPeriod currentEvaluation) {
+
+			
+			
+			
+			if( currentEvaluation.getDateFrom().getTime()<= System.currentTimeMillis() &&  // Quimestre actual
+				currentEvaluation.getDateTo().getTime()>= System.currentTimeMillis())
+			{
+				X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, currentEvaluation.getSeqNo().toString(), "3");
+				if(parcial.getDateStart().getTime()<=System.currentTimeMillis() &&
+				   parcial.getDateTo().getTime()>=System.currentTimeMillis())
+				{
+					return true;
+				}
+				else
+					return false;
+			}
+			
+			else
+			{
+				return true;
+			}
+			
+		}
 
 		public void repaintParameterPanel()
 		{
