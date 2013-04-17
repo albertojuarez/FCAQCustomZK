@@ -95,6 +95,14 @@ implements ValueChangeListener, IProcessParameter
 			//
 			initComponent();
 		}	//	ProcessParameterPanel
+		
+		
+		// AJC 15 abr 2013
+		// Allow restart Proces Info
+		public void setProcessInfo(ProcessInfo pi)
+		{
+			m_processInfo = pi;
+		}
 
 		
 		int parameterNo = 0;
