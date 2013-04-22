@@ -263,7 +263,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		//fSubject.addValueChangeListener(this);
 
 
-		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), 0));
+		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), 0,0));
 		fParcial.addValueChangeListener(this);
 		//fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx,0)!=null?AcademicUtil.getCurrentParcial(m_ctx,0).get_ID():null);
 		//currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
@@ -315,7 +315,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			isfilterenabled = false;
 
 			fCourseDef.setValue(value);
-			
+			/*
 			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), (Integer)fCourseDef.getValue()));
 			fParcial.addValueChangeListener(this);
 			
@@ -324,7 +324,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
 				currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 			}
-			
+			*/
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
@@ -340,6 +340,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			fSubject.actionRefresh();*/
 			fMatterAssignment.actionRefresh();
 
+			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), (Integer)fCourseDef.getValue(),0));
+			fParcial.addValueChangeListener(this);
+			
 			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
 
 			if(tmpCourse!=null)
@@ -351,7 +354,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					filtertype=2;
 				}
 			}
-			
+			/*
 			String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
 				" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
 				" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
@@ -373,7 +376,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
 			
-			noteCategory.addValueChangeListener(this);
+			noteCategory.addValueChangeListener(this);*/
+			
+			// setFNoteCategory
+			setFNoteCategory();
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -432,6 +438,22 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 			fMatterAssignment.setValue(value);
 
+			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(), (Integer)fCourseDef.getValue(),
+					fMatterAssignment.getValue()==   null  ?
+					0
+					:  
+					(Integer)fMatterAssignment.getValue()					
+					));
+			fParcial.addValueChangeListener(this);
+			
+			if(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue())!=null&& fMatterAssignment.getValue()!=   null)
+			{
+				if (AcademicUtil.getParcialNotApply(m_ctx,(Integer)fMatterAssignment.getValue() ,AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID()   ) ==null){				
+					fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
+					currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+				}
+			}
+						
 			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(m_ctx, (Integer) fMatterAssignment.getValue(), null);
 
 			X_CA_SubjectMatter tmpSubject = (X_CA_SubjectMatter) assignment.getCA_SubjectMatter();
@@ -469,7 +491,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					filtertype=2;
 				}*/
 			}
-
+			
+			// setFNoteCategory
+			setFNoteCategory();
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -477,7 +501,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
-			
+			/*
 			String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
 					" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
 					" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
@@ -499,8 +523,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 				noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
 				
-				noteCategory.addValueChangeListener(this);
+				noteCategory.addValueChangeListener(this);*/
 			
+			// setFNoteCategory
+			setFNoteCategory();
+						
 			repaintParameterPanel();
 			refreshHeader();
 		}
@@ -544,6 +571,33 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 
 	}
+
+	private void setFNoteCategory() {
+		
+		String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
+				" IN ( SELECT hl." + X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID + 
+				" FROM " + X_CA_NoteHeadingLine.Table_Name + " hl " +
+				" INNER JOIN CA_NoteHeading h on hl.CA_NoteHeading_ID = h.CA_NoteHeading_ID "+
+				" WHERE h.CA_CourseDef_ID="  + ((Integer)fCourseDef.getValue()) + " AND hl.IsActive='Y' " +
+				" AND h.CA_Parcial_ID=" + ((Integer)fParcial.getValue()) +
+				")" +
+				" ORDER BY " + X_CA_NoteCategory.COLUMNNAME_SeqNo;
+			
+			int noteCategoryColumn_ID = MColumn.getColumn_ID(X_CA_NoteHeadingLine.Table_Name, X_CA_NoteHeadingLine.COLUMNNAME_CA_NoteCategory_ID);
+
+			
+			MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), noteCategoryColumn_ID, DisplayType.TableDir);
+			MLookup lookup = new MLookup(info,0);
+			String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+			sql = sql + whereClause;
+			info.Query = sql;
+			
+
+			noteCategory  = new WTableDirEditor("CA_NoteCategory_ID", true, false, true, lookup);
+			
+			noteCategory.addValueChangeListener(this);
+	}
+	
 
 	@Override
 	public void tableChanged(WTableModelEvent event) {
