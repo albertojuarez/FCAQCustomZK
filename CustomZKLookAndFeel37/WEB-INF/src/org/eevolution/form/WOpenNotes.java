@@ -256,7 +256,7 @@ import org.zkoss.zul.Space;
 						currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
 					}	
 				}
-				
+				repaintParameterPanel();
 				refreshStudentTable();
 
 			}
