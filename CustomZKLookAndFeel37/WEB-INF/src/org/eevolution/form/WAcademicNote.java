@@ -89,7 +89,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Panel southPanel = new Panel();
 	private StatusBarPanel statusBar = new StatusBarPanel();
 	private WListbox noteHeadingTable = ListboxFactory.newDataTable();
-	private Button bSendNotes = new Button();
+	private Button bChekNotes = new Button();
 	private Button bShowComments = new Button();
 	private Hbox hboxBtnRight;
 	private Panel pnlBtnRight;
@@ -171,7 +171,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
 
 		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
-		bSendNotes.setLabel(Msg.getMsg(Env.getCtx(), "SendNotes"));
+		bChekNotes.setLabel(Msg.getMsg(Env.getCtx(), "Chek Grades"));
 		
 		fDate.setValue(new Date());
 
@@ -224,7 +224,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		pnlBtnRight = new Panel();
 		pnlBtnRight.setAlign("right");
 		pnlBtnRight.appendChild(bShowComments);
-		//pnlBtnRight.appendChild(bSendNotes);
+		pnlBtnRight.appendChild(bChekNotes);
 
 		hboxBtnRight = new Hbox();
 		hboxBtnRight.appendChild(pnlBtnRight);
@@ -296,6 +296,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		noteType.addValueChangeListener(this);
 
 		bShowComments.addActionListener(this);
+		bChekNotes.addActionListener(this);
+
 		isElective.addActionListener(this);
 	}
 
@@ -670,14 +672,24 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			}
 
 		}
-		else if(event.getTarget().equals(bSendNotes))
+		else if(event.getTarget().equals(bChekNotes))
 		{
-			boolean sendnotes = FDialog.ask(form.getWindowNo(), null, Msg.getMsg(Env.getCtx(), "SureSendNotes"));
-
-			if(sendnotes)
+			if(note!=null && students !=null && headingLines !=null )
 			{
-				sendNotes();
+				WGradeViewer  gradeViewer = new WGradeViewer(note, students, headingLines, false);
+				
+				gradeViewer.setSizable(true);
+				gradeViewer.setWidth("700px");
+				gradeViewer.setHeight("600px");
+				gradeViewer.setShadow(true);
+				gradeViewer.setBorder("normal");
+				gradeViewer.setClosable(true);
+				gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
+				gradeViewer.setContentStyle("overflow: auto");
+	
+				AEnv.showCenterScreen(gradeViewer);
 			}
+
 		}
 	}
 

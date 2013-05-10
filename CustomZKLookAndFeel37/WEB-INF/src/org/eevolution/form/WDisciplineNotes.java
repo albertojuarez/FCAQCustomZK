@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Vector;
 
+import org.adempiere.webui.apps.AEnv;
+import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
@@ -45,6 +47,8 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
+import org.zkoss.zkex.zul.South;
+import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Space;
 
 public class WDisciplineNotes extends DisciplineNotes implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
@@ -67,6 +71,11 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 	private WTableDirEditor fMatterAssignment = null;
 
 	private Label absence = new Label("");
+	
+	private Button bChekNotes = new Button();
+	private Hbox hboxBtnRight;
+	private Panel pnlBtnRight;
+
 
 
 	public WDisciplineNotes()
@@ -111,6 +120,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		isElective.addActionListener(this);
 		((WListbox)noteTable).addActionListener(this);
 
+		bChekNotes.addActionListener(this);
+
 	}
 
 
@@ -130,6 +141,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 		lSubjectMatter = new Label();
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
+		bChekNotes.setLabel(Msg.getMsg(Env.getCtx(), "Chek Grades"));
+
 
 
 		North north = new North();
@@ -169,6 +182,23 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		((WListbox)noteTable).setHeight("99%");
 		center.setStyle("border: none");
 
+		South south = new South();
+		south.setStyle("border: none");
+		mainLayout.appendChild(south);
+		Panel southPanel = new Panel();
+		south.appendChild(southPanel);
+
+		pnlBtnRight = new Panel();
+		pnlBtnRight.setAlign("right");
+		pnlBtnRight.appendChild(bChekNotes);
+
+		hboxBtnRight = new Hbox();
+		hboxBtnRight.appendChild(pnlBtnRight);
+		hboxBtnRight.setWidth("100%");
+		hboxBtnRight.setStyle("text-align:right");
+
+		southPanel.appendChild(hboxBtnRight);
+		southPanel.setWidth("100%");
 	}
 
 	@Override
@@ -264,6 +294,25 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			displayAbsenceInfo(String.valueOf(assisNo), String.valueOf(delayNo));
 			double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
 			setDiscontInfo(selectedstudent, discount);
+		}
+		else if(event.getTarget().equals(bChekNotes))
+		{
+			if(note!=null && students!=null)
+			{
+				WGradeViewer  gradeViewer = new WGradeViewer(note, students, null, true);
+				
+				gradeViewer.setSizable(true);
+				gradeViewer.setWidth("700px");
+				gradeViewer.setHeight("600px");
+				gradeViewer.setShadow(true);
+				gradeViewer.setBorder("normal");
+				gradeViewer.setClosable(true);
+				gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
+				gradeViewer.setContentStyle("overflow: auto");
+	
+				AEnv.showCenterScreen(gradeViewer);
+			}
+
 		}
 	}
 
