@@ -164,7 +164,8 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			
 			DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
 
-			Date parcialEnd  = note.getCA_Parcial().getDateTo();
+			//Date parcialEnd  = note.getCA_Parcial().getDateTo();
+			Date parcialEnd  = note.getCA_Parcial().getDateStart(); // Inicio de Fecha de Juntas
 
 			String dateString = df.format(parcialEnd);
 			
