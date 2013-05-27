@@ -285,8 +285,10 @@ import org.zkoss.zul.Space;
 				currentEvaluation.getDateTo().getTime()>= System.currentTimeMillis())
 			{
 				X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, currentEvaluation.getSeqNo().toString(), "3");
-				if(parcial.getDateStart().getTime()<=System.currentTimeMillis() &&
-				   parcial.getDateTo().getTime()>=System.currentTimeMillis())
+				if(parcial.getDateStart().getTime()>=System.currentTimeMillis() &&
+						   parcial.getDateTo().getTime()>=System.currentTimeMillis() && 
+						   parcial.getDateFrom().getTime()<=System.currentTimeMillis()
+								)
 				{
 					return true;
 				}
