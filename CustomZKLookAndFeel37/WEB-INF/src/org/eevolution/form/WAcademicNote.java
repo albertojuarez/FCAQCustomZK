@@ -771,6 +771,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		
 		if(currentCourse.isSport())
 		{
+			Label lblDataSport = new Label(Msg.translate(m_ctx, "Date"));
+			row = rows.newRow();
+			row.appendChild(lblDataSport);
 			isHeaderSport  = true ;
 			row.appendChild(fDate.getComponent());
 		}
