@@ -568,6 +568,11 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
             return;
         }
 
+        for (WEditor comp : editors)
+        {
+        	comp.setMandatoryLabels();
+        }
+        
         //  Selective
         if (col > 0)
         {
@@ -1047,7 +1052,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         	listPanel.dynamicDisplay(col);
         }
 
-        if (!includedPanel.isEmpty()) {
+        if (!includedPanel.isEmpty() && e.getChangedColumn() == -1) {
         	for (EmbeddedPanel panel : includedPanel)
         		panel.tabPanel.query(false, 0, 0);
         }
