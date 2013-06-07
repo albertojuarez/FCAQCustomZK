@@ -90,6 +90,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 
 						MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
+						AcademicUtil.setNeedRecalculated((X_CA_Parcial)noteline.getCA_Note().getCA_Parcial(), (MBPartner)noteline.getC_BPartner());
 						noteline.deleteEx(true);
 						noteline=null;
 						noteLine_id=0;
