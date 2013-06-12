@@ -120,9 +120,13 @@ public class WBrowser extends Browser implements IFormController,
 	private Hbox topPanel;
 	private BusyDialog m_waiting;
 	private VerticalBox dialogBody;
+	
+
+
 
 	public static CustomForm openBrowse(int AD_Browse_ID) {
 		MBrowse browse = new MBrowse(Env.getCtx(), AD_Browse_ID , null);
+		
 		boolean modal = true;
 		int WindowNo = 0;
 		String value = "";
@@ -562,7 +566,9 @@ public class WBrowser extends Browser implements IFormController,
 				bZoomActionPerformed(evt);
 			}
 		});
-		toolsBar.appendChild(bZoom);
+		
+		if(ad_Window_ID>0)
+			toolsBar.appendChild(bZoom);
 
 		bExport.setLabel(Msg.getMsg(Env.getCtx(),"Export"));
 		bExport.setEnabled(false);
@@ -580,7 +586,9 @@ public class WBrowser extends Browser implements IFormController,
 				bDeleteActionPerformed(evt);
 			}
 		});
-		toolsBar.appendChild(bDelete);
+		
+		if(isDeleteable)
+			toolsBar.appendChild(bDelete);
 
 		//TODO: victor.perez@e-evolution.com pending find functionality
 		/*bFind.setLabel("Find");
@@ -796,7 +804,7 @@ public class WBrowser extends Browser implements IFormController,
 		bSelectAll.setEnabled(true);
 		bExport.setEnabled(true);
 		bDelete.setEnabled(true);
-		collapsibleSeach.setOpen(false);
+		collapsibleSeach.setOpen(!isCollapsible);
 		p_loadedOK = initBrowser();
 		executeQuery();
 	}
@@ -865,7 +873,26 @@ public class WBrowser extends Browser implements IFormController,
 		else {
 			detail.setFocus(true);
 		}
-		detail.getModel().addTableModelListener(this);
+		
+		
+		
+		int topIndex = 1 ; //detail.getShowTotals() ? 2 : 1;
+		int rows = detail.getRowCount();
+		int selectedList[] = new int[rows];
+
+			for (int row = 0; row <= rows - topIndex; row++) {
+				Object data = detail.getModel().getValueAt(row,
+						m_keyColumnIndex);
+				if (data instanceof IDColumn) {
+					IDColumn dataColumn = (IDColumn) data;
+					dataColumn.setSelected(isSelected);
+					detail.getModel().setValueAt(dataColumn, row,m_keyColumnIndex);
+				}
+				selectedList[row] = row;
+			}
+			detail.setSelectedIndices(selectedList);
+
+		//detail.getModel().addTableModelListener(this);
 	} // run
 
 	@Override
@@ -887,36 +914,18 @@ public class WBrowser extends Browser implements IFormController,
 	@Override
 	public void tableChanged(WTableModelEvent event) {
 
+		return; 
+		/*
 		if(event.getIndex0()>=0)
 		{
 			Object data = detail.getModel().getValueAt(event.getIndex0(),
 					m_keyColumnIndex);
 			
-			/*BigDecimal newAcadValue = (BigDecimal)detail.getValueAt(event.getIndex0(), 3);
-			BigDecimal newDiscValue = (BigDecimal)detail.getValueAt(event.getIndex0(), 2);*/
-
-
-			
 			if(data!=null && loopblock==false)
 			{
 				loopblock = true;
 				
-				/*if(newAcadValue==null || newDiscValue==null)
-				{
-					loopblock=false;
-					return;
-				}
-				
-				if(newAcadValue.compareTo(new BigDecimal(0))<0 || newAcadValue.compareTo(new BigDecimal(100))>0)
-				{
-					newAcadValue = new BigDecimal(0);
-					detail.setValueAt(newAcadValue, event.getIndex0(), 3);
-				}
-				else if(newDiscValue.compareTo(new BigDecimal(0))<0 || newDiscValue.compareTo(new BigDecimal(100))>0)
-				{
-					newDiscValue = new BigDecimal(0);
-					detail.setValueAt(newDiscValue, event.getIndex0(), 2);
-				}*/
+
 				
 				if (data instanceof IDColumn) {
 					IDColumn dataColumn = (IDColumn) data;
@@ -930,7 +939,7 @@ public class WBrowser extends Browser implements IFormController,
 				loopblock=false;
 			}
 		}
-		
+		*/
 	}
 
 	@Override
