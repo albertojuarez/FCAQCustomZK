@@ -190,7 +190,7 @@ public class WGradeViewer extends Window{
 		html = "<html><header></header><body onload='window.print()'>" + html + "</body></html>";
 		
 		try {
-			File pFile = new File("/u02/app/Adempiere/jboss/server/adempiere/deploy/reports.war/tmpgrade/" + user.getName() + ".html");
+			File pFile = new File("/u01/app/Adempiere/jboss/server/adempiere/deploy/reports.war/tmpgrade/" + user.getName() + ".html");
 			FileOutputStream pBytes = new FileOutputStream(pFile);
 			pBytes.write(html.getBytes());
 			pBytes.close();
