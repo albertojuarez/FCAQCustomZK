@@ -609,4 +609,22 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
 	public void setHasFocus(boolean b) {
 		hasFocus = b;
 	}
+	
+	public void setMandatoryLabels() {
+		Object value = getValue();
+		if (this instanceof WAccountEditor && value != null && ((Integer) value).intValue() == 0) // special case
+			value = null;
+		if (getLabel() != null) {
+			markMandatory(mandatory && !readOnly && getGridField().isEditable(true) && (value == null || value.toString().trim().length() == 0));
+		}
+	}
+
+    private static final String STYLE_ZOOMABLE_LABEL = "cursor: pointer; text-decoration: underline;";
+	private static final String STYLE_NORMAL_LABEL = "color:black;";
+	private static final String STYLE_EMPTY_MANDATORY_LABEL = "color: red;";
+
+	private void markMandatory(boolean mandatory) {
+		getLabel().setStyle( (getLabel().isZoomable() ? STYLE_ZOOMABLE_LABEL : "") + (mandatory ? STYLE_EMPTY_MANDATORY_LABEL : STYLE_NORMAL_LABEL));
+	}
+	
 }

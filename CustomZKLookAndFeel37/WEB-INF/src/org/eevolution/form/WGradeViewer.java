@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Window;
+import org.compiere.minigrid.IMiniTable;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MUser;
 import org.compiere.util.Env;
@@ -33,7 +34,72 @@ public class WGradeViewer extends Window{
 	List<X_CA_NoteHeadingLine> headingLines = null;
 	MUser user = null;
 	
+	public WGradeViewer (List<String> description, IMiniTable table)
+	{
+		super();
+
+		Html html = new Html();
+		
+		String htmlString = buildHTMLString(description, table);
+		html.setContent(htmlString);
+		
+		saveForPrinting(htmlString);
+		
+		
+		Borderlayout mainCLayout = new Borderlayout();
+		Panel parameterCPanel = new Panel();
+		mainCLayout.setWidth("99%");
+		mainCLayout.setHeight("99%");
+		
+		Center centerC = new Center();
+		mainCLayout.appendChild(centerC);
+		
+		centerC.appendChild(html);
+		html.setWidth("99%");
+		html.setHeight("99%");
+		centerC.setStyle("border: none");
+		
+		appendChild(mainCLayout);
+	}
 	
+	private String buildHTMLString(List<String> description, IMiniTable table) {
+
+		
+		user = new MUser(Env.getCtx(), Env.getContextAsInt(Env.getCtx(), "#AD_User_ID"), null);
+		
+		String html = "<a href=http://newsis.fcaq.k12.ec/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
+		html += "<p>" + user.getName() + "<br>";
+		
+		for(String item : description)
+		{
+			html+= item + "<br>";
+		}
+		html += "<br>";
+				
+		html+= "<table border=1>\n";
+		
+		for(int row=0;row<=table.getRowCount()-1;row++)
+
+		{
+			html +="<tr>";
+			for(int col=0;col<=table.getColumnCount()-1; col++)
+
+			{
+				Object value = table.getValueAt(row, col);
+				if(value!=null)
+					html += "<td>" + value.toString() + "</td>";
+				else
+					html += "<td></td>";
+			}
+			html +="</tr>";
+		}
+		
+		html += "</table></font>\n";
+		
+		return html;
+		
+	}
+
 	public WGradeViewer (X_CA_Note note, List<MBPartner>students , List<X_CA_NoteHeadingLine> headingLines, boolean isdiscipline )
 	{
 		super();
@@ -74,7 +140,7 @@ public class WGradeViewer extends Window{
 		
 		user = new MUser(Env.getCtx(), Env.getContextAsInt(Env.getCtx(), "#AD_User_ID"), null);
 		
-		String html = "<a href=http://sistest.fcaq.k12.ec/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
+		String html = "<a href=http://newsis.fcaq.k12.ec/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
 				
 		html+= "<table border=1>\n";
 	
@@ -117,12 +183,19 @@ public class WGradeViewer extends Window{
 			{
 				for(X_CA_NoteHeadingLine headingLine : headingLines)
 				{
+					boolean enc = false;
 					for(X_CA_NoteLine line : noteDetail)
 					{
+						
 						if(headingLine.getCA_NoteHeadingLine_ID() == line.getCA_NoteHeadingLine_ID())
 						{
+							enc=true;
 							html += "<td>" + line.getAmount().toString() + "</td>";
 						}
+					}
+					if(!enc)
+					{
+						html += "<td></td>";
 					}
 				}
 				
@@ -190,7 +263,7 @@ public class WGradeViewer extends Window{
 		html = "<html><header></header><body onload='window.print()'>" + html + "</body></html>";
 		
 		try {
-			File pFile = new File("/u02/app/Adempiere/jboss/server/adempiere/deploy/reports.war/tmpgrade/" + user.getName() + ".html");
+			File pFile = new File("/u01/app/Adempiere/jboss/server/adempiere/deploy/reports.war/tmpgrade/" + user.getName() + ".html");
 			FileOutputStream pBytes = new FileOutputStream(pFile);
 			pBytes.write(html.getBytes());
 			pBytes.close();
@@ -202,4 +275,6 @@ public class WGradeViewer extends Window{
 		}
 		
 	}
+	
+	
 }

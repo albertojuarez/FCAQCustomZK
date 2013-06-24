@@ -320,6 +320,26 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 			}
 			//END AJC 17 sep 2012
 			
+			//BEGIN instanceof Button, Josias Vargas, e-Evolution, 17-04-2013
+			else if (field instanceof org.adempiere.webui.component.Button)
+			{
+				listcell.setValue(field);
+				if (isCellEditable)
+				{
+					Button button =  (Button)field;
+					button.addEventListener(Events.ON_CLICK, this);
+					listcell.appendChild(button);
+				}
+				else
+				{
+					Button button =  (Button)field;
+					if(button!=null ) {
+						listcell.setLabel("");
+					}
+				}
+			}
+			//END instanceof Button
+			
 			// if ID column make it invisible
 			else if (field instanceof IDColumn)
 			{
