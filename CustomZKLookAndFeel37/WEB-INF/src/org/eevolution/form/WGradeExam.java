@@ -1,9 +1,13 @@
 package org.eevolution.form;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Combobox;
@@ -23,6 +27,7 @@ import org.adempiere.webui.event.WTableModelListener;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
+import org.compiere.minigrid.IMiniTable;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MColumn;
 import org.compiere.model.Query;
@@ -32,6 +37,7 @@ import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ExamType;
 import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_SchoolYear;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -167,7 +173,8 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 	// Init Search Editor
 	private void dynInit() {
 
-		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
+		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "Print"));
+		bShowComments.addActionListener(this);
 
 		examTable = new WListbox();
 		((WListbox)examTable).setWidth("100%");
@@ -370,12 +377,40 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 			refreshExamTable();
 		}
 		
-		if (event.getTarget().equals(isElective))
+		else if (event.getTarget().equals(isElective))
 		{
 
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
 			fCourseDef.addValueChangeListener(this);
 			repaintParameterPanel();
+		}
+		else if(event.getTarget().equals(bShowComments))
+		{
+			
+				List<String> description = new ArrayList<String>();
+				
+				if(currentTeacher!=null)
+					description.add(currentTeacher.getName());
+				if(currentCourse!=null)
+					description.add(fCourseDef.getDisplay());
+				if(currentAssignment!=null)
+					description.add(fMatterAssignment.getDisplay());
+				
+				description.add("Intento: " + currentTry);
+
+				WGradeViewer  gradeViewer = new WGradeViewer(description, examTable);
+				
+				gradeViewer.setSizable(true);
+				gradeViewer.setWidth("700px");
+				gradeViewer.setHeight("600px");
+				gradeViewer.setShadow(true);
+				gradeViewer.setBorder("normal");
+				gradeViewer.setClosable(true);
+				gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
+				gradeViewer.setContentStyle("overflow: auto");
+	
+				AEnv.showCenterScreen(gradeViewer);
+
 		}
 	}
 
