@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Vector;
 
+import org.adempiere.webui.apps.AEnv;
+import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
@@ -31,7 +33,9 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.components.INoteEditor;
 import org.fcaq.components.WNoteEditor;
+import org.fcaq.model.X_CA_ConcatenatedSubject;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_EvaluationPeriod;
 import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Parcial;
@@ -43,6 +47,8 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
+import org.zkoss.zkex.zul.South;
+import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Space;
 
 public class WDisciplineNotes extends DisciplineNotes implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
@@ -51,11 +57,6 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 	private Borderlayout mainLayout = new Borderlayout();
 	private Panel parameterPanel = new Panel();
 	private Grid parameterLayout = GridFactory.newGridLayout();
-
-
-	private Panel southPanel = new Panel();
-	private StatusBarPanel statusBar = new StatusBarPanel();
-	// ListboxFactory.newDataTable();
 
 	// Form Components
 
@@ -70,6 +71,11 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 	private WTableDirEditor fMatterAssignment = null;
 
 	private Label absence = new Label("");
+	
+	private Button bChekNotes = new Button();
+	private Hbox hboxBtnRight;
+	private Panel pnlBtnRight;
+
 
 
 	public WDisciplineNotes()
@@ -78,6 +84,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			loadStartData();
 			dynInit();
 			zkInit();
+			Env.setContext(Env.getCtx(), "DisciplineWindowNo", form.getWindowNo());
+
 		}
 		catch(Exception e)
 		{
@@ -105,12 +113,14 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
 		fMatterAssignment.addValueChangeListener(this);
 
-		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID()));
+		fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),0));
 		fParcial.addValueChangeListener(this);
-		fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx).get_ID());
+		//fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx,0).get_ID());
 
 		isElective.addActionListener(this);
 		((WListbox)noteTable).addActionListener(this);
+
+		bChekNotes.addActionListener(this);
 
 	}
 
@@ -131,6 +141,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 		lSubjectMatter = new Label();
 		lSubjectMatter.setText(Msg.getMsg(Env.getCtx(), "SubjectMatter"));
+		bChekNotes.setLabel(Msg.getMsg(Env.getCtx(), "Chek Grades"));
+
 
 
 		North north = new North();
@@ -170,6 +182,23 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		((WListbox)noteTable).setHeight("99%");
 		center.setStyle("border: none");
 
+		South south = new South();
+		south.setStyle("border: none");
+		mainLayout.appendChild(south);
+		Panel southPanel = new Panel();
+		south.appendChild(southPanel);
+
+		pnlBtnRight = new Panel();
+		pnlBtnRight.setAlign("right");
+		pnlBtnRight.appendChild(bChekNotes);
+
+		hboxBtnRight = new Hbox();
+		hboxBtnRight.appendChild(pnlBtnRight);
+		hboxBtnRight.setWidth("100%");
+		hboxBtnRight.setStyle("text-align:right");
+
+		southPanel.appendChild(hboxBtnRight);
+		southPanel.setWidth("100%");
 	}
 
 	@Override
@@ -186,6 +215,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	@Override
 	public void dispose() {
+		Env.setContext(Env.getCtx(), "IsGradeEnabled", 0);
 		form.dispose();
 	}
 
@@ -202,6 +232,12 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		if ("CA_CourseDef_ID".equals(name))
 		{
 			fCourseDef.setValue(value);
+			
+			fParcial = new WTableDirEditor("CA_Parcial_ID", true, false, true, AcademicUtil.getParcialLookup(form.getWindowNo(),currentSchoolYear.get_ID(),(Integer)fCourseDef.getValue()));
+			fParcial.addValueChangeListener(this);
+			
+			if(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue())!=null)
+				fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx, (Integer)fCourseDef.getValue()).get_ID());
 
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
@@ -219,6 +255,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		if ("CA_Parcial_ID".equals(name))
 		{
 			fParcial.setValue(value);
+			refreshHeader();
 		}
 
 	}
@@ -253,10 +290,29 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		{
 			int row = noteTable.getSelectedRow();
 			MBPartner selectedstudent = ((INoteEditor)noteTable.getValueAt(row, 1+inccol)).getStudent();
-			refreshDelayInfo(selectedstudent,currentMatterAssignment);
+			refreshDelayInfo(selectedstudent,currentMatterAssignment, currentParcial);
 			displayAbsenceInfo(String.valueOf(assisNo), String.valueOf(delayNo));
 			double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
 			setDiscontInfo(selectedstudent, discount);
+		}
+		else if(event.getTarget().equals(bChekNotes))
+		{
+			if(note!=null && students!=null)
+			{
+				WGradeViewer  gradeViewer = new WGradeViewer(note, students, null, true);
+				
+				gradeViewer.setSizable(true);
+				gradeViewer.setWidth("700px");
+				gradeViewer.setHeight("600px");
+				gradeViewer.setShadow(true);
+				gradeViewer.setBorder("normal");
+				gradeViewer.setClosable(true);
+				gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
+				gradeViewer.setContentStyle("overflow: auto");
+	
+				AEnv.showCenterScreen(gradeViewer);
+			}
+
 		}
 	}
 
@@ -279,6 +335,22 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			currentSubject = new X_CA_SubjectMatter(m_ctx, currentMatterAssignment.getCA_SubjectMatter_ID(), null);
 
 		currentParcial = new X_CA_Parcial(m_ctx, (Integer)fParcial.getValue(), null);
+		
+		String whereClause =  X_CA_ConcatenatedSubject.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + X_CA_ConcatenatedSubject.COLUMNNAME_IsConcatenated + "=?";
+
+		X_CA_ConcatenatedSubject csubject = new Query(m_ctx, X_CA_ConcatenatedSubject.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true).setParameters(currentMatterAssignment.get_ID(), "N").first();
+
+
+		if(csubject!=null)
+		{
+			X_CA_EvaluationPeriod evaperiod = (X_CA_EvaluationPeriod) csubject.getCA_EvaluationPeriod();
+			X_CA_EvaluationPeriod p_evaperiod = (X_CA_EvaluationPeriod) currentParcial.getCA_EvaluationPeriod();
+
+			if(evaperiod.getSeqNo().intValue() == p_evaperiod.getSeqNo().intValue())
+				return;
+		}
+
 
 		System.out.println("Load discipline config At " + new Timestamp(System.currentTimeMillis()));
 
@@ -305,12 +377,12 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 		noteTable.setColumnClass(0, String.class, true);
-		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-		noteTable.setColumnClass(4+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, false);
+		noteTable.setColumnClass(4+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(5+inccol, String.class, true);
-		noteTable.setColumnClass(6+inccol, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+		noteTable.setColumnClass(6+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(7+inccol, String.class, true);
 
 	}

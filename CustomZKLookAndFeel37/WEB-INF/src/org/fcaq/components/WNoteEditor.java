@@ -1,23 +1,33 @@
 package org.fcaq.components;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MBPartner;
+import org.compiere.model.Query;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
 import org.eevolution.form.AcademicNote;
 import org.eevolution.form.DisciplineNotes;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_DiscCalc;
 import org.fcaq.model.X_CA_DisciplineConfig;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.model.X_CA_Note;
 import org.fcaq.model.X_CA_NoteHeadingLine;
+import org.fcaq.model.MCANoteLine;
 import org.fcaq.model.X_CA_NoteLine;
 import org.fcaq.model.X_CA_NoteRule;
+import org.fcaq.model.X_CA_Parcial;
 import org.fcaq.model.X_CA_SchoolYearConfig;
+import org.fcaq.util.AcademicUtil;
 import org.zkoss.zhtml.Table;
 import org.zkoss.zhtml.Td;
 import org.zkoss.zhtml.Tr;
@@ -31,23 +41,21 @@ import org.zkoss.zul.Div;
 public class WNoteEditor extends Div  implements INoteEditor{
 
 	private static final long serialVersionUID = 299456427772228471L;
-	
-	//private X_CA_Note note = null;
-	//private X_CA_NoteLine noteline = null;
-	
+
+
 	private MBPartner student = null;
 	private X_CA_NoteHeadingLine noteHeadingLine = null;
-	
+
 	private X_CA_SchoolYearConfig yearConfig = null;
 	private X_CA_NoteRule noteRule = null;
 	private X_CA_DisciplineConfig discConfig = null;
-	private X_CA_MatterAssignment assignment = null;
 
 	private boolean isforced = false;
 	private boolean isfinal=false;
 	private boolean isdiscipline=false;
 	private boolean isaverange=false;
-	private String criteria = "";
+	private String dccriteria = "";
+	private String sportCriteria="";
 
 	private int noteLine_id = 0;
 	private int note_id=0;
@@ -58,6 +66,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	private AcademicNote academicNote;
 	private DisciplineNotes disciplineNotes;
+	private String DTString = "";
 
 
 	public WNoteEditor()
@@ -68,34 +77,36 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			public void onEvent(Event event){
 				if(decimalBox.getValue()!=null)
 				{
+					MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
+					if("O".equals(noteline.getDocStatus()))
+						decimalBox.setValue(AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue(), noteline.getDocStatus()));
 					saveEx();
 				}	
 				else
 				{
 					try
 					{
-						
-						
-						
-						X_CA_NoteLine noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+
+
+
+						MCANoteLine noteline = new MCANoteLine(Env.getCtx(), noteLine_id, null);
+						AcademicUtil.setNeedRecalculated((X_CA_Parcial)noteline.getCA_Note().getCA_Parcial(), (MBPartner)noteline.getC_BPartner());
 						noteline.deleteEx(true);
 						noteline=null;
 						noteLine_id=0;
-						
+
 						if(!isfinal && !isdiscipline)
 						{
-							//saveAcademicNote(null);
+							academicNote.refreshFinalNote(student);
 						}
 						else if((isdiscipline && !isfinal) || (isdiscipline && isfinal && isaverange) )
 						{
-							
-							
 							if(discConfig.isAverageCriteria() || (!discConfig.isAverageCriteria()  && isaverange ))
 							{
 								disciplineNotes.refreshDisciplineNote(student);
 							}
 						}
-						
+
 					}
 					catch(Exception e)
 					{
@@ -149,6 +160,34 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setNote(X_CA_Note note) {
 		this.note_id = note.get_ID();
+
+		try{
+			
+			DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+
+			//Date parcialEnd  = note.getCA_Parcial().getDateTo();
+			Date parcialEnd  = note.getCA_Parcial().getDateStart(); // Inicio de Fecha de Juntas
+
+			String dateString = df.format(parcialEnd);
+			
+			dateString  = dateString +  " 23:59:59"; 
+		     
+		    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"); 
+		    parcialEnd = dateFormat.parse(dateString); 
+			
+			
+			long currentTime = System.currentTimeMillis();
+
+			if(!(note.getCA_Parcial().getDateFrom().getTime()<= currentTime &&
+					parcialEnd.getTime()>=(currentTime)))
+			{
+				decimalBox.setReadonly(true);
+			}}
+		catch(Exception e)
+		{
+			//Nothing to do, just ignore
+		}
+
 	}
 
 	@Override
@@ -156,7 +195,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		if(noteLine!=null)
 		{
 			this.noteLine_id = noteLine.get_ID();
-
+			decimalBox.setReadonly(!"O".equals((noteLine.getDocStatus())));
 
 			if(isdiscipline)
 			{
@@ -210,11 +249,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	}
 
 	@Override
-	public X_CA_NoteLine getNoteLine() {
+	public MCANoteLine getNoteLine() {
 
 		if(noteLine_id>0)
 		{
-			return new X_CA_NoteLine(Env.getCtx(), noteLine_id, null);
+			return new MCANoteLine(Env.getCtx(), noteLine_id, null);
 		}
 
 		return null;
@@ -248,7 +287,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 	@Override
 	public void setSchoolYearConfig(X_CA_SchoolYearConfig yearConfig) {
 		this.yearConfig = yearConfig;
-		decimalBox.setFormat(yearConfig.getFormatPattern());
+		//decimalBox.setFormat(yearConfig.getFormatPattern());
 	}
 
 	@Override
@@ -331,12 +370,12 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setCriteria(String criteria) {
-		this.criteria = criteria;
+		this.dccriteria = criteria;
 	}
 
 	@Override
 	public String getCriteria() {
-		return this.criteria;
+		return this.dccriteria;
 	}
 
 	@Override
@@ -364,7 +403,6 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					{
 						saveDisciplineNote(trxName);
 					}
-				
 				}
 			});
 		}catch (Exception e)
@@ -383,11 +421,11 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					disciplineNotes.refreshDisciplineNote(student);
 				}
 			}
-			
+
 		}
 	}
-	
-	
+
+
 
 
 	private void saveAcademicNote(String trxName)
@@ -401,7 +439,7 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
-		
+
 		X_CA_Note note = getNote();
 
 		if(note!=null)
@@ -424,26 +462,67 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		}
 
 
-		X_CA_NoteLine noteline = null;
-		
+		MCANoteLine noteline = null;
+
 		if(noteLine_id==0)
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			noteline = new MCANoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(note.get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
-			noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+			if(noteHeadingLine!=null)
+				noteline.set_CustomColumn("CA_NoteHeadingLine_ID", noteHeadingLine.get_ID());
+			noteline.setSportCriteria(sportCriteria);
+			noteline.setDtString(DTString);
+			noteline.setDocStatus("O");
 		}
 		else
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+			noteline = new MCANoteLine(Env.getCtx(), noteLine_id, trxName);
 		}
-		noteline.setAmount(decimalBox.getValue());
-		oldValue = decimalBox.getValue();
-		noteline.setIsFinal(false);
-		noteline.saveEx();
+
+		if(noteline.getDocStatus().equals("O"))
+		{
+			noteline.setAmount(decimalBox.getValue());
+			oldValue = decimalBox.getValue();
+			noteline.setIsFinal(false);
+			noteline.saveEx();
+
+			setNeedRecalculated();
+		}
 
 		noteLine_id = noteline.get_ID();
 	}
+
+	private void setNeedRecalculated() {
+		
+		X_CA_CourseDef course = (X_CA_CourseDef) AcademicUtil.getGroupCourse(student.getCtx(), student, student.get_TrxName()).getCA_CourseDef();
+		
+		X_CA_Parcial realparcial = AcademicUtil.getRealParcial(course, 
+				getNote().getCA_Parcial().getCA_EvaluationPeriod().getSeqNo().toString(),  
+				getNote().getCA_Parcial().getSeqNo().toString());
+
+		String whereClause = X_CA_DiscCalc.COLUMNNAME_C_BPartner_ID + "=? AND " + X_CA_DiscCalc.COLUMNNAME_CA_Parcial_ID + "=?";
+
+		X_CA_DiscCalc calc = new Query(student.getCtx(), X_CA_DiscCalc.Table_Name, whereClause, student.get_TrxName())
+		.setOnlyActiveRecords(true)
+		.setParameters(student.get_ID(), realparcial.getCA_Parcial_ID())
+		.first();
+
+		if(calc==null)
+		{
+			calc = new X_CA_DiscCalc(student.getCtx(), 0, student.get_TrxName());
+		}
+
+		calc.setC_BPartner_ID(student.get_ID());
+		calc.setCA_Parcial_ID(realparcial.getCA_Parcial_ID());
+		calc.setAverange1(new BigDecimal("0"));
+		calc.setAverange2(new BigDecimal("0"));
+		calc.setIsNeed(true);
+
+		calc.saveEx();
+	}
+
+
 
 	public void saveDisciplineNote(String trxName)
 	{
@@ -457,63 +536,119 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
 
+		if(discConfig.isAverageCriteria() 
+				&& X_CA_CourseDef.SECTION_Kinder.equals(getNote().getCA_CourseDef().getSection())    
+				&& X_CA_CourseDef.MODALITY_Nacional.equals(getNote().getCA_CourseDef().getModality())  
+				&& decimalBox.getValue().compareTo(new BigDecimal("5"))>0)
+		{
+
+			decimalBox.setValue(new BigDecimal("0"));
+		}
+
 		if(!discConfig.isAverageCriteria() && decimalBox.getValue().compareTo(new BigDecimal("4"))>0 && !isfinal)
 		{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
 
 
-		X_CA_NoteLine noteline = null;
-		
-		if(noteLine_id==0)
+		MCANoteLine noteline = null;
+
+
+		String whereClause = MCANoteLine.COLUMNNAME_CA_Note_ID + "=? AND " +
+				MCANoteLine.COLUMNNAME_C_BPartner_ID + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsDiscipline + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsFinal + "=? AND " + 
+				MCANoteLine.COLUMNNAME_IsAverage + "=? ";
+
+		List<Object> parameters = new ArrayList<Object>();
+
+		parameters.add(getNote().get_ID());
+		parameters.add(student.get_ID());
+		parameters.add(true);
+		parameters.add(isfinal);
+		parameters.add(isaverange);
+
+
+
+		if(!isfinal)
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), 0, trxName);
+			whereClause += " AND " + MCANoteLine.COLUMNNAME_DcCriteria + " =? ";
+			parameters.add(dccriteria);
+		}
+
+		noteline = new Query(Env.getCtx(), MCANoteLine.Table_Name, whereClause, trxName)
+		.setOnlyActiveRecords(true)
+		.setParameters(parameters)
+		.first();
+
+		if(noteline==null)
+			//if(noteLine_id==0)
+		{
+			noteline = new MCANoteLine(Env.getCtx(), 0, trxName);
 			noteline.setCA_Note_ID(getNote().get_ID());
 			noteline.setC_BPartner_ID(student.get_ID());
 			noteline.setIsDiscipline(true);
 			noteline.setIsFinal(isfinal);
 			noteline.setIsAverage(isaverange);
-			noteline.setDcCriteria(criteria);
+			noteline.setDcCriteria(dccriteria);
+			noteline.setDocStatus("O");
+			//}
+			//else
+			//{
+			//	noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+		}
+		
+		BigDecimal rValue = AcademicUtil.applyRound(noteline.getAmount(), decimalBox.getValue()!=null?decimalBox.getValue():BigDecimal.ZERO	, noteline.getDocStatus());
+
+		
+		
+		if(noteline.getDocStatus().equals("O"))
+		{
+			decimalBox.setValue(rValue);
+
+			if(!discConfig.isAverageCriteria() || isaverange)
+			{
+				noteline.setAmount(decimalBox.getValue());
+				noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
+			}
+			else
+			{
+				double tmp = decimalBox.getValue().doubleValue();
+				if(tmp>=0 && tmp<=60)
+				{
+					noteline.setAmount(new BigDecimal("1"));
+				}
+				else if(tmp>60 && tmp<=70)
+				{
+					noteline.setAmount(new BigDecimal("2"));
+				}
+				else if(tmp>70 && tmp<=90)
+				{
+					noteline.setAmount(new BigDecimal("3"));
+				}
+				else if(tmp>90 && tmp<=100)
+				{
+					noteline.setAmount(new BigDecimal("4"));
+				}
+
+				noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
+			}
+
+
+			oldValue = decimalBox.getValue();
+
+
+			noteline.saveEx();
+			setNeedRecalculated();
 		}
 		else
 		{
-			noteline = new X_CA_NoteLine(Env.getCtx(), noteLine_id, trxName);
+			//decimalBox.setValue(noteline.getAmount());
+			oldValue = decimalBox.getValue();
 		}
-
-
-		if(!discConfig.isAverageCriteria() || isaverange)
-		{
-			noteline.setAmount(decimalBox.getValue());
-		}
-		else
-		{
-			double tmp = decimalBox.getValue().doubleValue();
-			if(tmp>0 && tmp<=60)
-			{
-				noteline.setAmount(new BigDecimal("1"));
-			}
-			else if(tmp>61 && tmp<=70)
-			{
-				noteline.setAmount(new BigDecimal("2"));
-			}
-			else if(tmp>71 && tmp<=90)
-			{
-				noteline.setAmount(new BigDecimal("3"));
-			}
-			else if(tmp>91 && tmp<=100)
-			{
-				noteline.setAmount(new BigDecimal("4"));
-			}
-
-			noteline.set_ValueOfColumn("Qty", decimalBox.getValue());
-		}
-
-
-		oldValue = decimalBox.getValue();
-		noteline.saveEx();
 
 		disciplineNotes.copyToAlternateNotes(student, getNote(), noteline, trxName);
-		
+
 		noteLine_id = noteline.get_ID();
 
 	}
@@ -549,16 +684,42 @@ public class WNoteEditor extends Div  implements INoteEditor{
 
 	@Override
 	public void setMatterAssignment(X_CA_MatterAssignment assignment) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 
 
 	@Override
 	public X_CA_MatterAssignment getMatterAssignment() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+
+
+	@Override
+	public void setSportCriteria(String sportCriteria) {
+		this.sportCriteria=sportCriteria;
+	}
+
+
+
+	@Override
+	public String getSportCriteria() {
+		return sportCriteria;
+	}
+
+
+
+	@Override
+	public void setDTString(String dtstring) {
+		this.DTString = dtstring;
+	}
+
+
+
+	@Override
+	public String getDTString() {
+		return DTString;
 	}
 
 

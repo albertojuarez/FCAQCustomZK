@@ -126,7 +126,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     private boolean			  uiCreated = false;
 
-    private GridPanel		  listPanel;
+    public GridPanel		  listPanel;
 
     private Map<String, List<org.zkoss.zul.Row>> fieldGroupContents = new HashMap<String, List<org.zkoss.zul.Row>>();
 
@@ -568,6 +568,11 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
             return;
         }
 
+        for (WEditor comp : editors)
+        {
+        	comp.setMandatoryLabels();
+        }
+        
         //  Selective
         if (col > 0)
         {
@@ -603,10 +608,10 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
                     }
                     else
                     {
-                    	comp.dynamicDisplay();
                         boolean rw = mField.isEditable(true);   //  r/w - check Context
                         comp.setReadWrite(rw);
                         comp.setMandatory(mField.isMandatory(true));    //  check context
+                        comp.dynamicDisplay();
                         dis = !rw;
                         
                     }
@@ -1047,7 +1052,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         	listPanel.dynamicDisplay(col);
         }
 
-        if (!includedPanel.isEmpty()) {
+        if (!includedPanel.isEmpty() && e.getChangedColumn() == -1) {
         	for (EmbeddedPanel panel : includedPanel)
         		panel.tabPanel.query(false, 0, 0);
         }
@@ -1221,7 +1226,9 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public void afterSave(boolean onSaveEvent) {
 		if (!includedPanel.isEmpty()) {
         	for (EmbeddedPanel panel : includedPanel)
+        		//panel.tabPanel.getGridTab().dataRefreshAll()
         		panel.tabPanel.query(false, 0, 0);
+        		
         }
 	}
 

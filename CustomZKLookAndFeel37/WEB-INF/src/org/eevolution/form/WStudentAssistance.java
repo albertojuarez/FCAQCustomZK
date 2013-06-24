@@ -36,6 +36,8 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.MCAPeriodClass;
 import org.fcaq.model.X_CA_CourseDef;
+import org.fcaq.model.X_CA_MatterAssignment;
+import org.fcaq.model.X_CA_SubjectMatter;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -61,18 +63,17 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Button bSendAssistance = new Button();
 	private Button bRefresh = new Button();
 
+	private Label lDay = null;
+	private Label lDayNo = null;
 	private Label lSubject = null;
 	private Label lDate = null;
 	private Label lCourse = null;
 	private Label lPeriod = null;
-	public Label lExtraGroup = null;
 
 	private WTableDirEditor fSubject = null;
 	private WDateEditor fDate = null;
 	private WTableDirEditor fCourse = null;
 	private WTableDirEditor fPeriod = null;
-	private WTableDirEditor fExtraGroup = null;
-	private Textbox fConcatenated = null;
 
 	private boolean setting = false;
 
@@ -104,6 +105,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		parameterPanel.appendChild(parameterLayout);
 
+		lDay = new Label();
+		lDay.setText(Msg.getMsg(m_ctx, "Day"));
+		lDayNo = new Label();
+		lDayNo.setText("" + dayNo);
+		
 		lSubject = new Label();
 		lSubject.setText(Msg.getMsg(m_ctx, "SubjectMatter"));
 
@@ -112,17 +118,12 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fDate = new WDateEditor();
 		fDate.setValue(new Timestamp(System.currentTimeMillis()));
 		fDate.setReadWrite(false);
-
+		
 		lCourse = new Label();
 		lCourse.setText(Msg.getMsg(m_ctx, "Group"));
 
 		lPeriod = new Label();
 		lPeriod.setText(Msg.getMsg(m_ctx, "PeriodClass"));
-
-		lExtraGroup = new Label();
-		lExtraGroup.setText(Msg.getMsg(m_ctx, "Extracurricular"));
-		
-		fConcatenated = new Textbox();
 		
 		bSendAssistance.setLabel(Msg.getMsg(m_ctx, "SendAssistance"));
 		
@@ -139,6 +140,10 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterLayout.newRows();
 
 		row = rows.newRow();
+		row.appendChild(lDay);
+		row.appendChild(lDayNo);
+		
+		row = rows.newRow();
 		row.appendChild(lDate);
 		row.appendChild(fDate.getComponent());
 		row.appendChild(lPeriod);
@@ -149,15 +154,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lCourse);
 		fCourse.getComponent().setWidth("90%");
 		row.appendChild(fCourse.getComponent());
-		row.appendChild(lExtraGroup);
-		fExtraGroup.getComponent().setWidth("90%");
-		row.appendChild(fExtraGroup.getComponent());
 		row.appendChild(lSubject);
 		fSubject.getComponent().setWidth("90%");
 		row.appendChild(fSubject.getComponent());
-		fConcatenated.setWidth("90%");
-		fConcatenated.setReadonly(true);
-		row.appendChild(fConcatenated);
 
 		
 		Center center = new Center();
@@ -198,59 +197,30 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		fPeriod = new WTableDirEditor("CA_PeriodClass_ID", true, false, true, getPeriodClass(form.getWindowNo()));
 		fPeriod.addValueChangeListener(this);
-		if (periodClass != null)
-			fPeriod.setValue(periodClass.getCA_PeriodClass_ID());
+		if (getPeriodClass() != null)
+			fPeriod.setValue(getPeriodClass().getCA_PeriodClass_ID());
 		
 		fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
 		fCourse.addValueChangeListener(this);
-		if (currentCourse != null)
-			fCourse.setValue(currentCourse.getCA_CourseDef_ID());
+		if (getCurrentCourse(true) != null) {
+			if (isDuplicate()) 
+				fCourse.setValue(getCurrentMatterAssignment().get(0).getCA_GroupAssignment().getCA_CourseDef_ID());
+			else
+				fCourse.setValue(getCurrentCourse(false).getCA_CourseDef_ID());
+		}
 
-		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getMatterAssignment(form.getWindowNo()));
-		fSubject.setReadWrite(false);
-		if (currentMatterAssignment != null)
-			fSubject.setValue(currentMatterAssignment.get_ID());
-
-		fExtraGroup = new WTableDirEditor("CA_ExtraGroupDef_ID", true, false, true, getExtraGroupDef(form.getWindowNo()));
-		fExtraGroup.setReadWrite(false);
-		if (currentExtraGroup != null)
-			fExtraGroup.setValue(currentExtraGroup.get_ID());
+		fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+		//fSubject.setReadWrite(false);
+		fSubject.addValueChangeListener(this);
+		if (getCurrentMatterAssignment().size()>0)
+			fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
 		
 		bSendAssistance.addActionListener(this);
 		
 		bRefresh.addActionListener(this);
 	}
 
-	
-	public void showExtraGroup() {
-
-		parameterLayout.removeChild(parameterLayout.getRows());
-		
-		Rows rows = null;
-		Row row = null;
-		rows = parameterLayout.newRows();
-
-		row = rows.newRow();
-		row.appendChild(lDate);
-		row.appendChild(fDate.getComponent());
-		
-		if (byPeriod && isSustitution)
-			fPeriod.setReadWrite(false);
-		else
-			fPeriod.setReadWrite(true);
-			
-		row.appendChild(lPeriod);
-		fPeriod.getComponent().setWidth("90%");
-		row.appendChild(fPeriod.getComponent());
-
-		row = rows.newRow();
-		row.appendChild(lExtraGroup);
-		fExtraGroup.getComponent().setWidth("90%");
-		row.appendChild(fExtraGroup.getComponent());
-	}
-
-
-	public void hideExtraGroup() {
+	public void ShowSecondaryFields() {
 	
 		parameterLayout.removeChild(parameterLayout.getRows());
 		
@@ -259,11 +229,15 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterLayout.newRows();
 		
 		row = rows.newRow();
+		row.appendChild(lDay);
+		row.appendChild(lDayNo);
+		
+		row = rows.newRow();
 		row.appendChild(lDate);
 		row.appendChild(fDate.getComponent());
 		row.appendChild(lPeriod);
 		
-		if (byPeriod && isSustitution)
+		if (isByPeriod() && isSustitution())
 			fPeriod.setReadWrite(false);
 		else
 			fPeriod.setReadWrite(true);
@@ -276,16 +250,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fCourse.getComponent().setWidth("90%");
 		row.appendChild(fCourse.getComponent());
 		row.appendChild(lSubject);
-		
-		if(concatenatedSubject != null) {
-			fConcatenated.setValue(concatenatedSubject.getCA_SubjectMatter().getName());
-			row.appendChild(fConcatenated);
-		} else {
-			fSubject.getComponent().setWidth("90%");
-			row.appendChild(fSubject.getComponent());
-		}
+		fSubject.getComponent().setWidth("90%");
+		row.appendChild(fSubject.getComponent());
 	}
-	
 	
 	public void hideSecondaryFields() {
 		
@@ -305,7 +272,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(fCourse.getComponent());
 	}
 	
-	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		String name = evt.getPropertyName();
@@ -323,17 +289,26 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			int CA_PeriodClass_ID = (Integer) value;
 
 			periodClass = new MCAPeriodClass(m_ctx, CA_PeriodClass_ID, null);
-			currentCourse = currentCourse();
-			currentMatterAssignment = currentMatterAssignment();
-			currentExtraGroup = currentExtraGroup();
+			//currentCourse = currentCourse();
+			//currentMatterAssignment = currentMatterAssignment();
 			
-			if (currentMatterAssignment != null && currentCourse != null) {
+			if (getCurrentCourse(true) != null) {
 				
 				fCourse = new WTableDirEditor("CA_CourseDef_ID", true, false, true, getCourseInPeriod(form.getWindowNo()));
 				fCourse.addValueChangeListener(this);
 				
-				fSubject.setValue(currentMatterAssignment.get_ID());
-				fCourse.setValue(currentCourse.get_ID());
+				if (getCurrentMatterAssignment().size()>0) {
+					
+					fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+					fSubject.addValueChangeListener(this);
+				
+					fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
+					
+					if (isDuplicate()) 
+						fCourse.setValue(getCurrentMatterAssignment().get(0).getCA_GroupAssignment().getCA_CourseDef_ID());
+					else
+						fCourse.setValue(getCurrentCourse(false).get_ID());
+				}
 			}
 			else {
 				
@@ -343,11 +318,6 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 				fSubject.setValue(null);
 				fCourse.setValue(null);
 			}
-			
-			if (currentExtraGroup != null)
-				fExtraGroup.setValue(currentExtraGroup.get_ID());
-			else
-				fExtraGroup.setValue(null);
 			
 		} else if ("CA_CourseDef_ID".equals(name)) {
 			
@@ -355,28 +325,33 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			
 			int CA_CourseDef_ID = (Integer) value;
 			
-			currentCourse = new X_CA_CourseDef(m_ctx, CA_CourseDef_ID, null);
-			currentMatterAssignment = currentMatterAssignment();
-			currentExtraGroup = currentExtraGroup();
+			//currentCourse = new X_CA_CourseDef(m_ctx, CA_CourseDef_ID, null);
 			
-			if (currentMatterAssignment != null && currentCourse != null) {
+			setCurrentCourse(m_ctx, CA_CourseDef_ID, null);
+			//currentMatterAssignment = currentMatterAssignment();
+			
+			fSubject = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, getScheduleMatterAssignmentLookup(form.getWindowNo()));
+			//fSubject.setReadWrite(false);
+			fSubject.addValueChangeListener(this);
+			
+			if (getCurrentMatterAssignment().size()>0 && getCurrentCourse(false) != null) {
 				
-				fSubject.setValue(currentMatterAssignment.get_ID());
-				fCourse.setValue(currentCourse.get_ID());
+				fSubject.setValue(getCurrentMatterAssignment().get(0).get_ID());
+				fCourse.setValue(getCurrentCourse(false).get_ID());
 			}
 			else {
 				
 				fSubject.setValue(null);
 				fCourse.setValue(null);
 			}
-			
-			if (currentExtraGroup != null)
-				fExtraGroup.setValue(currentExtraGroup.get_ID());
-			else
-				fExtraGroup.setValue(null);
+		} else if ("CA_MatterAssignment_ID".equals(name))
+		{
+			fSubject.setValue(value);
+			setCurrentMatterAssignment(m_ctx, (Integer)value, null);				
 		}
-
 		
+		
+
 		refreshHeader();
 	}
 
@@ -384,7 +359,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	public void tableChanged(WTableModelEvent event) {
 		//Checkbox & Observations
 		if (!setting && event.getLastRow() >= 0 && event.getColumn() >= 0)
-			setAssistenceRow(event.getLastRow(), event.getColumn());	
+			setAssistenceRow(event.getLastRow(), event.getColumn());
 	}
 
 	@Override
@@ -439,7 +414,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		commentBox.setStyle("ipadcombobox");
 
 		String name = null;
-		for (MRefList comment : comments) {
+		for (MRefList comment : getListComments()) {
 			name = DB.getSQLValueString(
 					null,
 					"SELECT NAME FROM AD_Ref_List_Trl WHERE AD_Ref_List_ID = "
@@ -470,28 +445,30 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 	public void refreshHeader(){
 
-		if (byPeriod) {
+		if (isByPeriod()) {
+			
+			ShowSecondaryFields();
+			
 			if(fCourse.getValue() == null || fSubject.getValue() == null) {
-
-				if (fExtraGroup.getValue() == null) {
-					hideExtraGroup();
-					studentTable.clear();
-					showErrorMessage("NoOpenPeriod");
-					return;
-				} else {
-					showExtraGroup();
-				}
-			} else {
-				hideExtraGroup();
+				studentTable.clear();
+				showErrorMessage("NoOpenPeriod");
+				return;
 			}
 		} else { 
 			if(fCourse.getValue() == null) {
-				hideExtraGroup();
+				ShowSecondaryFields();
 				studentTable.clear();
 				showErrorMessage("NoCourse");
 				return;
 			}
-			hideSecondaryFields();
+			else {
+				if (validateDayWeek(getCurrentCourse(false)))
+					hideSecondaryFields();
+				else {
+					showErrorMessage("Holiday");
+					return;
+				}
+			}
 		}
 		
 		Vector<Vector<Object>> data = getAssistanceData();
@@ -663,8 +640,8 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		if (indexMotive >= 0) {
 			motive = (String)motiveBox.getSelectedItem().getValue();
 		} else {
-			if (currentCourse != null)
-				if (Integer.parseInt(currentCourse.getSection()) < 5)
+			if (getCurrentCourse(false) != null)
+				if (Integer.parseInt(getCurrentCourse(false).getSection()) < 5)
 					motiveBox.setSelectedIndex(0);
 				else {
 					motiveBox.setSelectedIndex(1);

@@ -632,10 +632,10 @@ public class GridPanel extends Borderlayout implements EventListener
                     comp.setReadWrite(false);
                 }
                 else
-                {
-                	comp.dynamicDisplay();
+                {              	
                     boolean rw = mField.isEditable(true);   //  r/w - check Context
                     comp.setReadWrite(rw);
+                    comp.dynamicDisplay();
                 }
 
                 comp.setVisible(mField.isDisplayed(true));

@@ -16,7 +16,6 @@ package org.adempiere.webui.apps;
 
 
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,7 +48,6 @@ import org.compiere.process.ProcessInfo;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
-import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Label;
@@ -60,6 +58,9 @@ import org.zkoss.zul.Label;
  *	- checks, if parameters exist and inquires and saves them
  *
  * 	@author 	Low Heng Sin
+ * 	@author victor.perez@e-evoluton.com, www.e-evolution.com 
+ * 		<li>FR [ 3426137 ] Smart Browser
+ *  	https://sourceforge.net/tracker/?func=detail&aid=3426137&group_id=176962&atid=879335
  * 	@version 	2006-12-01
  */
 public class ProcessParameterPanel extends Panel 
@@ -95,85 +96,32 @@ implements ValueChangeListener, IProcessParameter
 			//
 			initComponent();
 		}	//	ProcessParameterPanel
+		
+		
+		// AJC 15 abr 2013
+		// Allow restart Proces Info
+		public void setProcessInfo(ProcessInfo pi)
+		{
+			m_processInfo = pi;
+		}
 
-		
-		int parameterNo = 0;
-		
 		private void initComponent() {
-			
-			// BEGIN AJC 24 may 2012 - Count parameters
-			
-			PreparedStatement pstmtC = null;
-			ResultSet rsC = null;
-			try{
-			String sqlC = "SELECT count(p.name)"
-				+ "FROM AD_Process_Para p "
-				+ "WHERE p.AD_Process_ID=?"
-				+ " AND p.IsActive='Y' ";
-				
-			pstmtC = DB.prepareStatement(sqlC, null);
-			pstmtC.setInt(1, m_processInfo.getAD_Process_ID());
-			rsC = pstmtC.executeQuery();
-			
-			
-			
-			while (rsC.next())
-			{
-				parameterNo = rsC.getInt(1);
-				
-			}
-			rsC.close();
-			pstmtC.close();
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
-			if(parameterNo>=7)
-				isTwoColumns=true;
-			// END AJC 24 may 2012 - Count parameters
-			
-			
-			
 			centerPanel = GridFactory.newGridLayout();
 			centerPanel.setInnerWidth(width);
 			this.appendChild(centerPanel);
 			
 			//setup columns
-			
-			if(isTwoColumns)
-			{
-		    	Columns columns = new Columns();
-		    	centerPanel.appendChild(columns);
-		    	Column col = new Column();
-		    	col.setWidth("25%");
-		    	columns.appendChild(col);
-		    	col = new Column();
-		    	col.setWidth("25%");
-		    	columns.appendChild(col);
-		    	col = new Column();
-		    	col.setWidth("25%");
-		    	columns.appendChild(col);
-		    	col = new Column();
-		    	col.setWidth("25%");
-		    	columns.appendChild(col);
-			}
-			else
-			{
-				Columns columns = new Columns();
-		    	centerPanel.appendChild(columns);
-		    	Column col = new Column();
-		    	col.setWidth("30%");
-		    	columns.appendChild(col);
-		    	col = new Column();
-		    	col.setWidth("65%");
-		    	columns.appendChild(col);
-		    	col = new Column();
-		    	col.setWidth("5%");
-		    	columns.appendChild(col);
-
-			}
+	    	Columns columns = new Columns();
+	    	centerPanel.appendChild(columns);
+	    	Column col = new Column();
+	    	col.setWidth("30%");
+	    	columns.appendChild(col);
+	    	col = new Column();
+	    	col.setWidth("65%");
+	    	columns.appendChild(col);
+	    	col = new Column();
+	    	col.setWidth("5%");
+	    	columns.appendChild(col);
 		}
 
 		private int			m_WindowNo;
@@ -189,6 +137,16 @@ implements ValueChangeListener, IProcessParameter
 		private ArrayList<Label> m_separators = new ArrayList<Label>();
 		//
 		private Grid centerPanel = null;
+		
+		public static final int DEFAULT_MODE = 1;
+		public static final int BROWSER_MODE = 2;
+		private int mode=1;
+		
+		public void setMode(int mode)
+		{
+			//this.mode = mode;
+			this.mode = BROWSER_MODE; //forced two columns
+		}
 
 		/**
 		 *  Dispose
@@ -208,7 +166,6 @@ implements ValueChangeListener, IProcessParameter
 		 */
 		public boolean init()
 		{
-			
 			log.config("");
 
 			// ASP
@@ -284,24 +241,23 @@ implements ValueChangeListener, IProcessParameter
 			Rows rows = new Rows();
 			try
 			{
-				
-				
-				
-				
 				PreparedStatement pstmt = DB.prepareStatement(sql, null);
 				pstmt.setInt(1, m_processInfo.getAD_Process_ID());
 				ResultSet rs = pstmt.executeQuery();
-				
-				
-				
-				
-				
+				int field = 0;
+				Row row = null;
 				while (rs.next())
 				{
-					
 					hasFields = true;
-					createField (rs, rows);
-					isPair = !isPair;
+					field++;
+					if(field % 2 ==0 && mode==BROWSER_MODE)
+					{
+						row = createField (rs, rows, row);
+					}
+					else
+					{
+						row = createField (rs, rows, null);
+					}
 				}
 				rs.close();
 				pstmt.close();
@@ -340,30 +296,19 @@ implements ValueChangeListener, IProcessParameter
 		 *
 		 * @param rs result set
 		 */
-		
-		boolean isPair = false;
-		boolean isTwoColumns = false;
-		Row row ;
-		
-		private void createField (ResultSet rs, Rows rows)
+		private Row createField (ResultSet rs, Rows rows, Row rw)
 		{
 			//  Create Field
 			GridFieldVO voF = GridFieldVO.createParameter(Env.getCtx(), m_WindowNo, rs);
 			GridField mField = new GridField (voF);
 			m_mFields.add(mField);                      //  add to Fields
 
+			Row row;
 			
-			if(isTwoColumns)
-			{
-				if(!isPair)
-				{
-					row = new Row(); 
-				}
-			}
+			if(rw==null)
+				row = new Row();
 			else
-			{
-				row = new Row(); 
-			}
+				row = rw;
 			
 			//	The Editor
 			WEditor editor = WebEditorFactory.getEditor(mField, false);
@@ -375,11 +320,8 @@ implements ValueChangeListener, IProcessParameter
 			Object defaultObject = mField.getDefault();
 			mField.setValue (defaultObject, true);
 			//streach component to fill grid cell
-            editor.fillHorizontal();
-            
-           // if(isTwoColumns)
-            //	((HtmlBasedComponent)editor.getComponent()).setWidth("50%");
-            
+			if(mode==DEFAULT_MODE)
+				editor.fillHorizontal();
             //setup editor context menu
             WEditorPopupMenu popupMenu = editor.getPopupMenu();                    
             if (popupMenu != null)
@@ -438,7 +380,11 @@ implements ValueChangeListener, IProcessParameter
 				m_wEditors2.add (null);
 				m_separators.add(null);
 			}
-			rows.appendChild(row);
+			
+			if(rw==null)
+				rows.appendChild(row);
+			
+			return row;
 		}	//	createField
 
 		
@@ -583,7 +529,7 @@ implements ValueChangeListener, IProcessParameter
 				if (editor2 != null)
 					para.setInfo_To (editor2.getDisplay());
 				//
-				para.saveEx();
+				para.save();
 				log.fine(para.toString());
 			}	//	for every parameter
 
