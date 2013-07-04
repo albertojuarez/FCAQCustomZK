@@ -194,17 +194,28 @@ public class WAcademicNoteSpecialMatter extends AcademicNoteSpecialMatter
 	public void tableChanged(WTableModelEvent event) {
 
 		if (event.getIndex0() >= 0) {
+			int column = event.getColumn();
+			
 			String studentvalue = (String) studentTable.getValueAt(
 					event.getIndex0(), 0);
 			BigDecimal newValue = (BigDecimal) studentTable.getValueAt(
 					event.getIndex0(), 2);
+			
+
 
 			MBPartner student = new Query(Env.getCtx(), MBPartner.Table_Name,
 					MBPartner.COLUMNNAME_Value + "=?", null)
 					.setOnlyActiveRecords(true).setParameters(studentvalue)
 					.first();
 			if (student != null && loopblock == false) {
+				
 				loopblock = true;
+
+				if(column==2)
+				{
+					studentTable.setValueAt(AcademicUtil.applyRound(newValue, newValue, "O"), event.getIndex0(), column);
+				}
+				
 				if (newValue.compareTo(new BigDecimal(0)) < 0
 						|| newValue.compareTo(currentMatterAssignmentSpecial
 								.getMaxEntry()) > 0) {

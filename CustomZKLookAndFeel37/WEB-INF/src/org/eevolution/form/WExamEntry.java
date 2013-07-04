@@ -252,12 +252,12 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),0));
 			fMatterAssignment.addValueChangeListener(this);
 
-			whereClause = " AND IsActive='Y'";
+			whereClause = " AND AD_Ref_List.IsActive='Y'";
 			MLookup lookup = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
 			fModality = new WTableDirEditor("Modality", true, false, true, lookup);
 			fModality.addValueChangeListener(this);
 
-			whereClause = "AND IsActive='Y'";
+			whereClause = "AND AD_Ref_List.IsActive='Y'";
 			lookup = MLookupFactory.get(Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Grade"), DisplayType.List);
 			fGrade = new WTableDirEditor("Grade", true,false,true,lookup);
 			fGrade.addValueChangeListener(this);
@@ -308,8 +308,8 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 						currentCourse=null;
 						
 						
-						String whereClause = " AND IsActive='Y' " +
-						(currentTeacher!=null? " AND (Value IN (SELECT Modality FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+						String whereClause = " AND AD_Ref_List.IsActive='Y' " +
+						(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT Modality FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
 					               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " ))" : "" );
 						
 						MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
@@ -320,8 +320,8 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 						fModality = new WTableDirEditor("Modality", true, false, true, lookup);
 						fModality.addValueChangeListener(this);
 
-						whereClause = " AND IsActive='Y' " +
-								(currentTeacher!=null? " AND (Value IN (SELECT Grade FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+						whereClause = " AND AD_Ref_List.IsActive='Y' " +
+								(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT Grade FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
 							               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " ))" : "" );
 						
 						

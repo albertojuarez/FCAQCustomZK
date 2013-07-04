@@ -30,7 +30,6 @@ import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.StringBox;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
-import org.adempiere.webui.panel.ADTabpanel;
 import org.adempiere.webui.panel.IADTabpanel;
 import org.compiere.model.GridField;
 import org.compiere.model.GridTab;
@@ -41,7 +40,6 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zul.Image;
-import org.zkoss.zul.Textbox;
 
 /**
  *
@@ -109,7 +107,8 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
         }
 
         this.setComponent(comp);
-        comp.setAttribute("zk_component_prefix", "Field_" + gridField.getColumnName() + "_" + gridField.getAD_Tab_ID() + "_" + gridField.getWindowNo() + "_");
+        //comp.setAttribute("zk_component_prefix", "Field_" + gridField.getColumnName() + "_" + gridField.getAD_Tab_ID() + "_" + gridField.getWindowNo() + "_");
+        comp.setAttribute("zk_component_ID", "Field_" + gridField.getColumnName() + "_" + gridField.getAD_Tab_ID() + "_" + gridField.getWindowNo());
         this.gridField = gridField;
         this.setMandatory(gridField.isMandatory(false));
         this.readOnly = gridField.isReadOnly();
