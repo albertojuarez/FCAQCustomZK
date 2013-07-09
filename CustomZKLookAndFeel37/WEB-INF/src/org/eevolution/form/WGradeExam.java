@@ -347,7 +347,14 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 
 			if(column==(3)) //Exam Grade
 			{
+				
 				BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 3);
+				
+				if(newValue==null)
+				{
+					newValue = BigDecimal.ZERO;
+				}
+				
 				if(student!=null)
 				{
 					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
