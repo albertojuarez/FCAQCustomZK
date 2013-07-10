@@ -34,6 +34,7 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ExamType;
+import org.fcaq.model.X_CA_ExamTypeDate;
 import org.fcaq.model.X_CA_MatterAssignment;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
@@ -327,8 +328,31 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		.setParameters("GE", schoolYear.get_ID())
 		.first();
 
-		if(examType.getDateFrom().getTime()< System.currentTimeMillis() && 
-				System.currentTimeMillis()< examType.getDateTo().getTime() )
+
+		whereClause = X_CA_ExamTypeDate.COLUMNNAME_CA_ExamType_ID + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Modality + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Grade + "=? ";
+
+		List<Object> parameters = new ArrayList<Object>();
+
+
+		parameters.add(examType.get_ID());
+		parameters.add(currentCourse.getModality());
+		parameters.add(currentCourse.getGrade());
+
+
+
+		X_CA_ExamTypeDate examDate = new Query(m_ctx, X_CA_ExamTypeDate.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true)
+		.setParameters(parameters)
+		.first();
+
+		if(examDate==null)
+			return true;
+
+
+		if(examDate.getDateFrom().getTime()< System.currentTimeMillis() && 
+				System.currentTimeMillis()< examDate.getDateTo().getTime() )
 			return false;
 		else
 			return true;
@@ -347,14 +371,14 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 
 			if(column==(3)) //Exam Grade
 			{
-				
+
 				BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 3);
-				
+
 				if(newValue==null)
 				{
 					newValue = BigDecimal.ZERO;
 				}
-				
+
 				if(student!=null)
 				{
 					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)

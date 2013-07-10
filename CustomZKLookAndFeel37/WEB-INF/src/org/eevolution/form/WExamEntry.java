@@ -1,6 +1,8 @@
 package org.eevolution.form;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -27,7 +29,6 @@ import org.compiere.model.MColumn;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.model.MLookupInfo;
-import org.compiere.model.MPayment;
 import org.compiere.model.Query;
 import org.compiere.util.CLogger;
 import org.compiere.util.DisplayType;
@@ -35,9 +36,8 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ExamType;
+import org.fcaq.model.X_CA_ExamTypeDate;
 import org.fcaq.model.X_CA_MatterAssignment;
-import org.fcaq.model.X_CA_NoteHeadingLine;
-import org.fcaq.model.X_CA_SchoolYear;
 import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
@@ -150,7 +150,7 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 	private void repaintParameterPanel() {
 		Rows rows = null;
 		Row row = null;
-		
+
 		try{
 			parameterLayout.removeChild(parameterLayout.getRows());
 		}catch(Exception e)
@@ -191,371 +191,400 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 		}
 	}
 
-		// Init Search Editor
-		private void dynInit() {
+	// Init Search Editor
+	private void dynInit() {
 
-			bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
-			bChekNotes.setLabel(Msg.getMsg(Env.getCtx(), "Chek Grades"));
+		bShowComments.setLabel(Msg.getMsg(Env.getCtx(), "ShowComments"));
+		bChekNotes.setLabel(Msg.getMsg(Env.getCtx(), "Chek Grades"));
 
-			examTable = new WListbox();
-			((WListbox)examTable).setWidth("100%");
-			((WListbox)examTable).setHeight("100%");
-			((WListbox)examTable).setFixedLayout(false);
-			((WListbox)examTable).setVflex(true);
-			((WListbox)examTable).setStyle("overflow:auto;");
+		examTable = new WListbox();
+		((WListbox)examTable).setWidth("100%");
+		((WListbox)examTable).setHeight("100%");
+		((WListbox)examTable).setFixedLayout(false);
+		((WListbox)examTable).setVflex(true);
+		((WListbox)examTable).setStyle("overflow:auto;");
 
-			isElective.setSelected(false);
-			isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
+		isElective.setSelected(false);
+		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
 
-			lCourseDef.setText(Msg.getMsg(Env.getCtx(), "Group"));
-			lExamType.setText(Msg.getMsg(Env.getCtx(), "ExamType"));
-			lTeacher.setText(Msg.getMsg(Env.getCtx(), "Teacher"));
-			lModality.setText(Msg.getMsg(Env.getCtx(), "Modality"));
-			lGrade.setText(Msg.getMsg(Env.getCtx(), "Grade"));
-			lSubject.setText(Msg.getMsg(Env.getCtx(), "Subject"));
-			
-			String whereClause = "";
-			//Teacher
-			
-			if(currentTeacher!=null)
-				whereClause = "AND C_BPartner_ID = " + currentTeacher.get_ID();
-			else
-				whereClause = "AND C_BPartner_ID in (SELECT C_BPartner_ID FROM CA_TeacherAssignment WHERE IsActive='Y')";
+		lCourseDef.setText(Msg.getMsg(Env.getCtx(), "Group"));
+		lExamType.setText(Msg.getMsg(Env.getCtx(), "ExamType"));
+		lTeacher.setText(Msg.getMsg(Env.getCtx(), "Teacher"));
+		lModality.setText(Msg.getMsg(Env.getCtx(), "Modality"));
+		lGrade.setText(Msg.getMsg(Env.getCtx(), "Grade"));
+		lSubject.setText(Msg.getMsg(Env.getCtx(), "Subject"));
 
-			int teacherColumn = MColumn.getColumn_ID("C_BPartner", "C_BPartner_ID");
-			fTeacher = new WTableDirEditor("C_BPartner_ID", true, false, true, AcademicUtil.buildLookup(teacherColumn, whereClause, form.getWindowNo()));
-			fTeacher.addValueChangeListener(this);
-			if(currentTeacher!=null)
-				fTeacher.setValue(currentTeacher.get_ID());
-			
-			//Tipo de Examen
-			
-			
-			whereClause = "AND CA_SchoolYear_ID =" + schoolYear.get_ID() +
-					(currentTeacher!=null? " AND (CA_ExamType_ID IN (SELECT CA_ExamType_ID FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
-							               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " ) OR Value='RE')" : "" );
-			
-			int examColumn = MColumn.getColumn_ID("CA_ExamType", "CA_ExamType_ID");
-			fExamType = new WTableDirEditor("CA_ExamType_ID", true, false, true, AcademicUtil.buildLookup(examColumn, whereClause, form.getWindowNo()));
-			fExamType.addValueChangeListener(this);
-			if(currentExamType!=null)
-				fExamType.setValue(currentExamType.get_ID());
+		String whereClause = "";
+		//Teacher
 
-			//Group
-			if(currentTeacher!=null)
-				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
-			else
-				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),0, isElective.isSelected()));
-			fCourseDef.addValueChangeListener(this);
+		if(currentTeacher!=null)
+			whereClause = "AND C_BPartner_ID = " + currentTeacher.get_ID();
+		else
+			whereClause = "AND C_BPartner_ID in (SELECT C_BPartner_ID FROM CA_TeacherAssignment WHERE IsActive='Y')";
 
-			//Subject when recovery
-			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),0));
-			fMatterAssignment.addValueChangeListener(this);
+		int teacherColumn = MColumn.getColumn_ID("C_BPartner", "C_BPartner_ID");
+		fTeacher = new WTableDirEditor("C_BPartner_ID", true, false, true, AcademicUtil.buildLookup(teacherColumn, whereClause, form.getWindowNo()));
+		fTeacher.addValueChangeListener(this);
+		if(currentTeacher!=null)
+			fTeacher.setValue(currentTeacher.get_ID());
 
-			whereClause = " AND AD_Ref_List.IsActive='Y'";
-			MLookup lookup = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
-			fModality = new WTableDirEditor("Modality", true, false, true, lookup);
-			fModality.addValueChangeListener(this);
-
-			whereClause = "AND AD_Ref_List.IsActive='Y'";
-			lookup = MLookupFactory.get(Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Grade"), DisplayType.List);
-			fGrade = new WTableDirEditor("Grade", true,false,true,lookup);
-			fGrade.addValueChangeListener(this);
-			
-			whereClause = " AND 1=0";
-			int subjectColumn = MColumn.getColumn_ID("CA_SubjectMatter", "CA_SubjectMatter_ID");
-			fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.buildLookup(subjectColumn, whereClause, form.getWindowNo()));
-			fSubjectMatter.addValueChangeListener(this);
-			
-			isElective.addActionListener(this);
-
-		}
-
-		@Override
-		public void valueChange(ValueChangeEvent evt) {
-			String name = evt.getPropertyName();
-			Object value = evt.getNewValue();
-
-			if ("C_BPartner_ID".equals(name))
-			{
-				if(value==null)
-				{
-					currentTeacher=null;
-				}
-				else
-				{
-					fTeacher.setValue(value);
-					currentTeacher= new MBPartner(m_ctx, (Integer)value, null);
-					fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
-					fCourseDef.addValueChangeListener(this);
-				}
-			}
-			else if("CA_ExamType_ID".equals(name))
-			{
-				if(value==null)
-				{
-					currentExamType = null;
-				}
-				else
-				{
-					fExamType.setValue(value);
-					currentExamType = new X_CA_ExamType(m_ctx, (Integer)value, null);
-					if(currentTeacher!=null)
-					{
-						fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
-						fCourseDef.addValueChangeListener(this);
-						fCourseDef.setValue(null);
-						currentCourse=null;
-						
-						
-						String whereClause = " AND AD_Ref_List.IsActive='Y' " +
-						(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT Modality FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
-					               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " ))" : "" );
-						
-						MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
-						MLookup lookup = new MLookup(info,0);
-						String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
-						sql = sql + whereClause;
-						info.Query = sql;
-						fModality = new WTableDirEditor("Modality", true, false, true, lookup);
-						fModality.addValueChangeListener(this);
-
-						whereClause = " AND AD_Ref_List.IsActive='Y' " +
-								(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT Grade FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
-							               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " ))" : "" );
-						
-						
-						info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), MColumn.getColumn_ID("CA_CourseDef", "Grade"), DisplayType.List);
-						lookup = new MLookup(info,0);
-						sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
-						sql = sql + whereClause;
-						info.Query = sql;
-						fGrade = new WTableDirEditor("Grade", true,false,true,lookup);
-						fGrade.addValueChangeListener(this);
-						currentModality=null;
-						currentGrade=null;
-						
-						
-					}
-				}
-			}
-			else if("CA_CourseDef_ID".equals(name))
-			{
-				if(value==null)
-				{
-					currentCourse = null;
-				}
-				else
-				{
-					fCourseDef.setValue(value);
-					currentCourse = new X_CA_CourseDef(m_ctx, (Integer)value, null);
-					fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, 
-							AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentTeacher.get_ID(), (Integer)fCourseDef.getValue()));
-					fMatterAssignment.addValueChangeListener(this);
-					fMatterAssignment.setValue(null);
-					currentAssignment=null;
-					
-				}
-			}
-			else if("CA_MatterAssignment_ID".equals(name))
-			{
-				if(value==null)
-				{
-					currentAssignment=null;
-				}
-				else
-				{
-					fMatterAssignment.setValue(value);
-					currentAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)value, null);
-				}
-			}
-			else if("Modality".equals(name))
-			{
-				if(value==null)
-				{
-					currentModality=null;
-				}
-				else
-				{
-					fModality.setValue(value);
-					currentModality = (String)value;
-					currentGrade=null;
-					fGrade.setValue(null);
-				}
-			}
-			else if("Grade".equals(name))
-			{
-				if(value==null)
-				{
-					currentGrade=null;
-				}
-				else
-				{
-					fGrade.setValue(value);
-					currentGrade=(String)value;
-					
-					
-					String whereClause = " AND (CA_SubjectMatter_ID IN (SELECT CA_SubjectMatter_ID FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
-				               " CA_SchoolYear_ID=" + schoolYear.get_ID() + " AND Modality='"+ currentModality+"' AND Grade='"+currentGrade+"'))";
-		
-					int subjectColumn = MColumn.getColumn_ID("CA_SubjectMatter", "CA_SubjectMatter_ID");
-					fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.buildLookup(subjectColumn, whereClause, form.getWindowNo()));
-					fSubjectMatter.addValueChangeListener(this);
-					currentSubject=null;
-				}
-				
-			}
-			else if("CA_SubjectMatter_ID".equals(name))
-			{
-				if(value==null)
-				{
-					currentSubject=null;
-				}
-				else
-				{
-					fSubjectMatter.setValue(value);
-					currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)value, null);
-				}
-			}
-			
-			
-			repaintParameterPanel();
-			refreshExamTable();
-		}
-
-		private void refreshExamTable() {
-			
-			examTable.setRowCount(0);
-			
-			if(currentExamType==null)
-				return;
-			
-			if("RE".equals(currentExamType.getValue()))
-			{
-				if(currentTeacher==null || currentCourse==null || currentAssignment==null)
-					return;
-			}
-			else
-			{
-				if(currentTeacher==null || currentModality==null || currentGrade==null || currentSubject==null)
-					return;
-			}
-			
-			Vector<String> columns = getColumns();
-			
-			Vector<Vector<Object>> data = getStudentData();
-
-			ListModelTable modelP = new ListModelTable(data);
-
-			modelP.addTableModelListener(this);
-			((WListbox)examTable).setData(modelP, columns);
-
-			((WListbox)examTable).setStyle("sizedByContent=true");
-
-			if("RE".equals(currentExamType.getValue()))
-				examTable.setColumnClass(0, Boolean.class, false);
-			else
-				examTable.setColumnClass(0, String.class, true);
-
-			examTable.setColumnClass(1, String.class, true);
-			examTable.setColumnClass(2, String.class, true);
-			examTable.setColumnClass(3, BigDecimal.class, true);
-			examTable.setColumnClass(4, BigDecimal.class, true);
-			examTable.setColumnClass(5, BigDecimal.class, true);
-			examTable.setColumnClass(6, BigDecimal.class, isReadOnly());
-			examTable.setColumnClass(7, BigDecimal.class, true);
+		//Tipo de Examen
 
 
-			
-			
-			
-			
-			examTable.autoSize();
-			((WListbox)examTable).setWidth("100%");
-			((WListbox)examTable).setHeight("100%");
-			
-		}
+		whereClause = "AND CA_SchoolYear_ID =" + schoolYear.get_ID() +
+				(currentTeacher!=null? " AND (CA_ExamType_ID IN (SELECT CA_ExamType_ID FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+						" CA_SchoolYear_ID=" + schoolYear.get_ID() + " ) OR Value='RE')" : "" );
 
-		private boolean isReadOnly() {
+		int examColumn = MColumn.getColumn_ID("CA_ExamType", "CA_ExamType_ID");
+		fExamType = new WTableDirEditor("CA_ExamType_ID", true, false, true, AcademicUtil.buildLookup(examColumn, whereClause, form.getWindowNo()));
+		fExamType.addValueChangeListener(this);
+		if(currentExamType!=null)
+			fExamType.setValue(currentExamType.get_ID());
 
-			String whereClause = X_CA_ExamType.COLUMNNAME_Value + "=? AND " + 
-								 X_CA_ExamType.COLUMNNAME_CA_SchoolYear_ID + "=?";
-			
-			X_CA_ExamType examType = new Query(m_ctx, X_CA_ExamType.Table_Name, whereClause, null)
-								.setOnlyActiveRecords(true)
-								.setParameters(currentExamType.getValue(), schoolYear.get_ID())
-								.first();
-			
-			if(examType.getDateFrom().getTime()< System.currentTimeMillis() && 
-					System.currentTimeMillis()< examType.getDateTo().getTime() )
-				return false;
-			else
-				return true;
-		}
-		
-		@Override
-		public void tableChanged(WTableModelEvent event) {
-			if(event.getIndex0()>=0)
-			{
-				int column = event.getColumn();
-				String studentvalue = (String) examTable.getValueAt(event.getIndex0(), (!"RE".equals(currentExamType.getValue())) ? 0:1);
-				MBPartner student = new Query(Env.getCtx(), MBPartner.Table_Name, MBPartner.COLUMNNAME_Value+"=?", null)
-				.setOnlyActiveRecords(true)
-				.setParameters(studentvalue)
-				.first();
-				
-				if(!"RE".equals(currentExamType.getValue()))
-				{
-					overrideMatterAssignment(student);
-				}
-				
-				if(column==0) //enable/disable exam
-				{
-					boolean isenabled = (Boolean)examTable.getValueAt(event.getIndex0(), 0);
-					if(!isenabled)
-					{
-						tryDeleteExam(student);
-						examTable.setValueAt(BigDecimal.ZERO, event.getIndex0(), 6+inccolumn);
-						calculateAnuals(student, event.getIndex0());
-					}
-				}
-				else if(column==(6+inccolumn)) //Exam Grade
-				{
-					BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 6+inccolumn);
-					if(student!=null)
-					{
-						if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
-						{
-							newValue = BigDecimal.ZERO;
-							examTable.setValueAt(newValue, event.getIndex0(), 6+inccolumn);
-	
-						}
-						else
-						{
-								saveExam(student, event.getIndex0(), newValue);
-						}
-					}
-				}
-			}
-		}
+		//Group
+		if(currentTeacher!=null)
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
+		else
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),0, isElective.isSelected()));
+		fCourseDef.addValueChangeListener(this);
 
-		@Override
-		public void onEvent(Event event) throws Exception {
+		//Subject when recovery
+		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),0));
+		fMatterAssignment.addValueChangeListener(this);
 
-			if (event.getTarget().equals(isElective))
-			{
+		whereClause = " AND AD_Ref_List.IsActive='Y'";
+		MLookup lookup = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
+		fModality = new WTableDirEditor("Modality", true, false, true, lookup);
+		fModality.addValueChangeListener(this);
 
-				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
-				fCourseDef.addValueChangeListener(this);
-				repaintParameterPanel();
-			}
-			
-		}
+		whereClause = "AND AD_Ref_List.IsActive='Y'";
+		lookup = MLookupFactory.get(Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Grade"), DisplayType.List);
+		fGrade = new WTableDirEditor("Grade", true,false,true,lookup);
+		fGrade.addValueChangeListener(this);
 
-		@Override
-		public ADForm getForm() {
-			return form;
-		}
+		whereClause = " AND 1=0";
+		int subjectColumn = MColumn.getColumn_ID("CA_SubjectMatter", "CA_SubjectMatter_ID");
+		fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.buildLookup(subjectColumn, whereClause, form.getWindowNo()));
+		fSubjectMatter.addValueChangeListener(this);
 
+		isElective.addActionListener(this);
 
 	}
+
+	@Override
+	public void valueChange(ValueChangeEvent evt) {
+		String name = evt.getPropertyName();
+		Object value = evt.getNewValue();
+
+		if ("C_BPartner_ID".equals(name))
+		{
+			if(value==null)
+			{
+				currentTeacher=null;
+			}
+			else
+			{
+				fTeacher.setValue(value);
+				currentTeacher= new MBPartner(m_ctx, (Integer)value, null);
+				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
+				fCourseDef.addValueChangeListener(this);
+			}
+		}
+		else if("CA_ExamType_ID".equals(name))
+		{
+			if(value==null)
+			{
+				currentExamType = null;
+			}
+			else
+			{
+				fExamType.setValue(value);
+				currentExamType = new X_CA_ExamType(m_ctx, (Integer)value, null);
+				if(currentTeacher!=null)
+				{
+					fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
+					fCourseDef.addValueChangeListener(this);
+					fCourseDef.setValue(null);
+					currentCourse=null;
+
+
+					String whereClause = " AND AD_Ref_List.IsActive='Y' " +
+							(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT ea.Modality FROM CA_ExamAssignment ea WHERE ea.C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+									" ea.CA_SchoolYear_ID=" + schoolYear.get_ID() + " AND ea.IsActive='Y' ))" : "" );
+
+					MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
+					MLookup lookup = new MLookup(info,0);
+					String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+					sql = sql + whereClause;
+					info.Query = sql;
+					fModality = new WTableDirEditor("Modality", true, false, true, lookup);
+					fModality.addValueChangeListener(this);
+
+					whereClause = " AND AD_Ref_List.IsActive='Y' " +
+							(currentTeacher!=null? " AND (AD_Ref_List.Value IN (SELECT ea.Grade FROM CA_ExamAssignment ea WHERE ea.C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+									" ea.CA_SchoolYear_ID=" + schoolYear.get_ID() + " AND ea.IsActive='Y'))" : "" );
+
+
+					info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), MColumn.getColumn_ID("CA_CourseDef", "Grade"), DisplayType.List);
+					lookup = new MLookup(info,0);
+					sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+					sql = sql + whereClause;
+					info.Query = sql;
+					fGrade = new WTableDirEditor("Grade", true,false,true,lookup);
+					fGrade.addValueChangeListener(this);
+					currentModality=null;
+					currentGrade=null;
+
+
+				}
+			}
+		}
+		else if("CA_CourseDef_ID".equals(name))
+		{
+			if(value==null)
+			{
+				currentCourse = null;
+			}
+			else
+			{
+				fCourseDef.setValue(value);
+				currentCourse = new X_CA_CourseDef(m_ctx, (Integer)value, null);
+				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, 
+						AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentTeacher.get_ID(), (Integer)fCourseDef.getValue()));
+				fMatterAssignment.addValueChangeListener(this);
+				fMatterAssignment.setValue(null);
+				currentAssignment=null;
+
+			}
+		}
+		else if("CA_MatterAssignment_ID".equals(name))
+		{
+			if(value==null)
+			{
+				currentAssignment=null;
+			}
+			else
+			{
+				fMatterAssignment.setValue(value);
+				currentAssignment = new X_CA_MatterAssignment(m_ctx, (Integer)value, null);
+			}
+		}
+		else if("Modality".equals(name))
+		{
+			if(value==null)
+			{
+				currentModality=null;
+			}
+			else
+			{
+				fModality.setValue(value);
+				currentModality = (String)value;
+				currentGrade=null;
+				fGrade.setValue(null);
+			}
+		}
+		else if("Grade".equals(name))
+		{
+			if(value==null)
+			{
+				currentGrade=null;
+			}
+			else
+			{
+				fGrade.setValue(value);
+				currentGrade=(String)value;
+
+
+				String whereClause = " AND (CA_SubjectMatter_ID IN (SELECT CA_SubjectMatter_ID FROM CA_ExamAssignment WHERE C_BPartner_ID=" + currentTeacher.get_ID() + " AND " +
+						" CA_SchoolYear_ID=" + schoolYear.get_ID() + " AND Modality='"+ currentModality+"' AND Grade='"+currentGrade+"'))";
+
+				int subjectColumn = MColumn.getColumn_ID("CA_SubjectMatter", "CA_SubjectMatter_ID");
+				fSubjectMatter = new WTableDirEditor("CA_SubjectMatter_ID", true, false, true, AcademicUtil.buildLookup(subjectColumn, whereClause, form.getWindowNo()));
+				fSubjectMatter.addValueChangeListener(this);
+				currentSubject=null;
+			}
+
+		}
+		else if("CA_SubjectMatter_ID".equals(name))
+		{
+			if(value==null)
+			{
+				currentSubject=null;
+			}
+			else
+			{
+				fSubjectMatter.setValue(value);
+				currentSubject = new X_CA_SubjectMatter(m_ctx, (Integer)value, null);
+			}
+		}
+
+
+		repaintParameterPanel();
+		refreshExamTable();
+	}
+
+	private void refreshExamTable() {
+
+		examTable.setRowCount(0);
+
+		if(currentExamType==null)
+			return;
+
+		if("RE".equals(currentExamType.getValue()))
+		{
+			if(currentTeacher==null || currentCourse==null || currentAssignment==null)
+				return;
+		}
+		else
+		{
+			if(currentTeacher==null || currentModality==null || currentGrade==null || currentSubject==null)
+				return;
+		}
+
+		Vector<String> columns = getColumns();
+
+		Vector<Vector<Object>> data = getStudentData();
+
+		ListModelTable modelP = new ListModelTable(data);
+
+		modelP.addTableModelListener(this);
+		((WListbox)examTable).setData(modelP, columns);
+
+		((WListbox)examTable).setStyle("sizedByContent=true");
+
+		if("RE".equals(currentExamType.getValue()))
+			examTable.setColumnClass(0, Boolean.class, false);
+		else
+			examTable.setColumnClass(0, String.class, true);
+
+		examTable.setColumnClass(1, String.class, true);
+		examTable.setColumnClass(2, String.class, true);
+		examTable.setColumnClass(3, BigDecimal.class, true);
+		examTable.setColumnClass(4, BigDecimal.class, true);
+		examTable.setColumnClass(5, BigDecimal.class, true);
+		examTable.setColumnClass(6, BigDecimal.class, isReadOnly());
+		examTable.setColumnClass(7, BigDecimal.class, true);
+
+
+
+
+
+
+		examTable.autoSize();
+		((WListbox)examTable).setWidth("100%");
+		((WListbox)examTable).setHeight("100%");
+
+	}
+
+	private boolean isReadOnly() {
+
+		String whereClause = X_CA_ExamType.COLUMNNAME_Value + "=? AND " + 
+				X_CA_ExamType.COLUMNNAME_CA_SchoolYear_ID + "=?";
+
+		X_CA_ExamType examType = new Query(m_ctx, X_CA_ExamType.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true)
+		.setParameters(currentExamType.getValue(), schoolYear.get_ID())
+		.first();
+
+		whereClause = X_CA_ExamTypeDate.COLUMNNAME_CA_ExamType_ID + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Modality + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Grade + "=? ";
+
+		List<Object> parameters = new ArrayList<Object>();
+
+		if("RE".equals(currentExamType.getValue()))
+		{
+			parameters.add(examType.get_ID());
+			parameters.add(currentCourse.getModality());
+			parameters.add(currentCourse.getGrade());
+		}
+		else
+		{
+			parameters.add(examType.get_ID());
+			parameters.add(currentModality);
+			parameters.add(currentGrade);
+		}
+
+		X_CA_ExamTypeDate examDate = new Query(m_ctx, X_CA_ExamTypeDate.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true)
+		.setParameters(parameters)
+		.first();
+
+		if(examDate==null)
+			return true;
+
+
+
+		if(examDate.getDateFrom().getTime()< System.currentTimeMillis() && 
+				System.currentTimeMillis()< examDate.getDateTo().getTime() )
+			return false;
+		else
+			return true;
+	}
+
+	@Override
+	public void tableChanged(WTableModelEvent event) {
+		if(event.getIndex0()>=0)
+		{
+			int column = event.getColumn();
+			String studentvalue = (String) examTable.getValueAt(event.getIndex0(), (!"RE".equals(currentExamType.getValue())) ? 0:1);
+			MBPartner student = new Query(Env.getCtx(), MBPartner.Table_Name, MBPartner.COLUMNNAME_Value+"=?", null)
+			.setOnlyActiveRecords(true)
+			.setParameters(studentvalue)
+			.first();
+
+			if(!"RE".equals(currentExamType.getValue()))
+			{
+				overrideMatterAssignment(student);
+			}
+
+			if(column==0) //enable/disable exam
+			{
+				boolean isenabled = (Boolean)examTable.getValueAt(event.getIndex0(), 0);
+				if(!isenabled)
+				{
+					tryDeleteExam(student);
+					examTable.setValueAt(BigDecimal.ZERO, event.getIndex0(), 6+inccolumn);
+					calculateAnuals(student, event.getIndex0());
+				}
+			}
+			else if(column==(6+inccolumn)) //Exam Grade
+			{
+				BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 6+inccolumn);
+				if(student!=null)
+				{
+					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
+					{
+						newValue = BigDecimal.ZERO;
+						examTable.setValueAt(newValue, event.getIndex0(), 6+inccolumn);
+
+					}
+					else
+					{
+						saveExam(student, event.getIndex0(), newValue);
+					}
+				}
+			}
+		}
+	}
+
+	@Override
+	public void onEvent(Event event) throws Exception {
+
+		if (event.getTarget().equals(isElective))
+		{
+
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
+			fCourseDef.addValueChangeListener(this);
+			repaintParameterPanel();
+		}
+
+	}
+
+	@Override
+	public ADForm getForm() {
+		return form;
+	}
+
+
+}
