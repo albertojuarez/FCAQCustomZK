@@ -1,11 +1,8 @@
 package org.eevolution.form;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.adempiere.webui.component.Button;
-import org.adempiere.webui.component.Combobox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
@@ -26,12 +23,8 @@ import org.compiere.model.MLookupFactory;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.fcaq.model.X_CA_Schedule;
-import org.fcaq.model.X_CA_ScheduleDay;
-import org.fcaq.model.X_CA_SchedulePeriod;
 import org.fcaq.util.DateUtils;
 import org.zkoss.zhtml.Span;
-import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -153,7 +146,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		{
 			for(int x=1; x<=9; x++)
 			{
-				Period period = new Period(x, days, periods, iseditablemode, (MBPartner) periods.get(0).getC_BPartner());
+				Period period = new Period(x, days, periods, iseditablemode, currentBPartner);
 				period.iseditablemode=iseditablemode;
 				periodLayout.appendChild(period);
 			}
@@ -235,21 +228,13 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 			if(value==null)
 				return;
 			currentBPartner = new MBPartner(ctx, (Integer)fBPartner.getValue(), null);
-
-			if(currentBPartner.get_ValueAsBoolean("IsStudent"))
-			{
-				schedule = loadStudentSchedule();
-			}
-			else{
-				schedule = loadTeacherSchedule();
-			}
+			
+			if(currentBPartner.isStudent())
+				loadStudentSchedule();
+			else
+				loadTeacherSchedule();
 		}
-
-		if(schedule!=null)
-		{
-			loadSchedule(schedule);
-		}
-
+		
 		renderNorth();
 		
 		scheduleLayout.removeChild(scheduleCenter);
@@ -266,14 +251,15 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		for(int x=1; x<=9; x++)
 		{
 			Period period = null;
-			if(!currentBPartner.get_ValueAsBoolean("IsStudent"))
-			{
-				period = new Period(x, days, periods, iseditablemode,currentBPartner);
+			if(!currentBPartner.isStudent() 
+					&& !isSportTeacher(currentBPartner))
+			{	
+				period = new Period(x, days, periods, iseditablemode, currentBPartner);
 				period.iseditablemode=iseditablemode;
 			}
 			else
 			{
-				period = new Period(x, days, periods, false,currentBPartner);
+				period = new Period(x, days, periods, false, currentBPartner);
 				period.iseditablemode=false;
 			}
 			periodLayout.appendChild(period);

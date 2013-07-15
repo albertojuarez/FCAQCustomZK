@@ -2,11 +2,11 @@ package org.eevolution.form;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.Panel;
 import org.compiere.model.MBPartner;
-import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
 import org.zkoss.zhtml.Span;
@@ -23,7 +23,7 @@ public class Period extends Panel{
 	MBPartner currentBPartner = null;
 
 
-	public Period(int periodNo, List<X_CA_ScheduleDay> days, List<X_CA_SchedulePeriod> periods, boolean iseditablemode, MBPartner teacher){
+	public Period(int periodNo, List<X_CA_ScheduleDay> days, Vector<Vector<Object>> periods, boolean iseditablemode, MBPartner teacher){
 
 		super();
 		
@@ -74,24 +74,23 @@ public class Period extends Panel{
 
 		if(periods!=null)
 		{
-			for(X_CA_SchedulePeriod period : periods)
+			for(Vector<Object> periodLine : periods)
 			{
-				if(realPeriodNo.equals(period.getCA_PeriodClass().getName())){
+				X_CA_SchedulePeriod period = (X_CA_SchedulePeriod)periodLine.get(0);
+				
+				if (realPeriodNo.equals(period.getCA_PeriodClass().getName())) {
 					for(ClassRoom classroom : classRooms)
 					{
 						for(int day=1; day<=6; day++) // X_CA_ScheduleDay day : days)
 						{
 							if(classroom.getPeriodno().equals(realPeriodNo) && classroom.getDayno()==day && period.getCA_ScheduleDay().getDayNo()==day)
 							{
-								classroom.setPeriod(period);
+								classroom.setPeriod(periodLine);
 							}
 						}
 					}
 				}
 			}
-
 		}
-
 	}
-
 }

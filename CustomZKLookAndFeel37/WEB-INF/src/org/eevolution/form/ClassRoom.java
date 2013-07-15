@@ -1,6 +1,7 @@
 package org.eevolution.form;
 
 import java.util.List;
+import java.util.Vector;
 
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.component.Button;
@@ -12,7 +13,6 @@ import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.Window;
-import org.adempiere.webui.editor.WSearchEditor;
 import org.adempiere.webui.editor.WTableDirEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
@@ -23,15 +23,14 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ElectivePeriod;
-import org.fcaq.model.X_CA_GroupAssignment;
 import org.fcaq.model.X_CA_MatterAssignment;
-import org.fcaq.model.X_CA_TeacherAssignment;
 import org.fcaq.model.X_CA_PeriodClass;
 import org.fcaq.model.X_CA_Schedule;
+import org.fcaq.model.X_CA_ScheduleClass;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
-import org.fcaq.model.X_CA_SubjectMatter;
-import org.fcaq.model.X_I_CA_Schedule;
+import org.fcaq.model.X_CA_SchoolYear;
+import org.fcaq.process.ProcessJustification;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -56,6 +55,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	private int dayno = 0;
 	private String periodno = "";
 	private X_CA_SchedulePeriod period=null;
+	private X_CA_MatterAssignment matterAssignment = null;
 
 	public boolean iseditablemode = false;
 
@@ -69,6 +69,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	{
 		this.currentBPartner = teacher;
 		fGroup = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(0,currentBPartner.get_ID(), isElective.isSelected()));
+		fGroup.addValueChangeListener(this);
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(0,currentBPartner.get_ID(), 0));
 	}
 	public MBPartner getTeacher()
@@ -146,9 +147,10 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 		return period;
 	}
 
-	public void setPeriod(X_CA_SchedulePeriod period)
+	public void setPeriod(Vector<Object> periodLine)
 	{
-		this.period = period;
+		this.period = (X_CA_SchedulePeriod) periodLine.get(0);
+		this.matterAssignment = (X_CA_MatterAssignment) periodLine.get(1);
 		repaintSchedulePeriod();
 	}
 
@@ -156,18 +158,41 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 
 	private void repaintSchedulePeriod()
 	{
-		lSubject.setText(period.getCA_SubjectMatter()!=null?period.getCA_SubjectMatter().getName():"");
-		lTeacher.setText(period.getC_BPartner()!=null?period.getC_BPartner().getName():"");
-
-		if(period.getCA_CourseDef_ID()>0)
-		{
-			lGroup.setText( period.getCA_CourseDef().getGrade() + " - " + period.getCA_CourseDef().getParallel());
-		}
+		if (matterAssignment != null)
+			if (matterAssignment.getElectiveSubject_ID() > 0)
+				lSubject.setText(matterAssignment.getElectiveSubject().getName());
+			else if (matterAssignment.getCA_SubjectMatter_ID() > 0)
+				lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() 
+						+ (matterAssignment.isAttendance() ? "" : "*"));
+			else
+				lSubject.setText("");
+			
 		else
-		{
+			lSubject.setText("");
+		
+		if (this.getTeacher().isStudent()) {
+			
+			int C_BPartner_ID = ProcessJustification.getBPartnerTeacher(Env.getCtx(), matterAssignment, null);
+			
+			if (C_BPartner_ID > 0) {
+				MBPartner teacher = new MBPartner(Env.getCtx(), C_BPartner_ID, null);
+				lTeacher.setText(teacher.getName());
+			}
+			else
+				lTeacher.setText("");
+			
 			lGroup.setText("");
 		}
-
+		else {
+			
+			lTeacher.setText("");
+			lGroup.setText((X_CA_CourseDef)matterAssignment.getCA_GroupAssignment().getCA_CourseDef()!=null 
+					? matterAssignment.getCA_GroupAssignment().getCA_CourseDef().getGrade() + " - " 
+					+ (matterAssignment.getCA_GroupAssignment().getCA_CourseDef().getParallel()!=null
+						? matterAssignment.getCA_GroupAssignment().getCA_CourseDef().getParallel() 
+						: (matterAssignment.getCA_GroupAssignment().getCA_CourseDef().getName()!=null
+						? matterAssignment.getCA_GroupAssignment().getCA_CourseDef().getName() : "")) : "");
+		}
 	}
 
 
@@ -216,32 +241,30 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	private void deleteCurrentPeriod() {
 		if(period!=null)
 		{
-
 			try{
-
-
-				X_CA_Schedule schedule = new Query(Env.getCtx(), X_CA_Schedule.Table_Name, X_CA_Schedule.COLUMNNAME_CA_CourseDef_ID+ "=?", null)
-				.setOnlyActiveRecords(true).setParameters(period.getCA_CourseDef_ID()).first();
-
+				
+				X_CA_SchoolYear schoolYear = AcademicUtil.getCurrentSchoolYear(Env.getCtx());
+				
+				X_CA_Schedule schedule = new Query(Env.getCtx(), X_CA_Schedule.Table_Name, X_CA_Schedule.COLUMNNAME_C_BPartner_ID + "=? AND " + X_CA_Schedule.COLUMNNAME_CA_SchoolYear_ID + "=?", null)
+				.setOnlyActiveRecords(true).setParameters(currentBPartner.get_ID(), schoolYear != null ? schoolYear.get_ID() : 0).first();
+				
 				X_CA_ScheduleDay day = new Query(Env.getCtx(), X_CA_ScheduleDay.Table_Name, X_CA_ScheduleDay.COLUMNNAME_DayNo + "=? AND " + X_CA_ScheduleDay.COLUMNNAME_CA_Schedule_ID + "=?", null)
 				.setOnlyActiveRecords(true).setParameters(dayno, schedule.getCA_Schedule_ID()).first();
-
+				
 				List<X_CA_SchedulePeriod> tmpperiods = new Query(Env.getCtx(), X_CA_SchedulePeriod.Table_Name, X_CA_SchedulePeriod.COLUMNNAME_CA_ScheduleDay_ID+"=? AND " +
-						X_CA_SchedulePeriod.COLUMNNAME_C_BPartner_ID+"=? AND " + 
-						X_CA_SchedulePeriod.COLUMNNAME_CA_SubjectMatter_ID + "=? AND "+
-						X_CA_SchedulePeriod.COLUMNNAME_ElectiveSubject_ID + "=? AND " + 
+						X_CA_SchedulePeriod.COLUMNNAME_CA_CourseDef_ID+"=? AND " + 
+						X_CA_SchedulePeriod.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + 
 						X_CA_SchedulePeriod.COLUMNNAME_CA_PeriodClass_ID + "=?", null)
 				.setOnlyActiveRecords(true)
-				.setParameters(day.get_ID(), currentBPartner.get_ID(), period.getCA_SubjectMatter_ID(), period.getElectiveSubject_ID(), period.getCA_PeriodClass_ID())
+				.setParameters(day.get_ID(), period.getCA_CourseDef_ID(), period.getCA_MatterAssignment_ID(), period.getCA_PeriodClass_ID())
 				.list();
-
-				for(X_CA_SchedulePeriod tmpperiod : tmpperiods )
+				
+				for(X_CA_SchedulePeriod tmpperiod : tmpperiods)
 				{
 					tmpperiod.deleteEx(true);
 				}
-
-
-				period.deleteEx(true);
+				
+				//period.deleteEx(true);
 				period = null;
 			}
 			catch(Exception e)
@@ -250,6 +273,7 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 			}
 		}
 	}
+	
 	private void showEditWindow()
 	{
 
@@ -335,280 +359,149 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	private void createSchedule() {
 		
 		deleteCurrentPeriod();
-
-		boolean success = createStandardSchedule();
-
-		if(!success)
-		{
-			FDialog.error(0, "Can't create standar Schedule");
-			return;
-		}
-
-		success = createTeacherSchedule();
+		
+		boolean success = createTeacherSchedule();
 		if(!success)
 		{
 			FDialog.error(0, "Can't create standar Schedule");
 			return;
 		}
 	}
-
-
+	
 	private boolean createTeacherSchedule() {
-
-
+		
 		if(currentBPartner==null)
 			return false;
-
+		
 		// Find or create schedule
-
-		String whereClause = X_CA_Schedule.COLUMNNAME_C_BPartner_ID + "=? ";
+		
+		X_CA_SchoolYear schoolYear = AcademicUtil.getCurrentSchoolYear(Env.getCtx());
+		
+		if (schoolYear == null)
+			return false;
+		
+		String whereClause = X_CA_Schedule.COLUMNNAME_C_BPartner_ID + "=? AND " +
+				X_CA_Schedule.COLUMNNAME_CA_SchoolYear_ID + "=?";
+		
 		X_CA_Schedule schedule = new Query(Env.getCtx(), X_CA_Schedule.Table_Name, whereClause, null)
-		.setOnlyActiveRecords(true)
-		.setParameters(currentBPartner.get_ID())
-		.firstOnly();
-
+			.setOnlyActiveRecords(true)
+			.setParameters(currentBPartner.get_ID(), schoolYear.get_ID())
+			.firstOnly();
+		
 		if(schedule==null)
 		{
 			schedule = new X_CA_Schedule(Env.getCtx(), 0, null);
 		}
-
+		
 		schedule.setC_BPartner_ID(currentBPartner.get_ID());
 		schedule.save();
-
+		
 		// Find or create Day
-
+		
 		whereClause = X_CA_ScheduleDay.COLUMNNAME_CA_Schedule_ID + "=? AND " + X_CA_ScheduleDay.COLUMNNAME_DayNo + "=?";
 		X_CA_ScheduleDay day = new Query(Env.getCtx(), X_CA_ScheduleDay.Table_Name, whereClause, null)
-		.setOnlyActiveRecords(true)
-		.setParameters(schedule.get_ID(),dayno)
-		.firstOnly();
-
+			.setOnlyActiveRecords(true)
+			.setParameters(schedule.get_ID(), dayno)
+			.firstOnly();
+		
 		if(day==null)
 		{
 			day = new X_CA_ScheduleDay(Env.getCtx(), 0, null);
 		}
-
+		
 		day.setCA_Schedule_ID(schedule.get_ID());
 		day.setDayNo(dayno);
 		day.saveEx();
-
+		
 		//Find or create period
-
-
+		
 		X_CA_CourseDef group = new X_CA_CourseDef(Env.getCtx(),(Integer) fGroup.getValue(), null);
-
-		if(group.getSection().equals("05")) // Secundaria
+		
+		if(group.getSection().equals(X_CA_CourseDef.SECTION_Secundaria)) // Secundaria
 		{
-			whereClause = X_CA_PeriodClass.COLUMNNAME_Name + "=? AND " + X_CA_PeriodClass.COLUMNNAME_CA_ScheduleClass_ID + "=?"  ;
-
+			whereClause = "EXISTS (SELECT 1 FROM " + X_CA_ScheduleClass.Table_Name + 
+					" WHERE " + X_CA_ScheduleClass.COLUMNNAME_IsActive + 
+					"=? AND " + X_CA_ScheduleClass.COLUMNNAME_ActivityType + 
+					" IS NULL AND " + X_CA_ScheduleClass.COLUMNNAME_Section +
+					" =? AND " + X_CA_ScheduleClass.COLUMNNAME_CA_ScheduleClass_ID +
+					"=" + X_CA_PeriodClass.Table_Name + "." + X_CA_PeriodClass.COLUMNNAME_CA_ScheduleClass_ID + 
+					") AND " + X_CA_PeriodClass.COLUMNNAME_Name + "=?";
+			
 			X_CA_PeriodClass period = new Query(Env.getCtx(), X_CA_PeriodClass.Table_Name, whereClause, null)
-			.setParameters(periodno, 1000003)
+			.setParameters(true, X_CA_CourseDef.SECTION_Secundaria, periodno)
 			.setOnlyActiveRecords(true)
 			.first();
-
+			
 			whereClause = X_CA_SchedulePeriod.COLUMNNAME_CA_ScheduleDay_ID + "=? AND " + X_CA_SchedulePeriod.COLUMNNAME_CA_PeriodClass_ID + "=?";
-
+			
 			X_CA_SchedulePeriod schPeriod = new Query(Env.getCtx(), X_CA_SchedulePeriod.Table_Name, whereClause, null)
-			.setParameters(day.get_ID(), period.get_ID())
-			.setOnlyActiveRecords(true)
-			.firstOnly();
-
+				.setParameters(day.get_ID(), period.get_ID())
+				.setOnlyActiveRecords(true)
+				.firstOnly();
+			
 			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(Env.getCtx(), (Integer)fMatterAssignment.getValue(), null);
-
+			
 			if(schPeriod==null)
 			{
 				schPeriod = new X_CA_SchedulePeriod(Env.getCtx(), 0,null);
 			}
-
+			
 			schPeriod.setCA_ScheduleDay_ID(day.get_ID()); // dia
 			schPeriod.setCA_CourseDef_ID(group.getCA_CourseDef_ID()); // curso
-
-
 			schPeriod.setCA_PeriodClass_ID(period.get_ID());
-			//schPeriod.setScheduleType(ischedule.get_ValueAsString("ScheduleType"));
-
-			boolean iselective = assignment.getCA_SubjectMatter().isElective();
-
-			if(iselective)
+			schPeriod.setCA_MatterAssignment_ID(assignment.get_ID());
+			
+			if(assignment.getCA_GroupAssignment().getCA_CourseDef().isElective())
 			{
 				schPeriod.setCA_SubjectMatter_ID(assignment.getElectiveSubject_ID());
-				schPeriod.set_ValueOfColumn("ElectiveSubject_ID", assignment.getCA_SubjectMatter_ID());
+				schPeriod.setElectiveSubject_ID(assignment.getCA_SubjectMatter_ID());
 			}
 			else
 				schPeriod.setCA_SubjectMatter_ID(assignment.getCA_SubjectMatter_ID());
-
+			
 			schPeriod.saveEx();
-
-			this.setPeriod(schPeriod);
-
+			
+			if (assignment.getCA_GroupAssignment().getCA_CourseDef().isElective())
+				setElectivePeriod(assignment, day, period);
+			
+			Vector<Object> periodLine = new Vector<Object>();
+			
+			periodLine.add(schPeriod);
+			periodLine.add(assignment);
+			
+			this.setPeriod(periodLine);
+			
 			return true;
-
 		}
 		else // primaria && <
 		{
-
+			
 		}
-
-
+		
 		return false;
-
 	}
-
-
-
-	private boolean createStandardSchedule() {
-
-
-		X_CA_CourseDef course = new X_CA_CourseDef(Env.getCtx(), (Integer) fGroup.getValue(), null);
-
-		if(course==null)
-			return true;
-
-		// Find or create schedule
-
-		String whereClause = X_CA_Schedule.COLUMNNAME_CA_CourseDef_ID + "=? ";
-		X_CA_Schedule schedule = new Query(Env.getCtx(), X_CA_Schedule.Table_Name, whereClause, null)
-		.setOnlyActiveRecords(true)
-		.setParameters(course.get_ID())
-		.firstOnly();
-		if(schedule==null)
+	private void setElectivePeriod(X_CA_MatterAssignment assignment, X_CA_ScheduleDay day, X_CA_PeriodClass period) {
+		
+		if(assignment !=null)
 		{
-			schedule = new X_CA_Schedule(Env.getCtx(), 0, null);
-		}
-		schedule.setCA_CourseDef_ID(course.getCA_CourseDef_ID());
-		schedule.save();
+			String whereClause = X_CA_ElectivePeriod.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + 
+					X_CA_ElectivePeriod.COLUMNNAME_CA_PeriodClass_ID + "=? AND " + X_CA_ElectivePeriod.COLUMNNAME_DayNo +"=?" ;
 
-		// Find or create Day
+			X_CA_ElectivePeriod electivePeriod = new Query(Env.getCtx(), X_CA_ElectivePeriod.Table_Name, whereClause, null)
+			.setOnlyActiveRecords(true)
+			.setParameters(assignment.get_ID(), period.getCA_PeriodClass_ID(), day.getDayNo())
+			.first();
 
-		whereClause = X_CA_ScheduleDay.COLUMNNAME_CA_Schedule_ID + "=? AND " + X_CA_ScheduleDay.COLUMNNAME_DayNo + "=?";
-		X_CA_ScheduleDay day = new Query(Env.getCtx(), X_CA_ScheduleDay.Table_Name, whereClause, null)
-		.setOnlyActiveRecords(true)
-		.setParameters(schedule.get_ID(),dayno)
-		.firstOnly();
-		if(day==null)
-		{
-			day = new X_CA_ScheduleDay(Env.getCtx(), 0, null);
-		}
-
-		day.setCA_Schedule_ID(schedule.get_ID());
-		day.setDayNo(dayno);
-		day.saveEx();
-
-		//Find or create period
-
-		whereClause = X_CA_PeriodClass.COLUMNNAME_Name + "=? AND " + X_CA_PeriodClass.COLUMNNAME_CA_ScheduleClass_ID + "=?"  ;
-
-		X_CA_PeriodClass period = new Query(Env.getCtx(), X_CA_PeriodClass.Table_Name, whereClause, null)
-		.setParameters(periodno, 1000003)
-		.setOnlyActiveRecords(true)
-		.first();
-
-		if(period!=null)
-		{
-			whereClause = X_CA_SchedulePeriod.COLUMNNAME_CA_ScheduleDay_ID + "=? AND ( " + X_CA_SchedulePeriod.COLUMNNAME_CA_PeriodClass_ID + "=? )";
-
-
-			boolean iselective = isElective.isSelected();
-
-			if(iselective)
-				whereClause += " AND " + X_CA_SchedulePeriod.COLUMNNAME_C_BPartner_ID + "=? ";
-
-
-			Query query = new Query(Env.getCtx(), X_CA_SchedulePeriod.Table_Name, whereClause, null)
-			.setOnlyActiveRecords(true);
-
-			if(iselective)
-				query.setParameters(day.get_ID(), 0, currentBPartner.get_ID());
-			else
-				query.setParameters(day.get_ID(), 0);
-
-			X_CA_SchedulePeriod schPeriod = query.first();		
-
-			if(schPeriod==null)
+			if(electivePeriod==null)
 			{
-				schPeriod = new X_CA_SchedulePeriod(Env.getCtx(), 0, null);
+				electivePeriod = new X_CA_ElectivePeriod(Env.getCtx(), 0, null);
 			}
 
+			electivePeriod.setDayNo(day.getDayNo());
+			electivePeriod.setCA_PeriodClass_ID(period.get_ID());
+			electivePeriod.setCA_MatterAssignment_ID(assignment.get_ID());
 
-			X_CA_MatterAssignment assignment = new X_CA_MatterAssignment(Env.getCtx(), (Integer)fMatterAssignment.getValue(), null);
-
-			schPeriod.setCA_ScheduleDay_ID(day.get_ID()); // dia
-			schPeriod.setC_BPartner_ID(currentBPartner.getC_BPartner_ID()); // profesor
-
-
-			if(iselective)
-			{
-				schPeriod.setCA_SubjectMatter_ID(assignment.getElectiveSubject_ID());
-				schPeriod.set_ValueOfColumn("ElectiveSubject_ID", assignment.getCA_SubjectMatter_ID());
-			}
-			else
-				schPeriod.setCA_SubjectMatter_ID(assignment.getCA_SubjectMatter_ID());
-
-			schPeriod.setCA_PeriodClass_ID(period.get_ID());
-
-
-
-
-			schPeriod.saveEx();
-
-
-			if(iselective)
-			{
-
-				/*
-				whereClause = X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
-						" IN ( Select " +  X_CA_TeacherAssignment.COLUMNNAME_CA_MatterAssignment_ID +
-						" FROM " + X_CA_TeacherAssignment.Table_Name + 
-						" WHERE " + X_CA_TeacherAssignment.COLUMNNAME_C_BPartner_ID + "=?)" +
-						" AND " + X_CA_MatterAssignment.COLUMNNAME_ElectiveSubject_ID + "=?" + 
-						" AND " + X_CA_MatterAssignment.COLUMNNAME_CA_GroupAssignment_ID + 
-						" IN ( SELECT " + X_CA_GroupAssignment.COLUMNNAME_CA_GroupAssignment_ID + 
-						" FROM " + X_CA_GroupAssignment.Table_Name +
-						" WHERE " + X_CA_GroupAssignment.COLUMNNAME_CA_CourseDef_ID + "=?) " +
-						" AND " + X_CA_MatterAssignment.COLUMNNAME_CA_SubjectMatter_ID + "=?"; 
-
-
-				X_CA_MatterAssignment assignment2 = new Query(Env.getCtx(), X_CA_MatterAssignment.Table_Name, whereClause, null)
-				.setOnlyActiveRecords(true)
-				.setParameters(currentBPartner.get_ID(),assignment.getElectiveSubject_ID(), course.get_ID(), assignment.getCA_MatterAssignment_ID())
-				.first();*/
-
-				if(assignment !=null)
-				{
-
-					whereClause = X_CA_ElectivePeriod.COLUMNNAME_CA_MatterAssignment_ID + "=? AND " + 
-							X_CA_ElectivePeriod.COLUMNNAME_CA_PeriodClass_ID + "=? AND " + X_CA_ElectivePeriod.COLUMNNAME_DayNo +"=?" ;
-
-					X_CA_ElectivePeriod electivePeriod = new Query(Env.getCtx(), X_CA_ElectivePeriod.Table_Name, whereClause, null)
-					.setOnlyActiveRecords(true)
-					.setParameters(assignment.get_ID(), period.getCA_PeriodClass_ID(), day.getDayNo())
-					.first();
-
-					if(electivePeriod==null)
-					{
-						electivePeriod = new X_CA_ElectivePeriod(Env.getCtx(), 0, null);
-					}
-
-					electivePeriod.setDayNo(day.getDayNo());
-					electivePeriod.setCA_PeriodClass_ID(period.get_ID());
-					electivePeriod.setCA_MatterAssignment_ID(assignment.get_ID());
-
-					electivePeriod.saveEx();
-				}
-
-
-
-
-
-
-
-				return true;
-
-
-
-			}
-
+			electivePeriod.saveEx();
 		}
-		return true;
 	}
 }
