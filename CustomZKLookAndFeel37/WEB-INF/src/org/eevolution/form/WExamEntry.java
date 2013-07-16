@@ -220,10 +220,24 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 		if(currentTeacher!=null)
 			whereClause = "AND C_BPartner_ID = " + currentTeacher.get_ID();
 		else
-			whereClause = "AND C_BPartner_ID in (SELECT C_BPartner_ID FROM CA_TeacherAssignment WHERE IsActive='Y')";
+			whereClause = " AND C_BPartner_ID in ( " +
+					" SELECT ta.C_BPartner_ID FROM CA_Role_OthersAccess ra " +
+					" Inner Join Ca_Teacherassignment Ta On Ta.Isactive='Y' " +
+					" Inner Join Ca_Matterassignment Ma On Ma.Ca_Matterassignment_Id = Ta.Ca_Matterassignment_Id And Ma.Isactive='Y' " +
+					" Inner Join Ca_Groupassignment Ga On Ga.Ca_Groupassignment_Id = Ma.Ca_Groupassignment_Id " +
+					" inner join CA_CourseDef cd on cd.ca_coursedef_id = ga.ca_coursedef_id and cd.section = ra.section and cd.modality = ra.modality " +
+					" WHERE ra.AD_Role_ID =  " + Env.getContextAsInt(m_ctx, 0,"#AD_Role_ID") + " ) " ;
 
-		int teacherColumn = MColumn.getColumn_ID("C_BPartner", "C_BPartner_ID");
-		fTeacher = new WTableDirEditor("C_BPartner_ID", true, false, true, AcademicUtil.buildLookup(teacherColumn, whereClause, form.getWindowNo()));
+		int teacherColumn = MColumn.getColumn_ID("CA_MassiveJustification", "Course_BPartner_ID");
+
+		MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), teacherColumn, DisplayType.Table);
+		MLookup lookup = new MLookup(info,0);
+		String sql = info.Query.substring(0, info.Query.indexOf(" ORDER BY"));
+		sql = sql + whereClause;
+		info.Query = sql;
+
+
+		fTeacher = new WTableDirEditor("C_BPartner_ID", true, false, true, lookup);
 		fTeacher.addValueChangeListener(this);
 		if(currentTeacher!=null)
 			fTeacher.setValue(currentTeacher.get_ID());
@@ -253,7 +267,7 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 		fMatterAssignment.addValueChangeListener(this);
 
 		whereClause = " AND AD_Ref_List.IsActive='Y'";
-		MLookup lookup = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
+		lookup = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, MColumn.getColumn_ID("CA_CourseDef", "Modality"), DisplayType.List);
 		fModality = new WTableDirEditor("Modality", true, false, true, lookup);
 		fModality.addValueChangeListener(this);
 
