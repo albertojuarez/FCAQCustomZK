@@ -612,7 +612,7 @@ implements ValueChangeListener, IProcessParameter
 			dynamicDisplay();
 		}
 		
-		private void dynamicDisplay() {
+		public void dynamicDisplay() {
 			for(int i = 0; i < m_wEditors.size(); i++) {
 				WEditor editor = m_wEditors.get(i);
 				GridField mField = editor.getGridField();
@@ -646,7 +646,7 @@ implements ValueChangeListener, IProcessParameter
 		 * @author teo_sarca [ 1699826 ]
 		 * @see org.compiere.model.GridField#restoreValue()
 		 */
-		protected void restoreContext() {
+		public void restoreContext() {
 			for (GridField f : m_mFields) {
 				if (f != null)
 					f.restoreValue();
@@ -656,5 +656,14 @@ implements ValueChangeListener, IProcessParameter
 					f.restoreValue();
 			}
 		}
+		
+		public void refreshContext()
+	 	{
+			for(int i = 0; i < m_wEditors.size(); i++) {
+				WEditor editor = m_wEditors.get(i);
+				GridField mField = editor.getGridField();
+				editor.setValue(mField.getDefault());
+			}
+	 	}
 	}	//	ProcessParameterPanel
 

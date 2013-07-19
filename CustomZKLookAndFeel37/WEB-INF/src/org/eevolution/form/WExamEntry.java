@@ -228,7 +228,7 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 					" inner join CA_CourseDef cd on cd.ca_coursedef_id = ga.ca_coursedef_id and cd.section = ra.section and cd.modality = ra.modality " +
 					" WHERE ra.AD_Role_ID =  " + Env.getContextAsInt(m_ctx, 0,"#AD_Role_ID") + " ) " ;
 
-		int teacherColumn = MColumn.getColumn_ID("CA_MassiveJustification", "Course_BPartner_ID");
+		int teacherColumn = MColumn.getColumn_ID("CA_TeacherAssignment", "Course_BPartner_ID");
 
 		MLookupInfo info = MLookupFactory.getLookupInfo (Env.getCtx(), form.getWindowNo(), teacherColumn, DisplayType.Table);
 		MLookup lookup = new MLookup(info,0);
@@ -587,10 +587,12 @@ public class WExamEntry extends ExamEntry implements IFormController, EventListe
 
 		if (event.getTarget().equals(isElective))
 		{
-
-			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
-			fCourseDef.addValueChangeListener(this);
-			repaintParameterPanel();
+			if(currentTeacher!=null)
+			{
+				fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentTeacher.get_ID(), isElective.isSelected()));
+				fCourseDef.addValueChangeListener(this);
+				repaintParameterPanel();
+			}
 		}
 
 	}
