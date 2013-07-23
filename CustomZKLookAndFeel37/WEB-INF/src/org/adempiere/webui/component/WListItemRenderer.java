@@ -615,15 +615,15 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				value = ((Textbox)source).getValue();
 			}
 
-			//if(value != null)
-			//{
+			if(value != null)
+			{
 				vcEvent = new TableValueChangeEvent(source,
 						tableColumn.getHeaderValue().toString(),
 						row, col,
 						value, value);
 
 				fireTableValueChange(vcEvent);
-			//}
+			}
 		}
 		else if (event.getTarget() instanceof WListbox && Events.ON_SELECT.equals(event.getName()))
 		{

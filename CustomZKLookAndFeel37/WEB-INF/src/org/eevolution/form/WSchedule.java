@@ -1,11 +1,8 @@
 package org.eevolution.form;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.adempiere.webui.component.Button;
-import org.adempiere.webui.component.Combobox;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
@@ -26,12 +23,10 @@ import org.compiere.model.MLookupFactory;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.fcaq.model.X_CA_Schedule;
-import org.fcaq.model.X_CA_ScheduleDay;
-import org.fcaq.model.X_CA_SchedulePeriod;
+import org.fcaq.model.X_CA_SchoolYear;
+import org.fcaq.util.AcademicUtil;
 import org.fcaq.util.DateUtils;
 import org.zkoss.zhtml.Span;
-import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zkex.zul.Borderlayout;
@@ -54,6 +49,8 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 	private WTableDirEditor fGroup = null; // Curso (Grado, paralelo)
 	private Label lSubject = null;
 	private WTableDirEditor fSubject = null; // Materia
+	private Label lSchoolYear = null;
+	private WTableDirEditor fSchoolYear = null;
 
 	private Button bSave = new Button("Save");
 
@@ -90,8 +87,11 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		MLookup teacher = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
 		fBPartner = new WSearchEditor("C_BPartner_ID", true, false, true, teacher);
 		fBPartner.addValueChangeListener(this);
+		
+		fSchoolYear = new WTableDirEditor("CA_SchoolYear_ID", true, false, true, AcademicUtil.buildLookup(1000000, "", form.getWindowNo()));
+		fSchoolYear.setValue(getSchoolYear().get_ID());
+		fSchoolYear.addValueChangeListener(this);
 	}
-
 
 	private void zkInit()
 	{
@@ -112,56 +112,50 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 		if(iseditablemode)
 		{
-
 			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Find"));
+			lSchoolYear = new Label(Msg.getMsg(ctx, "SchoolYear"));
 			row = rows.newRow();
+			row.appendChild(lSchoolYear);
+			row.appendChild(fSchoolYear.getComponent());
 			row.appendChild(lBPartner);
 			row.appendChild(fBPartner.getComponent());
-
 		}
+		
 		row = rows.newRow();
 		row.appendChild(new Space());
 		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   D\u00EDa actual " + DateUtils.getDayNo()));
-
-
+		
 		scheduleLayout.setWidth("99%");
 		scheduleLayout.setHeight("100%");
-
+		
 		Center mainCenter = new Center();
-
+		
 		mainCenter.setFlex(true);
 		mainCenter.appendChild(scheduleLayout);
 		mainLayout.appendChild(mainCenter);
 		
 		renderNorth();
-
 		
-
-
-
-
 		//scheduleCenter.setFlex(true);
-
-
+		
 		periodLayout.setHeight("400px");
 		periodLayout.setWidth("99%");
-
+		
 		scheduleCenter.appendChild(periodLayout);
 		scheduleLayout.appendChild(scheduleCenter);
-
+		
 		if(days!=null && periods!=null)
 		{
 			for(int x=1; x<=9; x++)
 			{
-				Period period = new Period(x, days, periods, iseditablemode, (MBPartner) periods.get(0).getC_BPartner());
+				Period period = new Period(x, days, periods, 
+						iseditablemode, currentBPartner, getSchoolYear());
 				period.iseditablemode=iseditablemode;
 				periodLayout.appendChild(period);
 			}
 		}
 	}
-
-
-
+	
 	private void renderNorth() {
 		
 		scheduleLayout.removeChild(scheduleNorth);
@@ -169,12 +163,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		scheduleNorth = new North();
 		
 		Panel schedulePanelNorth = new Panel();
-
+		
 		scheduleNorth.appendChild(schedulePanelNorth);
 		scheduleLayout.appendChild(scheduleNorth);
 		scheduleNorth.setStyle("border: none");
-
-		
 		
 		Span span = new Span();
 		span.setParent(schedulePanelNorth);
@@ -182,7 +174,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		Label header = new Label("Period");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
-
+		
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
@@ -220,7 +212,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 	}
-
+	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
 		String name = evt.getPropertyName();
@@ -235,21 +227,35 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 			if(value==null)
 				return;
 			currentBPartner = new MBPartner(ctx, (Integer)fBPartner.getValue(), null);
-
-			if(currentBPartner.get_ValueAsBoolean("IsStudent"))
-			{
-				schedule = loadStudentSchedule();
-			}
-			else{
-				schedule = loadTeacherSchedule();
+			
+			if(currentBPartner.isStudent())
+				loadStudentSchedule();
+			else
+				loadTeacherSchedule();
+		}
+		
+		if ("CA_SchoolYear_ID".equals(name)) {
+			
+			fSchoolYear.setValue(value);
+			
+			if (value==null)
+				return;
+			
+			X_CA_SchoolYear schoolYear = new X_CA_SchoolYear(ctx, (Integer)fSchoolYear.getValue(), null);
+			
+			setSchoolYear(schoolYear);
+			
+			if (currentBPartner == null)
+				return;
+			else {
+				
+				if(currentBPartner.isStudent())
+					loadStudentSchedule();
+				else
+					loadTeacherSchedule();
 			}
 		}
-
-		if(schedule!=null)
-		{
-			loadSchedule(schedule);
-		}
-
+		
 		renderNorth();
 		
 		scheduleLayout.removeChild(scheduleCenter);
@@ -266,14 +272,17 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		for(int x=1; x<=9; x++)
 		{
 			Period period = null;
-			if(!currentBPartner.get_ValueAsBoolean("IsStudent"))
-			{
-				period = new Period(x, days, periods, iseditablemode,currentBPartner);
+			if(!currentBPartner.isStudent() 
+					&& !isSportTeacher(currentBPartner))
+			{	
+				period = new Period(x, days, periods, 
+						iseditablemode, currentBPartner, getSchoolYear());
 				period.iseditablemode=iseditablemode;
 			}
 			else
 			{
-				period = new Period(x, days, periods, false,currentBPartner);
+				period = new Period(x, days, periods, 
+						false, currentBPartner, getSchoolYear());
 				period.iseditablemode=false;
 			}
 			periodLayout.appendChild(period);
