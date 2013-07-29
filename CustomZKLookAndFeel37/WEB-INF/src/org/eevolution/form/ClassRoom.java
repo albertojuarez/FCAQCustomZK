@@ -216,8 +216,9 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 	{
 		if (matterAssignment != null)
 			if (matterAssignment.getElectiveSubject_ID() > 0)
-				lSubject.setText(matterAssignment.getElectiveSubject().getName()
-						+ (matterAssignment.isAttendance() ? "" : "*"));
+				lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() +
+						" " + matterAssignment.getElectiveSubject().getName() + 
+						(matterAssignment.isAttendance() ? "" : "*"));
 			else if (matterAssignment.getCA_SubjectMatter_ID() > 0)
 				lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() 
 						+ (matterAssignment.isAttendance() ? "" : "*"));
