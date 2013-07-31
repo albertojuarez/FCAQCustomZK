@@ -1,12 +1,18 @@
 package org.eevolution.form;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.adempiere.webui.LayoutUtils;
+import org.adempiere.webui.apps.BusyDialog;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Combobox;
+import org.adempiere.webui.component.ConfirmPanel;
+import org.adempiere.webui.component.DesktopTabpanel;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
@@ -15,10 +21,15 @@ import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
+import org.adempiere.webui.component.Tab;
+import org.adempiere.webui.component.Tabbox;
+import org.adempiere.webui.component.Tabpanels;
+import org.adempiere.webui.component.Tabs;
 import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.WListbox;
 import org.adempiere.webui.editor.WDateEditor;
-import org.adempiere.webui.editor.WSearchEditor;
+import org.adempiere.webui.editor.WNumberEditor;
+import org.adempiere.webui.editor.WStringEditor;
 import org.adempiere.webui.event.ValueChangeEvent;
 import org.adempiere.webui.event.ValueChangeListener;
 import org.adempiere.webui.event.WTableModelEvent;
@@ -28,75 +39,96 @@ import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
 import org.adempiere.webui.window.FDialog;
-import org.compiere.model.MAttributeInstance;
+import org.compiere.minigrid.IDColumn;
+import org.compiere.model.I_C_Payment;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MBankAccount;
 import org.compiere.model.MDocType;
-import org.compiere.model.MLookup;
-import org.compiere.model.MLookupFactory;
 import org.compiere.model.MRefList;
 import org.compiere.model.MSequence;
+import org.compiere.model.MTimeExpenseLine;
 import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.eevolution.model.X_HR_Employee;
+import org.fcaq.model.I_CA_Holder;
+import org.fcaq.model.MCAHolder;
+import org.fcaq.model.MCAPaymentType;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
+import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
+import org.zkoss.zul.Div;
 import org.zkoss.zul.Html;
 import org.zkoss.zul.Space;
+import org.zkoss.zul.Vbox;
 
 public class WFCAQPayment extends FCAQPayment implements IFormController, EventListener, WTableModelListener, ValueChangeListener{
 
+	private MCAHolder holder = null;
+	private Tabbox tabbedPane = new Tabbox();
+	private Borderlayout mainPanel = new Borderlayout();
+	//private Grid selNorthPanel = GridFactory.newGridLayout();
+	private ConfirmPanel confirmPanelSel = new ConfirmPanel(true);
+	private ConfirmPanel confirmPanelGen = new ConfirmPanel(false, true, false, false, false, false, false);
+	private StatusBarPanel statusBar = new StatusBarPanel();
+	private Borderlayout genPanel = new Borderlayout();
+	private Borderlayout studentPanel = new Borderlayout();
+	private Html info = new Html();
+	//private Borderlayout mainLayout = new Borderlayout();
+	private BusyDialog progressWindow;
+
+	
 	private CustomForm form = new CustomForm();
-	private Borderlayout mainLayout = new Borderlayout();
-	private Panel parameterPanel = new Panel();
-	private Grid parameterLayout = GridFactory.newGridLayout();
+	
+	private Vbox paymentNorthVertialPanel = new Vbox();
+	private Vbox paymentCenterVertialPanel = new Vbox();
+	
+	private Panel paymentTopPanel = new Panel();
+	private Grid paymentTopLayout = GridFactory.newGridLayout();
+	
+	private Panel studentTablePanel = new Panel();
+	private  Borderlayout studentTableLayout = new Borderlayout();
+	
+	private Panel paymentTablePanel = new Panel();
+	private  Borderlayout paymentTableLayout = new Borderlayout();
+	
+	private Panel paymentButtonPanel = new Panel();
+	private Grid paymentButtonLayout = GridFactory.newGridLayout();
+	
+	private Panel paymentSummaryTopPanel = new Panel();
+	private Grid paymentSummaryTopLayout = GridFactory.newGridLayout();
 	
 	private Button bRefresh = new Button();
-	private Panel southPanel = new Panel();
-	private StatusBarPanel statusBar = new StatusBarPanel();
-	
-	
-	private Panel paymentPanel = new Panel();
-	private Borderlayout borderPaymentLayout = new Borderlayout();
-	private Panel paymentSummaryPanel = new Panel();
-	private Grid paymentSummaryLayout = GridFactory.newGridLayout();
-	
-	private Panel paymentSouthPanel = new Panel();
-	private Grid paymentSouthLayout = GridFactory.newGridLayout();
+	//private Panel southPanel = new Panel();
 	
 	private Label lGeneralData = new Label();
-	private Label lParent = new Label();
-	private WSearchEditor fParent = null;
+	//private Label lParent = new Label();
+	//private WSearchEditor fParent = null;
 	private Checkbox worksInCollege = new Checkbox();
 	private Label lStudentData = new Label();
 	
 	//Payment fields
-	
-	private Label lChildNo = new Label();
-	private Textbox fChildNo = new Textbox();
-	private Label lScholarship = new Label();
-	private Textbox fScholarship = new Textbox();
+	//private Label lChildNo = new Label();
+	//private Textbox fChildNo = new Textbox();
+	//private Label lScholarship = new Label();
+	//private Textbox fScholarship = new Textbox();
 	private Label lSingleMonth = new Label();
-	private Textbox fSingleMonth = new Textbox();
+	private WNumberEditor fSingleMonth = new WNumberEditor();
 	private Label lSingleYear = new Label();
-	private Textbox fSingleYear = new Textbox();
+	private WNumberEditor fSingleYear = new WNumberEditor();;
 	private Label lSingleTotal = new Label();
-	private Textbox fSingleTotal = new Textbox();
+	private WNumberEditor fSingleTotal = new WNumberEditor();
 	private Label lConsolidated = new Label();
 	private Label lConMonth = new Label();
-	private Textbox fConMonth = new Textbox();
+	private WNumberEditor fConMonth = new WNumberEditor();
 	private Label lConYear = new Label();
-	private Textbox fConYear = new Textbox();
+	private WNumberEditor fConYear = new WNumberEditor();
 	private Label lConTotal = new Label();
-	private Textbox fConTotal = new Textbox();
-	private Label lPaymentModality = new Label();
-	private Combobox fPaymentMode = new Combobox();
+	private  WNumberEditor fConTotal = new WNumberEditor();
 	
 	private Label lPaymentReceipt = new Label();
 	private Label lDocumentType = new Label();
@@ -108,15 +140,16 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	private Label lConcept = new Label();
 	private Combobox fConcept = new Combobox();
 	private Label lValue = new Label();
-	private Textbox fValue = new Textbox();
-	private Textbox fValueDiff = new Textbox();
-	
-	private Label lPaymentMode = new Label();
+	private  WNumberEditor fValue = new  WNumberEditor();
+	private  WNumberEditor fValueDiff = new  WNumberEditor();
 	
 	private Button bNewPayment = new Button(Msg.translate(ctx, "NewPayment"));
 	private Button bSavePayment = new Button(Msg.translate(ctx, "CompletePayments"));
 
 	private Label currentBox = new Label();
+	
+	protected Label holderLabel = new Label();
+	protected WStringEditor holderField = new WStringEditor();
 	
 	
 	public WFCAQPayment()
@@ -127,6 +160,23 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			loadStartData();
 			dynInit();
 			zkInit();
+			
+			Borderlayout contentPane = new Borderlayout();
+			form.appendChild(contentPane);
+			contentPane.setWidth("99%");
+			contentPane.setHeight("100%");
+			Center center = new Center();
+			center.setStyle("border: none");
+			contentPane.appendChild(center);
+			center.appendChild(tabbedPane);
+			center.setFlex(true);
+			South south = new South();
+			south.setStyle("border: none");
+			contentPane.appendChild(south);
+			south.appendChild(statusBar);
+			LayoutUtils.addSclass("status-border", statusBar);
+			south.setHeight("22px");			
+			
 			loadStudentTable();
 			loadPaymentTable();
 		}
@@ -141,175 +191,199 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 
 
 	private void zkInit() {
-		form.appendChild(mainLayout);
-		mainLayout.setWidth("99%");
-		mainLayout.setHeight("100%");
-		parameterPanel.appendChild(parameterLayout);
 		
-		North north = new North();
-		north.setStyle("border: none");
-		mainLayout.appendChild(north);
-		north.appendChild(parameterPanel);
+		
+		mainPanel.setWidth("99%");
+		mainPanel.setHeight("90%");
+		mainPanel.setStyle("border: none; position: absolute");
+		
+		DesktopTabpanel tabpanel = new DesktopTabpanel();
+		tabpanel.appendChild(mainPanel);
+		Tabpanels tabPanels = new Tabpanels();
+		tabPanels.appendChild(tabpanel);
+		tabbedPane.appendChild(tabPanels);
+		Tabs tabs = new Tabs();
+		tabbedPane.appendChild(tabs);
+		Tab tab = new Tab(Msg.getMsg(Env.getCtx(), "Payment"));
+		tabs.appendChild(tab);
+		
+		paymentNorthVertialPanel.setHeight("250px");
+		paymentNorthVertialPanel.setWidth("99%");
+		
+		//Define top panel
+		paymentTopPanel.appendChild(paymentTopLayout);
+		paymentTopPanel.setWidth("800px");
+		//paymentTopPanel.setHeight("50px");
 		Rows rows = null;
 		Row row = null;
-		parameterLayout.setWidth("800px");
-		rows = parameterLayout.newRows();
+		rows = paymentTopLayout.newRows();
 		row = rows.newRow();
 		lGeneralData.setStyle("font-weight: bold");
 		row.appendChild(lGeneralData);
 		row = rows.newRow();
-		row.appendChild(lParent.rightAlign());
-		row.appendChild(fParent.getComponent());
+
+		row.appendChild(holderLabel.rightAlign());
+		row.appendChild(holderField.getComponent());
 		row.appendChild(new Space());
 		row.appendChild(worksInCollege);
 		row.appendChild(new Space());
 		row.appendChild(currentBox.rightAlign());
-		row = rows.newRow();
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row = rows.newRow();
-		row.appendChild(new Html("<hr>"));
+		//row = rows.newRow();
+		//row.appendChild(new Space());
+		//row = rows.newRow();
+		//row.appendChild(new Html("<hr>"));
+		
+		paymentNorthVertialPanel.appendChild(paymentTopPanel);
+		
+		
+		//Define Table Students
+		studentTablePanel.appendChild(studentTableLayout);
+		studentTablePanel.appendChild((WListbox)studentTable);
+		((WListbox)studentTable).setWidth("99%");
+		((WListbox)studentTable).setHeight("100%");
+		
+		paymentNorthVertialPanel.appendChild(studentTablePanel);
+		
+		//South Panel
+		paymentButtonPanel.appendChild(paymentButtonLayout);
+		rows = paymentButtonLayout.newRows();
 		row = rows.newRow();
 		lStudentData.setStyle("font-weight: bold");
 		row.appendChild(lStudentData);
-		
-		
-		
-		
-		Center center = new Center();
-		center.setFlex(true);
-		mainLayout.appendChild(center);
-		
-		center.appendChild((WListbox)studentTable);
-		center.setStyle("height: 25%");
-		((WListbox)studentTable).setWidth("99%");
-		((WListbox)studentTable).setHeight("100%");
-		center.setStyle("border: none");
-		
-		
-		South south = new South();
-		south.setStyle("border: none");
-		south.setStyle("height: 75%");
-
-		mainLayout.appendChild(south);
-		south.appendChild(borderPaymentLayout);
-
-		// Payment 
-		
-
-		North paynorth = new North();
-		paynorth.setStyle("border: none");
-		paynorth.appendChild(paymentSummaryPanel);
-		paymentSummaryPanel.appendChild(paymentSummaryLayout);
-
-		
-		borderPaymentLayout.appendChild(paynorth);
-		borderPaymentLayout.setWidth("800px");
-		borderPaymentLayout.setHeight("100%");
-		
-		rows = paymentSummaryLayout.newRows();
-		row = rows.newRow();
-		row.appendChild(lChildNo.rightAlign());
-		row.appendChild(fChildNo);
-		row.appendChild(lScholarship.rightAlign());
-		row.appendChild(fScholarship);
-		
 		row = rows.newRow();
 		row.appendChild(lSingleMonth.rightAlign());
-		row.appendChild(fSingleMonth);
+		fSingleMonth.setReadWrite(false);
+		row.appendChild(fSingleMonth.getComponent());
 		row.appendChild(lSingleYear.rightAlign());
-		row.appendChild(fSingleYear);
+		fSingleYear.setReadWrite(false);
+		row.appendChild(fSingleYear.getComponent());
 		row.appendChild(lSingleTotal.rightAlign());
-		row.appendChild(fSingleTotal);
-		row = rows.newRow();
+		fSingleTotal.setReadWrite(false);
+		row.appendChild(fSingleTotal.getComponent());;
 
 		row = rows.newRow();
-		row.appendChild(new Space());
-		row = rows.newRow();
-		row.appendChild(new Html("<hr>"));
-		row = rows.newRow();
+		//row.appendChild(new Space());
+		//row = rows.newRow();
+		//row.appendChild(new Html("<hr>"));
+		//row = rows.newRow();
 		lConsolidated.setStyle("font-weight: bold");
 		row.appendChild(lConsolidated);
 		
 		row = rows.newRow();
 		row.appendChild(lConMonth.rightAlign());
-		row.appendChild(fConMonth);
+		fConMonth.setReadWrite(true);
+		row.appendChild(fConMonth.getComponent());
 		row.appendChild(lConYear.rightAlign());
-		row.appendChild(fConYear);
+		fConYear.setReadWrite(true);
+		row.appendChild(fConYear.getComponent());
 		row.appendChild(lConTotal.rightAlign());
-		row.appendChild(fConTotal);
-		row.appendChild(lPaymentModality.rightAlign());
-		row.appendChild(fPaymentMode);
-		row = rows.newRow();
+		fConTotal.setReadWrite(false);
+		row.appendChild(fConTotal.getComponent());
+		
+		
+		paymentNorthVertialPanel.appendChild(paymentButtonPanel);
+		
+		North north = new North();
+		north.appendChild(paymentNorthVertialPanel);
+		mainPanel.appendChild(north);	
+		
+		paymentCenterVertialPanel.setWidth("99%");
+		paymentCenterVertialPanel.setHeight("99%");
+		
+		paymentSummaryTopPanel.appendChild(paymentSummaryTopLayout);
+		paymentSummaryTopPanel.setWidth("800px");
+		paymentSummaryTopPanel.setHeight("100%");
 
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row = rows.newRow();
-		row.appendChild(new Html("<hr>"));
+		rows = paymentSummaryTopLayout.newRows();
 		row = rows.newRow();
 		lPaymentReceipt.setStyle("font-weight: bold");
-		row.appendChild(lPaymentReceipt);
 		
+		row.appendChild(lPaymentReceipt);
 		row = rows.newRow();
 		row.appendChild(lDocumentType.rightAlign());
 		row.appendChild(fDocumentType);
-		
 		row = rows.newRow();
+		fDocumentNo.setReadonly(true);
 		row.appendChild(lDocumentNo.rightAlign());
 		row.appendChild(fDocumentNo);
 		row.appendChild(lDate.rightAlign());
 		row.appendChild(fDate.getComponent());
 		
-		row = rows.newRow();
+		/*row = rows.newRow();
 		row.appendChild(lConcept.rightAlign());
-		row.appendChild(fConcept);
+		row.appendChild(fConcept);*/
+		
 		row.appendChild(lValue.rightAlign());
-		row.appendChild(fValue);
-		row.appendChild(fValueDiff);
-		row = rows.newRow();
-
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row = rows.newRow();
-		row.appendChild(new Html("<hr>"));
-		row = rows.newRow();
-		lPaymentMode.setStyle("font-weight: bold");
-		row.appendChild(lPaymentMode);
+		row.appendChild(fValue.getComponent());
+		fValueDiff.setReadWrite(false);
+		row.appendChild(fValueDiff.getComponent());
+		
+		//row = rows.newRow();
+		//row.appendChild(new Space());
+		//row = rows.newRow();
+		//row.appendChild(new Html("<hr>"));
 		row = rows.newRow();
 		row.appendChild(bNewPayment);
 		row.appendChild(bSavePayment);
-
-		 center = new Center();
-		center.setFlex(true);
-		borderPaymentLayout.appendChild(center);
 		
-		center.appendChild((WListbox)paymentTable);
-		center.setStyle("height: 25%");
+		paymentCenterVertialPanel.appendChild(paymentSummaryTopPanel);
+		
+
+		paymentTablePanel.appendChild(paymentTableLayout);
+		paymentTablePanel.appendChild((WListbox)paymentTable);
 		((WListbox)paymentTable).setWidth("99%");
 		((WListbox)paymentTable).setHeight("100%");
-		center.setStyle("border: none");
+		
+		paymentCenterVertialPanel.appendChild(paymentTablePanel);
+
+		Center center = new Center();
+		center.appendChild(paymentCenterVertialPanel);
+		mainPanel.appendChild(center);
+		
+		South south = new South();
+		south.appendChild(confirmPanelGen);
+		confirmPanelGen.setStyle("margin-top:2px; margin-bottom:2px; margin-right:2px;margin-left:2px;");
+		
+		confirmPanelGen.addActionListener(this);
+		mainPanel.appendChild(south);
+
+		//
+		tabpanel = new DesktopTabpanel();
+		tabPanels.appendChild(tabpanel);
+		tabpanel.appendChild(genPanel);
+		tab = new Tab(Msg.getMsg(Env.getCtx(), "Credit Status"));
+		tabs.appendChild(tab);
+		
+		tabpanel = new DesktopTabpanel();
+		tabPanels.appendChild(tabpanel);
+		tabpanel.appendChild(studentPanel);
+		tab = new Tab(Msg.getMsg(Env.getCtx(), "Data User"));
+		tabs.appendChild(tab);
 		
 	}
 
 	
 
-	private void dynInit() {
-		
+	private void dynInit() {		
 		paymentTable = ListboxFactory.newDataTable();
 		studentTable = ListboxFactory.newDataTable();
+
+		holderLabel.setText(Msg.getElement(Env.getCtx(), "Value", false));
+    	holderLabel.setMandatory(true);
+        holderField = new WStringEditor ("CA_Holder_ID", false, false, true, 10, 30, null, null);	
+		
+		//lParent.setText(Msg.translate(ctx, "Parent"));		
+		//int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
+		//MLookup lookupBP = MLookupFactory.get (ctx, form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
+		//fParent = new WSearchEditor("C_BPartner_ID", true, false, true, lookupBP);
 		
 		lGeneralData.setText(Msg.translate(ctx, "GeneralData"));
-		lParent.setText(Msg.translate(ctx, "Parent"));
-		
-		int AD_Column_ID = 2893;        //  C_BPartner.C_BPartner_ID
-		MLookup lookupBP = MLookupFactory.get (ctx, form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fParent = new WSearchEditor("C_BPartner_ID", true, false, true, lookupBP);
-		
 		
 		worksInCollege.setLabel(Msg.translate(ctx, "WorksInCollege"));
+		worksInCollege.setEnabled(false);
 		lStudentData.setText(Msg.translate(ctx, "StudentData"));
-		lChildNo.setText(Msg.translate(ctx,"ChildNo"));
-		lScholarship.setText(Msg.translate(ctx, "Scholarship"));
+		/*lChildNo.setText(Msg.translate(ctx,"ChildNo"));
+		lScholarship.setText(Msg.translate(ctx, "Scholarship"));*/
 		lSingleMonth.setText(Msg.translate(ctx, "SingleMonth"));
 		lSingleYear.setText(Msg.translate(ctx, "SingleYear"));
 		lSingleTotal.setText(Msg.translate(ctx, "SingleTotal"));
@@ -318,7 +392,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		lConMonth.setText(Msg.translate(ctx, "ConsolidatedMonth"));
 		lConYear.setText(Msg.translate(ctx, "ConsolidatedYear"));
 		lConTotal.setText(Msg.translate(ctx, "ConsolidatedTotal"));
-		lPaymentModality.setText(Msg.translate(ctx, "PaymentModality"));
+		//lPaymentModality.setText(Msg.translate(ctx, "PaymentModality"));
 		
 		lPaymentReceipt.setText(Msg.translate(ctx, "PaymentReceipt"));
 		lDocumentType.setText(Msg.translate(ctx, "DocumentType"));
@@ -327,13 +401,13 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		fDate.setValue(new Timestamp(System.currentTimeMillis()));
 		lConcept.setText(Msg.translate(ctx, "Concept"));
 		lValue.setText(Msg.translate(ctx, "PaymentValue"));
-		lPaymentMode.setText(Msg.translate(ctx, "PaymentMode"));
+		//lPaymentMode.setText(Msg.translate(ctx, "PaymentMode"));
 		
-		fPaymentMode.appendItem("Diners", "DI");
-		fPaymentMode.appendItem("Pago Anticipado", "AP");
-		fPaymentMode.appendItem("Rol de Pagos", "PR");
-		fPaymentMode.appendItem("Pago Mesual", "MP");
-		fPaymentMode.appendItem("Pago Web", "WP");
+		//fPaymentMode.appendItem("Diners", "DI");
+		//fPaymentMode.appendItem("Pago Anticipado", "AP");
+		//fPaymentMode.appendItem("Rol de Pagos", "PR");
+		//fPaymentMode.appendItem("Pago Mesual", "MP");
+		//fPaymentMode.appendItem("Pago Web", "WP");
 		
 		currentBox.setText("Caja Actual: " + cashbox.getAccountNo());
 		
@@ -347,10 +421,14 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		fDocumentNo.setText(MSequence.getDocumentNo(Env.getContextAsInt(ctx, "@#AD_Client_ID@"), "CA_Payment", null) );
 		
 		
-		fParent.addValueChangeListener(this);
+		//fParent.addValueChangeListener(this);
+		holderField.getComponent().addEventListener(Events.ON_CHANGE, this);
+		
 		((WListbox)studentTable).addActionListener(this);
 		bNewPayment.addActionListener(this);
 		bSavePayment.addActionListener(this);
+		
+		//addPaymentRow();
 		
 	}
 	
@@ -362,45 +440,80 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		((WListbox)studentTable).clear();
 		((WListbox)studentTable).getModel().removeTableModelListener(this);
 		
-		ListModelTable modelP = new ListModelTable(data);
-		modelP.addTableModelListener(this);
-		((WListbox)studentTable).setData(modelP, columnNames);
+		ListModelTable model = new ListModelTable(data);
+		model.addTableModelListener(this);
+		((WListbox)studentTable).setData(model, columnNames);
 		
-		studentTable.setColumnClass(0, String.class, false);        //  1- Código
-		studentTable.setColumnClass(1, String.class, false);          // 2- Nombre
-		studentTable.setColumnClass(2, String.class, false);          // 3- Código seguro
-		studentTable.setColumnClass(3, String.class, false);          // 4- Matricula
-		studentTable.setColumnClass(4, String.class, false);          // 5- Codigo Bus
-		studentTable.setColumnClass(5, Boolean.class, false);
+		studentTable.setColumnClass(0, Boolean.class, true);        //  ID
+		studentTable.setColumnClass(1, String.class, false);        //  1- Código
+		studentTable.setColumnClass(2, String.class, false);          // 2- Nombre
+		studentTable.setColumnClass(3, String.class, false);          // 3- Código seguro
+		studentTable.setColumnClass(4, String.class, false);          // 4- Matricula
+		studentTable.setColumnClass(5, String.class, false);          // 5- Codigo Bus
+		studentTable.setColumnClass(6, Integer.class, false);
 
 	}
 	
 	private void loadPaymentTable() {
-		Vector<Vector<Object>> data = new Vector<Vector<Object>>(); //new getCandidateData(fEvaluator.getValue(), fDate.getValue(), fGroup.getValue());
-		Vector<String> columnNames = getPaymentColumnNames();
+		
+		Vector<Vector<Object>> rows = new Vector<Vector<Object>>();
+		
+		List<MCAPaymentType> paymentTypes = MCAPaymentType.getPaymentTypes(Env.getCtx(), null);
+		
+		for (MCAPaymentType paymentType :  paymentTypes)
+		{	
+			Vector<Object> data = new Vector<Object>();			
+			Combobox  paymentTypeCombo = new Combobox();
+			for(MCAPaymentType type :  paymentTypes)
+				 paymentTypeCombo.appendItem(type.getName(), type.getValue());
+			
+			 paymentTypeCombo.addEventListener(Events.ON_CHANGE, this);
+			 paymentTypeCombo.setSelectedIndex(0);
+			 paymentTypeCombo.setValue(paymentType.getName());
+
+			
+			data.add(paymentTypeCombo);
+			
+			Combobox cardType = new Combobox();
+			cardType.addEventListener(Events.ON_CHANGE, this);
+			int index = 0;
+			for(MRefList card : cardTypes)
+			{
+				
+				 cardType.appendItem(card.getName(), card.getValue());
+				 if (card.getValue().equals(paymentType.getCreditCardType()))
+					 cardType.setSelectedIndex(index);
+					 
+			}
+			
+			data.add(cardType);
+			if(paymentType.getNumberOfShares() > 0)
+				data.add(paymentType.getNumberOfShares());
+			else
+				data.add(null);
+	
+			data.add(paymentType.isHasInterests());
+			
+			Combobox bankAccount = new Combobox();
+			data.add(bankAccount);
+			data.add("");
+			data.add(Env.ZERO);
+			rows.add(data);
+		}
 		
 		((WListbox)paymentTable).clear();
 		((WListbox)paymentTable).getModel().removeTableModelListener(this);
 		
-		ListModelTable modelP = new ListModelTable(data);
-		modelP.addTableModelListener(this);
-		((WListbox)paymentTable).setData(modelP, columnNames);
-		
-		
-		paymentTable.setColumnClass(0, Combobox.class, false); 
-		paymentTable.setColumnClass(1, Combobox.class, false);          
-		paymentTable.setColumnClass(2, Combobox.class, false);       
-		paymentTable.setColumnClass(3, java.lang.Number.class, false);        
-		paymentTable.setColumnClass(4, Boolean.class, false);         
-		paymentTable.setColumnClass(5, String.class, false);          
-		paymentTable.setColumnClass(6, String.class, false);         
-		paymentTable.setColumnClass(7, java.lang.Number.class, false);          
-
-		
-		
-
-		
-		
+		ListModelTable model = new ListModelTable(rows);		
+		model.addTableModelListener(this);
+		((WListbox)paymentTable).setData(model, getPaymentColumnNames());
+		paymentTable.setColumnClass(0, Combobox.class, true);          
+		paymentTable.setColumnClass(1, Combobox.class, true);       
+		paymentTable.setColumnClass(2, BigDecimal.class, true);        
+		paymentTable.setColumnClass(3, Boolean.class, true);       
+		paymentTable.setColumnClass(4, String.class, true);          
+		paymentTable.setColumnClass(5, String.class, true);         
+		paymentTable.setColumnClass(6, BigDecimal.class, false); 
 	}
 
 
@@ -417,8 +530,9 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		
 		if ("C_BPartner_ID".equals(name))
 		{
-			fParent.setValue(value);
-			loadBPartner();
+			//fParent.setValue(value);
+			holderField.setValue(value);
+			//loadBPartner();
 		}
 		
 	}
@@ -426,23 +540,31 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 
 	@Override
 	public void tableChanged(WTableModelEvent event) {
-
+		String value = (String)studentTable.getValueAt(event.getIndex0(), INDEX_VALUE);
+		Boolean isPayment = (Boolean) studentTable.getValueAt(event.getIndex0(), 0);
+		calculatePayment();
 	}
 
 
 	@Override
 	public void onEvent(Event event) throws Exception {
 
+		if (event.getTarget().equals(holderField.getComponent()))
+        {	
+			findCustomer(holderField.getDisplay());
+            return;
+        }
+		
 		if(event.getTarget().equals(studentTable))
 		{
 			if(studentTable.getSelectedRow()>=0)
 			{
-				refresh();
+				//refresh();
 			}
 		}
 		else if(event.getTarget().equals(bNewPayment))
 		{
-			addPaymentRow();
+			//addPaymentRow();
 		}
 		else if(event.getTarget().equals(bSavePayment))
 		{
@@ -464,66 +586,97 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	}
 
 
+	private void findCustomer(String display) {
+		//find if code is a holder
+		MCAHolder holder = findHolder(display);
+		if (holder != null)
+		{
+			worksInCollege.setChecked(holder.isEmployee());
+			loadStuden(getStudentData(holder));	
+		}	
+		
+		MBPartner bpartner = MBPartner.get(Env.getCtx(), display);
+		if(bpartner != null)
+		{
+			worksInCollege.setChecked(bpartner.isEmployee());
+		}
+	}
+
+	private MCAHolder findHolder(String display) {
+	
+		StringBuilder whereClause = new 	StringBuilder();
+		whereClause
+		.append(I_CA_Holder.COLUMNNAME_Value).append("=? OR ")
+		.append(I_CA_Holder.COLUMNNAME_Name).append(" LIKE '%").append(display).append("%' OR ")
+		.append("EXISTS (SELECT 1 FROM C_BPartner p  WHERE p.C_BPartner_ID=CA_Holder.BPartner_Parent_ID AND p.Value=? OR p.TaxID=?)");
+		return new Query(Env.getCtx() , I_CA_Holder.Table_Name , whereClause.toString(), null)
+		.setClient_ID().setParameters(display, display , display)
+		.first();
+	}
+
 	@Override
 	public ADForm getForm() {
 		return form;
 	}
 	
-
-	
-	private void loadBPartner()
+	/*private void loadBPartner()
 	{	
-		
-		
 		m_bpartner = new MBPartner(ctx, (Integer)fParent.getValue(),null);
 		
 		if(m_bpartner.get_ValueAsBoolean("IsStudent"))
 		{
 			worksInCollege.setChecked(false);
-			loadBPartner(m_bpartner,true);
+			loadStuden(m_bpartner,true);
 		}
 		else
 		{
 			//Verifica si es empleado
 			X_HR_Employee employee = new Query(ctx, X_HR_Employee.Table_Name, "C_BPartner_ID=?", m_bpartner.get_TrxName()).setParameters(m_bpartner.get_ID()).first();
 			worksInCollege.setChecked(employee!=null?true:false);
-			loadBPartner(m_bpartner, false);
+			loadStuden(m_bpartner, false);
 		}
+	}*/
+	
+	
+	private void calculatePayment() {
+		paymentValue = Env.ZERO;
+		ListModelTable model = ((WListbox)studentTable).getModel();
+		int topIndex = 1;
+		int rows = studentTable.getRowCount();
+		for (int row = 0; row <= rows - topIndex; row++) {
+			boolean isApplyPayment  = (Boolean) model.getValueAt(row, 0);
+			String partnerValue = (String) model.getValueAt(row, 1);
+			if (isApplyPayment)
+			{	
+				for (MTimeExpenseLine line : paymentSchedules)
+				{
+					if (line.getC_BPartner().getValue().equals(partnerValue))
+						paymentValue = paymentValue.add(line.getApprovalAmt());
+					
+				}
+			}
+		}
+		fValue.setValue(paymentValue);
 	}
 	
-	private void loadBPartner(MBPartner bpartner, boolean student)
+	private void loadStuden(Vector<Vector<Object>> data)
 	{
-		Vector<Vector<Object>> data; 
-		
-		if(student)
-			data = getStudentData(m_bpartner);
-		else
-			data = getParentData(m_bpartner);
-		
-		
 		Vector<String> columnNames = getStudentColumnNames();
-		
 		((WListbox)studentTable).clear();
 		((WListbox)studentTable).getModel().removeTableModelListener(this);
+		ListModelTable model = new ListModelTable(data);
+		model.addTableModelListener(this);		
+		((WListbox)studentTable).setData(model, columnNames);
 		
-		ListModelTable modelP = new ListModelTable(data);
-		modelP.addTableModelListener(this);
-		((WListbox)studentTable).setData(modelP, columnNames);
-		
-
-		studentTable.setColumnClass(0, String.class, true);        //  1- Código
-		studentTable.setColumnClass(1, String.class, true);          // 2- Nombre
-		studentTable.setColumnClass(2, String.class, true);          // 3- Código seguro
-		studentTable.setColumnClass(3, String.class, true);          // 4- Matricula
-		studentTable.setColumnClass(4, String.class, true);          // 5- Codigo Bus
-		studentTable.setColumnClass(5, Boolean.class, false);
-		
-		if(studentTable.getRowCount()>0)
-		{
-			((WListbox)studentTable).setSelectedIndex(0);
-			refresh();
-		}
-
+		studentTable.setColumnClass(0, Boolean.class, false);       // 1- ID
+		studentTable.setColumnClass(1, String.class, true);          // 2- Código
+		studentTable.setColumnClass(2, String.class, true);          // 3- Nombre
+		studentTable.setColumnClass(3, String.class, true);          // 4- Código seguro
+		studentTable.setColumnClass(4, String.class, true);          // 5- Matricula
+		studentTable.setColumnClass(5, String.class, true);          // 6- Codigo Bus
+		studentTable.setColumnClass(6, Integer.class, true);		 
+		((WListbox)studentTable).setSelectedIndex(0);
+		refresh();
 	}
 	
 	
@@ -531,68 +684,72 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 	{
 		int row = studentTable.getSelectedRow();
 		String value = (String)studentTable.getValueAt(row, INDEX_VALUE);
-		fChildNo.setValue(getChildNo(value));
+		Boolean isPayment = (Boolean) studentTable.getValueAt(row, 0);
+		
 		calculateItems(value);
 		
-		fSingleMonth.setText(String.valueOf(singleMonth));
-		fSingleYear.setText(String.valueOf(singleYear));
-		fSingleTotal.setText(String.valueOf(singleTotal));
+		fSingleMonth.setValue(singleMonth);
+		fSingleYear.setValue(singleYear);
+		fSingleTotal.setValue(singleTotal);
 		
-		fConMonth.setText(String.valueOf(consolidatedMonth));
-		fConYear.setText(String.valueOf(consolidatedYear));
-		fConTotal.setText(String.valueOf(consolidatedTotal));
-		
-		String pm = getDefaultPayMode(value);
-		
-		for(int x = 0 ; x<=fPaymentMode.getItemCount()-1;x++)
-		{
-			if(fPaymentMode.getItemAtIndex(x).getValue().equals(pm))
-			{
-				fPaymentMode.setSelectedIndex(x);
-			}
-			
-		}
-			
-		
+		fConMonth.setValue(consolidatedMonth);
+		fConMonth.setReadWrite(false);
+		fConYear.setValue(consolidatedYear);
+		fConYear.setReadWrite(false);
+		fConTotal.setValue(consolidatedTotal);
+		fConTotal.setReadWrite(false);
+		fValue.setValue(consolidatedTotal);
 	}
-	
-	
+
 	private void addPaymentRow()
 	{		
-		
-		Vector<Object> data = new Vector<Object>();
-		
-		
-		Combobox type = new Combobox();
-		type.appendItem("Anual", "AN");
-		type.appendItem("Mensual", "ME");
-		data.add(type);
-
+		Vector<Vector<Object>> rows = new Vector<Vector<Object>>();
 		Combobox paymentType = new Combobox();
 		for( MRefList payT :  paymentTypes)
 			paymentType.appendItem(payT.getName(), payT.getValue());
-		paymentType.addEventListener("onChange", this);
+		
+		paymentType.addEventListener(Events.ON_CHANGE, this);
 		paymentType.setSelectedIndex(0);
-		data.add(paymentType);
 		
-		Combobox cardType = new Combobox();
-		cardType.addEventListener("onChange", this);
-		data.add(cardType);
-		data.add(1);
+		for (MRefList payT :  paymentTypes)
+		{	
+			Vector<Object> data = new Vector<Object>();
+			paymentType.setValue(payT.getName());
 
-		data.add(new Boolean(false));
+			
+			data.add(paymentType);
+			
+			Combobox cardType = new Combobox();
+			cardType.addEventListener(Events.ON_CHANGE, this);
+			data.add(cardType);
+			data.add(1);
+	
+			data.add(new Boolean(false));
+			
+			Combobox bankAccount = new Combobox();
+	
+			data.add(bankAccount);
+			
+			data.add("");
+			
+			data.add(0);
+			rows.add(data);
+		}
 		
-		Combobox bankAccount = new Combobox();
-
-		data.add(bankAccount);
+		((WListbox)paymentTable).clear();
+		((WListbox)paymentTable).getModel().removeTableModelListener(this);
 		
-		data.add("");
-		
-		data.add(0);
-		
-		((WListbox)paymentTable).getModel().add(data);
-		
-		refreshSelectedRow(paymentType);
+		ListModelTable model = new ListModelTable(rows);		
+		model.addTableModelListener(this);
+		((WListbox)paymentTable).setData(model, getPaymentColumnNames());
+		paymentTable.setColumnClass(1, Combobox.class, false);          
+		paymentTable.setColumnClass(2, Combobox.class, false);       
+		paymentTable.setColumnClass(3, java.lang.Number.class, false);        
+		paymentTable.setColumnClass(4, Boolean.class, false);         
+		paymentTable.setColumnClass(5, String.class, false);          
+		paymentTable.setColumnClass(6, String.class, false);         
+		paymentTable.setColumnClass(7, java.lang.Number.class, false);
+		//refreshSelectedRow(paymentType);
 	}	
 	
 	
@@ -637,14 +794,9 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			cardCombo.setSelectedIndex(0);
 		}
 		
-		//---
-		
 		// Update bankAccount
-		
 		Combobox bankCombo = (Combobox)paymentTable.getValueAt(rowNo,5);
 		bankCombo.removeAllItems();
-		
-		
 		if(!current.getSelectedItem().getValue().equals("E") && !current.getSelectedItem().getValue().equals("C")) //Efectivo,  Tarjeta de Crédito
 		{
 			for(MBankAccount bankaccount : bankAccounts)
@@ -659,8 +811,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 			}
 		}
 		else if(current.getSelectedItem().getValue().equals("C")) //Tarjeta de Crédito
-		{
-			
+		{	
 			String cardType = (String)cardCombo.getItemAtIndex(cardCombo.getSelectedIndex()).getValue();
 			
 			if("D".equals(cardType))
@@ -693,15 +844,17 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 
 	@Override
 	public void cleanComponents() {
-		fChildNo.setValue("");
+		//fChildNo.setValue("");
+		//fChildNo.setReadonly(true);
 		
-		fSingleMonth.setText("");
-		fSingleYear.setText("");
-		fSingleTotal.setText("");
+		fSingleMonth.setValue(Env.ZERO);
+		fSingleYear.setValue(Env.ZERO);
+		fSingleTotal.setValue(Env.ZERO);
 		
-		fConMonth.setText("");
-		fConYear.setText("");
-		fConTotal.setText("");
+		fConMonth.setValue(Env.ZERO);
+		fConYear.setValue(Env.ZERO);
+		fConTotal.setValue(Env.ZERO);
+		fValue.setValue(Env.ZERO);
 		loadStudentTable();
 		loadPaymentTable();
 	}
@@ -745,7 +898,7 @@ public class WFCAQPayment extends FCAQPayment implements IFormController, EventL
 		if(studentTable.getRowCount()>0)
 		{
 			((WListbox)studentTable).setSelectedIndex(0);
-			refresh();
+			//refresh();
 		}
 		
 		fDocumentNo.setText(MSequence.getDocumentNo(Env.getContextAsInt(ctx, "@#AD_Client_ID@"), "CA_Payment", null) );
