@@ -807,7 +807,8 @@ public class WBrowser extends Browser implements IFormController,
 		collapsibleSeach.setOpen(!isCollapsible);
 		p_loadedOK = initBrowser();
 		Env.setContext(Env.getCtx(), 0, "currWindowNo", p_WindowNo);
-		//parameterPanel.refreshContext();
+		if(parameterPanel !=null)
+			parameterPanel.refreshContext();
 		executeQuery();
 	}
 
