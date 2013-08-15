@@ -81,7 +81,7 @@ import org.zkoss.zul.SimpleTreeNode;
 import org.zkoss.zul.Space;
 import org.zkoss.zul.Treeitem;
 
-/**
+/** 
  *
  * This class is based on org.compiere.grid.GridController written by Jorg Janke.
  * Changes have been brought for UI compatibility.
@@ -118,7 +118,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     private int               windowNo;
 
-    private Grid              grid;
+    public Grid              grid;
 
     private ArrayList<WEditor> editors = new ArrayList<WEditor>();
 
@@ -334,6 +334,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
             			if (ep.adTabId == field.getIncluded_Tab_ID()) {
             				ep.group = includedTab.get(ep.adTabId);
             				createEmbeddedPanelUI(ep);
+            				((ADTabpanel)ep.tabPanel).autoResize();
+
             				break;
             			}
             		}
@@ -551,6 +553,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
         if (!gridTab.isSingleRow() && !isGridView())
         	switchRowPresentation();
+        
     }
 
 	private Component createSpacer() {
@@ -883,13 +886,6 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    		{
 	    			
 	    			int size = MSysConfig.getIntValue("TAB_INCLUDING_HEIGHT", 400);
-	    			
-	    			
-	    			/*
-		    		int rows = gridTab.getRowCount();
-		    		int size = (rows * 32) + 75;
-					if(size>400)
-						size=400;*/
 						
 		    		window.setHeight(size + "px");
 					
@@ -905,13 +901,15 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			for(Object o : grid.getRows().getChildren())
 	    			{
 	    				if(o instanceof Row)
-	    				{
+	    				{	    					 
 	    					rows++;
 	    				}
 	    					
 	    			}
 	    			
-	    			int size = rows * 40 + 100;
+	    			int size = (rows - includedPanel.size()) * 40 + 100;
+	    			
+	    			size += doAutoSize();
 	    			
 	    			
 					window.setHeight(size + "px");
@@ -923,6 +921,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			}
     	}
     }
+    
+    
     
     public void setUnselected()
     {
@@ -1350,5 +1350,70 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public GridPanel getGridView() {
 		return listPanel;
 	}
+	
+	public int doAutoSize()
+	{
+		if(includedPanel.size()>0)
+		{
+			for(EmbeddedPanel panel : includedPanel)
+			{
+				return includedAutoRezise(panel);
+			}
+		}
+		return 0;
+	}
+	
+	public int includedAutoRezise(EmbeddedPanel embeddedpanel)
+	{
+		if(embeddedpanel.windowPanel  !=null)
+    	{
+	    	if(embeddedpanel.windowPanel.isEmbedded())
+			{
+				Borderlayout window = embeddedpanel.windowPanel.getComponent();
+
+	    			int rows = 0;
+	    			Row c = new Row();
+	    			for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
+	    			{
+	    				if(o instanceof Row)
+	    				{	    					 
+	    					rows++;
+	    				}
+	    					
+	    			}
+	    			
+	    			int size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * 40  + 50;
+	    			
+	    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
+	    			
+	    			if(included.size()>0)
+	    			{
+	    				for(EmbeddedPanel panel : included)
+	    				{
+		    				size += includedAutoRezise(panel);
+	    				}
+	    			}
+
+	    			
+					window.setHeight(size + "px");
+	    			window.resize();
+	    			
+	    			return size;
+			}
+
+    	}
+		return 0; 
+	}
+
+	@Override
+	public Grid getGrid() {
+		return grid;
+	}
+
+	@Override
+	public List<EmbeddedPanel> getIncludedPanel() {
+		return includedPanel;
+	}
+	
 }
 

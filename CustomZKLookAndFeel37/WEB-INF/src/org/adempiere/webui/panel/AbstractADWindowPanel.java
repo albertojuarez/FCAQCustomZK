@@ -49,6 +49,7 @@ import org.adempiere.webui.event.ActionEvent;
 import org.adempiere.webui.event.ActionListener;
 import org.adempiere.webui.event.ToolbarListener;
 import org.adempiere.webui.exception.ApplicationException;
+import org.adempiere.webui.panel.ADTabpanel.EmbeddedPanel;
 import org.adempiere.webui.part.AbstractUIPart;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
@@ -633,6 +634,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			        curTabpanel.activate(true);
 			    }
 		    }
+		    
+		   // public int doAutoSize()
+			
+
+
+			
 		}
 
 		if (tabIndex == 0) {
