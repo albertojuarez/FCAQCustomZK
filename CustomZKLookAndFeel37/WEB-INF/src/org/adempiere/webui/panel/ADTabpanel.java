@@ -152,6 +152,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	private boolean m_vetoActive = false;
 	
 	private CWindowToolbar globalToolbar;
+	
+	private int INC = 32;
 		
 	public CWindowToolbar getGlobalToolbar()
 	{
@@ -907,7 +909,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    					
 	    			}
 	    			
-	    			int size = (rows - includedPanel.size()) * 40 + 100;
+	    			int size = (rows - includedPanel.size()) * INC + 100;
 	    			
 	    			size += doAutoSize();
 	    			
@@ -1373,16 +1375,19 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
 	    			int rows = 0;
 	    			Row c = new Row();
-	    			for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
-	    			{
-	    				if(o instanceof Row)
-	    				{	    					 
-	    					rows++;
-	    				}
-	    					
-	    			}
+	    			try{
+		    			for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
+		    			{
+		    				if(o instanceof Row)
+		    				{	    					 
+		    					rows++;
+		    				}
+		    					
+		    			}
 	    			
-	    			int size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * 40  + 50;
+	    			
+	    			
+	    			int size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * INC  + 50;
 	    			
 	    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
 	    			
@@ -1399,6 +1404,13 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			window.resize();
 	    			
 	    			return size;
+	    			}
+	    			catch(Exception e)
+	    			{
+	    				// nothig to do, just ignore
+	    			}
+	    			
+	    			return 0;
 			}
 
     	}
