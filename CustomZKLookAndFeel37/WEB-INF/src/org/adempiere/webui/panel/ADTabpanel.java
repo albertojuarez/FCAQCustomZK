@@ -900,10 +900,13 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			
 	    			int rows = 0;
 	    			Row c = new Row();
+	    			int addSize = 0;
+	    			
 	    			for(Object o : grid.getRows().getChildren())
 	    			{
 	    				if(o instanceof Row)
-	    				{	    					 
+	    				{	    	
+	    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
 	    					rows++;
 	    				}
 	    					
@@ -911,6 +914,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			
 	    			int size = (rows - includedPanel.size()) * INC + 100;
 	    			
+	    			size += addSize; //josias: los pixeles acumulados para imagenes se agregan a size.
 	    			size += doAutoSize();
 	    			
 	    			
@@ -1357,10 +1361,14 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	{
 		if(includedPanel.size()>0)
 		{
+			int size = 0; //josias: se agregó size, para acumular el tamaño adicional de las pestañas incluidas.
+			
 			for(EmbeddedPanel panel : includedPanel)
 			{
-				return includedAutoRezise(panel);
+				size += includedAutoRezise(panel); //josias: anteriormente se hacía return de lo que entregaba el método, pero si es que había mas incluidos ya no los consideraba.
 			}
+			
+			return size; //josias: al final de for se regresa lo acumulado en size.
 		}
 		return 0;
 	}
@@ -1376,29 +1384,40 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			int rows = 0;
 	    			Row c = new Row();
 	    			try{
-		    			for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
-		    			{
-		    				if(o instanceof Row)
-		    				{	    					 
-		    					rows++;
-		    				}
-		    					
-		    			}
-	    			
-	    			
-	    			
-	    			int size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * INC  + 50;
-	    			
-	    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
-	    			
-	    			if(included.size()>0)
-	    			{
-	    				for(EmbeddedPanel panel : included)
+	    				
+	    				int size = 0;
+	    				int addSize = 0;
+	    				
+	    				if (!embeddedpanel.tabPanel.getGridTab().isSingleRow()) 
 	    				{
-		    				size += includedAutoRezise(panel);
+	    					size = MSysConfig.getIntValue("TAB_INCLUDING_HEIGHT", 400);
 	    				}
-	    			}
-
+	    				else {
+	    					
+	    					for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
+			    			{
+			    				if(o instanceof Row)
+			    				{
+			    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pixeles faltantes para las imagenes.
+			    					
+			    					rows++;
+			    				}
+			    				
+			    			}
+	    			
+	    					size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * INC  + 100;  //josias: anteriormente se sumaban 50, se colocó 100 al igual que en el método autoResize().
+	    	    			size += addSize; //josias: se sgrega a size los pixeles acumulados para imagenes.
+	    			
+			    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
+			    			
+			    			if(included.size()>0)
+			    			{
+			    				for(EmbeddedPanel panel : included)
+			    				{
+				    				size += includedAutoRezise(panel);
+			    				}
+			    			}
+	    				}
 	    			
 					window.setHeight(size + "px");
 	    			window.resize();
@@ -1415,6 +1434,25 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     	}
 		return 0; 
+	}
+
+	private int sizeImage(Row row) { //josias: método para calcular los pixeles extra para filas que contienen imagenes.
+		
+		int addSize = 0;
+		
+		for (Object o : ((Row) row).getChildren()) {
+			
+			if (o instanceof org.zkoss.zul.Image){
+				
+				int size = Integer.parseInt(((org.zkoss.zul.Image) o)
+						.getHeight().replace("px", "")) - INC; //josias: se obtiene el tamaño de la imagen y se le resta INC, ya que solo se sumarán pixeles extra.
+				
+				if (size > addSize) //para filas que contienen dos imagenes o más, se toma como referencia la de mayor tamaño
+					addSize = size;
+			}
+		}
+		
+		return addSize;
 	}
 
 	@Override
