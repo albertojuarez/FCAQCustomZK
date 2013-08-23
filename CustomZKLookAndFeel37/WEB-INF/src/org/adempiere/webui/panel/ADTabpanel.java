@@ -897,29 +897,34 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    		}
 	    		else
 	    		{
-	    			
-	    			int rows = 0;
-	    			Row c = new Row();
-	    			int addSize = 0;
-	    			
-	    			for(Object o : grid.getRows().getChildren())
-	    			{
-	    				if(o instanceof Row)
-	    				{	    	
-	    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
-	    					rows++;
-	    				}
-	    					
+	    			try{
+		    			int rows = 0;
+		    			Row c = new Row();
+		    			int addSize = 0;
+		    			
+		    			for(Object o : grid.getRows().getChildren())
+		    			{
+		    				if(o instanceof Row)
+		    				{	    	
+		    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
+		    					rows++;
+		    				}
+		    					
+		    			}
+		    			
+		    			int size = (rows - includedPanel.size()) * INC + 100;
+		    			
+		    			size += addSize; //josias: los pixeles acumulados para imagenes se agregan a size.
+		    			size += doAutoSize();
+		    			
+		    			
+						window.setHeight(size + "px");
+		    			window.resize();
 	    			}
-	    			
-	    			int size = (rows - includedPanel.size()) * INC + 100;
-	    			
-	    			size += addSize; //josias: los pixeles acumulados para imagenes se agregan a size.
-	    			size += doAutoSize();
-	    			
-	    			
-					window.setHeight(size + "px");
-	    			window.resize();
+	    			catch(Exception e)
+	    			{
+	    				//nothing to do, just ignore
+	    			}
 	    			
 	    		}
 	    		
