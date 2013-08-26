@@ -680,6 +680,22 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         	}
         }
         
+        for (EmbeddedPanel ep : includedPanel) {
+        	
+        	if(ep.gridWindow.getTab(ep.tabIndex).isDisplayed())
+    		{
+    			ep.windowPanel.getParent().setVisible(true);
+    			ep.group.setVisible(true);
+    		}
+        	else {
+        		
+        		ep.windowPanel.getParent().setVisible(false);
+    			ep.group.setVisible(false);
+        	}
+        	
+        	//ep.tabPanel.dynamicDisplay(0);
+        }
+        
         logger.config(gridTab.toString() + " - fini - " + (col<=0 ? "complete" : "seletive"));
     }   //  dynamicDisplay
 

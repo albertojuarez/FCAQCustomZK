@@ -2461,5 +2461,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	public int getWindowNo() {
 		return curWindowNo;
 	}
+	
+	/**
+	 * @return parent
+	 */
+	public Component getParent() {
+		return this.parent;
+	}
 
 }
