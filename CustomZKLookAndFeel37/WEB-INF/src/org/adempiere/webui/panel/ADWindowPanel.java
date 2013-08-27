@@ -254,6 +254,7 @@ public class ADWindowPanel extends AbstractADWindowPanel
 					tabpanel.includedAutoRezise(panel);
 				}
 			}
+			tabpanel.setFocus(true);
 		}
 		
 		

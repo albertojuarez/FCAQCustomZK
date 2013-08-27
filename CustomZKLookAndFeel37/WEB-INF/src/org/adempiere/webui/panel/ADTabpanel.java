@@ -153,7 +153,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	
 	private CWindowToolbar globalToolbar;
 	
-	private int INC = 32;
+	private int INC = 30;
 		
 	public CWindowToolbar getGlobalToolbar()
 	{
@@ -918,17 +918,28 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 		    			Row c = new Row();
 		    			int addSize = 0;
 		    			
+		    			int size = 0;
 		    			for(Object o : grid.getRows().getChildren())
 		    			{
-		    				if(o instanceof Row)
+		    				if(o instanceof Row )
 		    				{	    	
-		    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
-		    					rows++;
+		    					if( ((Row) o).isVisible())
+		    					{
+		    						addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
+		    						size += INC;
+		    					}
+		    				}
+		    				else if(o instanceof org.zkoss.zul.Group)
+		    				{
+		    					size -= 5;
 		    				}
 		    					
 		    			}
 		    			
-		    			int size = (rows - includedPanel.size()) * INC + 100;
+
+		    				size += 25; // 25 = statusbar
+    			
+		    			//int size = (rows) * INC;
 		    			
 		    			size += addSize; //josias: los pixeles acumulados para imagenes se agregan a size.
 		    			size += doAutoSize();
@@ -969,13 +980,13 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
     		//return;
     	
     	getGlobalToolbar().setActualPanel(this);
-    	((HtmlBasedComponent)listPanel).setStyle("border-left: 6px solid #fa962f; border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
-		((HtmlBasedComponent)grid).setStyle("border-left: 6px solid #fa962f; border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
+    	((HtmlBasedComponent)listPanel).setStyle("border-left: 6px solid #fa962f; "); //border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
+		((HtmlBasedComponent)grid).setStyle("border-left: 6px solid #fa962f; "); //border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
 		
-		grid.setWidth("99%");
-		grid.setHeight("95%");
-		listPanel.setWidth("99%");
-		listPanel.setHeight("95%");
+		grid.setWidth("99.1%");
+		//grid.setHeight("95%");
+		listPanel.setWidth("99.1%");
+		//listPanel.setHeight("95%");
     }
     
     public void repaintComponents(boolean isRow)
@@ -1082,13 +1093,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         if (!includedPanel.isEmpty() && e.getChangedColumn() == -1) {
         	for (EmbeddedPanel panel : includedPanel)
         		panel.tabPanel.query(false, 0, 0);
-        }
-        
-        if(windowPanel!= null)
-	        if(windowPanel.isEmbedded())
-	        {
-	    		autoResize();
-	        }        
+        }      
     }
 
     private void deleteNode(int recordId) {
@@ -1382,11 +1387,11 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	{
 		if(includedPanel.size()>0)
 		{
-			int size = 0; //josias: se agreg√≥ size, para acumular el tama√±o adicional de las pesta√±as incluidas.
+			int size = 0; //josias: se agregó size, para acumular el tamaño adicional de las pestañas incluidas.
 			
 			for(EmbeddedPanel panel : includedPanel)
 			{
-				size += includedAutoRezise(panel); //josias: anteriormente se hac√≠a return de lo que entregaba el m√©todo, pero si es que hab√≠a mas incluidos ya no los consideraba.
+				size += includedAutoRezise(panel); //josias: anteriormente se hacía return de lo que entregaba el método, pero si es que había mas incluidos ya no los consideraba.
 			}
 			
 			return size; //josias: al final de for se regresa lo acumulado en size.
@@ -1419,14 +1424,22 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			    			{
 			    				if(o instanceof Row)
 			    				{
-			    					addSize += sizeImage((Row) o); //josias: se acumula en addSize los pixeles faltantes para las imagenes.
-			    					
-			    					rows++;
+			    					if( ((Row) o).isVisible())
+			    					{
+			    						addSize += sizeImage((Row) o); //josias: se acumula en addSize los pixeles faltantes para las imagenes.
+			    						size += INC ;
+			    					}
+			    				}
+			    				else if (o instanceof org.zkoss.zul.Group)
+			    				{
+			    					size -= 5;
 			    				}
 			    				
 			    			}
 	    			
-	    					size = (rows-embeddedpanel.tabPanel.getIncludedPanel().size()) * INC  + 100;  //josias: anteriormente se sumaban 50, se coloc√≥ 100 al igual que en el m√©todo autoResize().
+
+			    		    size += 25; // 25 = statusbar
+	    					
 	    	    			size += addSize; //josias: se sgrega a size los pixeles acumulados para imagenes.
 	    			
 			    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
@@ -1447,6 +1460,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			}
 	    			catch(Exception e)
 	    			{
+	    				e.printStackTrace();
 	    				// nothig to do, just ignore
 	    			}
 	    			
@@ -1457,7 +1471,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 		return 0; 
 	}
 
-	private int sizeImage(Row row) { //josias: m√©todo para calcular los pixeles extra para filas que contienen imagenes.
+	private int sizeImage(Row row) { //josias: método para calcular los pixeles extra para filas que contienen imagenes.
 		
 		int addSize = 0;
 		
@@ -1466,9 +1480,9 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			if (o instanceof org.zkoss.zul.Image){
 				
 				int size = Integer.parseInt(((org.zkoss.zul.Image) o)
-						.getHeight().replace("px", "")) - INC; //josias: se obtiene el tama√±o de la imagen y se le resta INC, ya que solo se sumar√°n pixeles extra.
+						.getHeight().replace("px", "")) - INC; //josias: se obtiene el tamaño de la imagen y se le resta INC, ya que solo se sumarán pixeles extra.
 				
-				if (size > addSize) //para filas que contienen dos imagenes o m√°s, se toma como referencia la de mayor tama√±o
+				if (size > addSize) //para filas que contienen dos imagenes o más, se toma como referencia la de mayor tamaño
 					addSize = size;
 			}
 		}
