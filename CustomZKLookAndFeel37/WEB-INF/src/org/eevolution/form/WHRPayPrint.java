@@ -303,6 +303,9 @@ public class WHRPayPrint extends HRPayPrint implements IFormController, EventLis
 	 */
 	private void loadPaymentRuleInfo()
 	{
+		if(fPaymentRule.getSelectedItem()==null)
+			return;
+		
 		ValueNamePair pp = fPaymentRule.getSelectedItem().toValueNamePair();
 		if (pp == null)
 			return;
