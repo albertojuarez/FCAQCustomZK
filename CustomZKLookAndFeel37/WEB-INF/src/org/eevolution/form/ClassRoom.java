@@ -32,6 +32,7 @@ import org.fcaq.model.X_CA_ScheduleClass;
 import org.fcaq.model.X_CA_ScheduleDay;
 import org.fcaq.model.X_CA_SchedulePeriod;
 import org.fcaq.model.X_CA_SchoolYear;
+import org.fcaq.model.X_CA_SubjectMatter;
 import org.fcaq.model.X_CA_TeacherAssignment;
 import org.fcaq.process.ProcessJustification;
 import org.fcaq.util.AcademicUtil;
@@ -219,9 +220,20 @@ public class ClassRoom extends Panel implements EventListener, ValueChangeListen
 				lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() +
 						" " + matterAssignment.getElectiveSubject().getName() + 
 						(matterAssignment.isAttendance() ? "" : "*"));
-			else if (matterAssignment.getCA_SubjectMatter_ID() > 0)
-				lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() 
-						+ (matterAssignment.isAttendance() ? "" : "*"));
+			else if (matterAssignment.getCA_SubjectMatter_ID() > 0) {
+				
+				if (period.getCA_SubjectMatter_ID() > 0) {
+					
+					X_CA_SubjectMatter subjectMatter = new X_CA_SubjectMatter(Env.getCtx(), period.getCA_SubjectMatter_ID(), null);
+					
+					lSubject.setText(subjectMatter.getName() 
+							+ (matterAssignment.isAttendance() ? "" : "*"));
+				}
+				else {
+					lSubject.setText(matterAssignment.getCA_SubjectMatter().getName() 
+							+ (matterAssignment.isAttendance() ? "" : "*"));
+				}
+			}
 			else
 				lSubject.setText("");
 		else

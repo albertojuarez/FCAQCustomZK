@@ -50,6 +50,7 @@ import org.zkoss.zkex.zul.North;
 import org.zkoss.zkex.zul.South;
 import org.zkoss.zul.Hbox;
 import org.zkoss.zul.Separator;
+import org.zkoss.zul.Space;
 
 
 public class WStudentAssistance extends StudentAssistance
@@ -77,6 +78,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private Label lDate = null;
 	private Label lCourse = null;
 	private Label lPeriod = null;
+	private Label lAliasSubject = null;
 
 	private WTableDirEditor fSubject = null;
 	private WDateEditor fDate = null;
@@ -136,6 +138,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		North north = new North();
 		north.setStyle("border: none");
+		north.setHeight("120px");
 		mainLayout.appendChild(north);
 		north.appendChild(parameterPanel);
 		Rows rows = null;
@@ -274,6 +277,17 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		row.appendChild(lSubject);
 		fSubject.getComponent().setWidth("90%");
 		row.appendChild(fSubject.getComponent());
+		
+		if (getAliasSubject() != null) {
+			
+			lAliasSubject = new Label(getAliasSubject());
+			
+			row = rows.newRow();
+			row.appendChild(new Space());
+			row.appendChild(new Space());
+			row.appendChild(new Space());
+			row.appendChild(lAliasSubject);
+		}
 	}
 	
 	public void hideSecondaryFields() {
