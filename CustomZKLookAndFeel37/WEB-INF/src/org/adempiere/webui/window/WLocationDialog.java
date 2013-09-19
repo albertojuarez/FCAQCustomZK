@@ -38,11 +38,13 @@ import org.adempiere.webui.component.Textbox;
 import org.adempiere.webui.component.Window;
 import org.compiere.model.MCountry;
 import org.compiere.model.MLocation;
+import org.compiere.model.MRefList;
 import org.compiere.model.MRegion;
 import org.compiere.util.CLogger;
 import org.compiere.util.DefaultContextProvider;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.compiere.util.ValueNamePair;
 import org.fcaq.model.MCACanton;
 import org.fcaq.model.MCAParish;
 import org.fcaq.model.MCAProvince;
@@ -93,6 +95,7 @@ public class WLocationDialog extends Window implements EventListener
 	private Label lblProvince;
 	private Label lblCanton;
 	private Label lblParish;
+	private Label lblAddressType;
 	//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 	
 	private Textbox txtAddress1;
@@ -109,6 +112,7 @@ public class WLocationDialog extends Window implements EventListener
 	private Listbox lstProvince;
 	private Listbox lstCanton;
 	private Listbox lstParish;
+	private Listbox	lstAddressType;
 	//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 	private Button btnUrl;
 
@@ -140,6 +144,7 @@ public class WLocationDialog extends Window implements EventListener
 	private boolean isProvinceMandatory = false;
 	private boolean isCantonMandatory = false;
 	private boolean isParishMandatory = false;
+	private boolean isAddressTypeMandatory = false;
 	
 	private boolean inProvinceAction;
 	private boolean inCantonAction;
@@ -200,15 +205,21 @@ public class WLocationDialog extends Window implements EventListener
 		{
 			lstProvince.appendItem(province.getName(), province);	
 		}
+		for (ValueNamePair valueNamePair : MRefList.getList(Env.getCtx(), MLocation.ADDRESSTYPE_AD_Reference_ID, false))
+		{
+			lstAddressType.appendItem(valueNamePair.getName(), valueNamePair.getValue());
+		}
+		
 		lstSector.addEventListener(Events.ON_SELECT, this);
 		lstProvince.addEventListener(Events.ON_SELECT, this);
 		lstCanton.addEventListener(Events.ON_SELECT, this);
 		lstParish.addEventListener(Events.ON_SELECT, this);
+		lstAddressType.addEventListener(Events.ON_SELECT, this);
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
 		initLocation();
 		//               
-		this.setWidth("290px");
+		this.setWidth("305px");
 		this.setClosable(true);
 		this.setBorder("normal");
 		this.setAttribute("mode","modal");
@@ -245,6 +256,8 @@ public class WLocationDialog extends Window implements EventListener
 		lblCanton.setStyle(LABEL_STYLE);
 		lblParish		= new Label(Msg.getElement(Env.getCtx(), MCAParish.COLUMNNAME_CA_Parish_ID));
 		lblParish.setStyle(LABEL_STYLE);
+		lblAddressType	= new Label(Msg.getElement(Env.getCtx(), MLocation.COLUMNNAME_AddressType));
+		lblAddressType.setStyle(LABEL_STYLE);
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 
 		txtAddress1 = new Textbox();
@@ -299,6 +312,11 @@ public class WLocationDialog extends Window implements EventListener
 		lstParish.setMold("select");
 		lstParish.setWidth("154px");
 		lstParish.setRows(0);
+		
+		lstAddressType	= new Listbox();
+		lstAddressType.setMold("select");
+		lstAddressType.setWidth("154px");
+		lstAddressType.setRows(0);
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
 		btnUrl =  new Button();
@@ -370,6 +388,10 @@ public class WLocationDialog extends Window implements EventListener
 		Row pnlParish  = new Row();
 		pnlParish.appendChild(lblParish.rightAlign());
 		pnlParish.appendChild(lstParish);
+		
+		org.zkoss.zul.Row pnlLocationType = new Row();
+		pnlLocationType.appendChild(lblAddressType.rightAlign());
+		pnlLocationType.appendChild(lstAddressType);
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
 		Panel pnlButtonLeft = new Panel();
@@ -532,6 +554,7 @@ public class WLocationDialog extends Window implements EventListener
 		isProvinceMandatory = false;
 		isCantonMandatory = false;
 		isParishMandatory = false;
+		isAddressTypeMandatory = false;
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
 		StringTokenizer st = new StringTokenizer(ds, "@", false);
@@ -559,7 +582,10 @@ public class WLocationDialog extends Window implements EventListener
 			} else if (s.startsWith("PA")) {
 				addComponents((Row)lstParish.getParent());
 				isParishMandatory = s.endsWith("!");
-			} 
+			} else if (s.startsWith("AT")) {
+				addComponents((Row)lstAddressType.getParent());
+				isAddressTypeMandatory = s.endsWith("!");
+			}
 			//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 			else if (s.startsWith("A1")) {
 				addComponents((Row)txtAddress1.getParent());
@@ -614,6 +640,7 @@ public class WLocationDialog extends Window implements EventListener
 			setProvince();
 			setCanton();
 			setParish();
+			setAddressType();
 			//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		}
 	}
@@ -744,6 +771,29 @@ public class WLocationDialog extends Window implements EventListener
 		{
 			lstParish.setSelectedItem(null);
 		}        
+	}
+	
+	private void setAddressType()
+	{
+		String locationType = m_location.getAddressType();
+		
+		if (locationType != null)
+		{
+			List<?> listState = lstAddressType.getChildren();
+			Iterator<?> iter = listState.iterator();
+			while (iter.hasNext())
+			{
+				ListItem listitem = (ListItem)iter.next();
+				if (locationType.equals(listitem.getValue()))
+				{
+					lstAddressType.setSelectedItem(listitem);
+				}
+			}
+		}
+		else
+		{
+			lstAddressType.setSelectedItem(null);
+		}
 	}
 	//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 	
@@ -884,6 +934,14 @@ public class WLocationDialog extends Window implements EventListener
 				initLocation();
 			}
 		}
+		//	AddressType Changed
+		else if (lstAddressType.equals(event.getTarget()))
+		{
+			if (lstAddressType.getSelectedItem() != null)
+			{
+				m_location.setAddressType((String)lstAddressType.getSelectedItem().getValue());
+			}
+		}
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		else if (btnUrl.equals(event.getTarget()))
 		{
@@ -933,6 +991,9 @@ public class WLocationDialog extends Window implements EventListener
 		}
 		if (isParishMandatory && lstParish.getSelectedItem() == null) {
 			fields = fields + " " + "@CA_Parish_ID@, ";
+		}
+		if (isAddressTypeMandatory && lstAddressType.getSelectedItems() == null) {
+			fields = fields + " " + "@AddressType@";
 		}
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
@@ -991,9 +1052,14 @@ public class WLocationDialog extends Window implements EventListener
 			if (parish != null)
 				m_location.setCA_Parish_ID(parish.get_ID());
 		}
+		if (lstAddressType.getSelectedItem() != null)
+		{
+			if (lstAddressType.getSelectedItem().getValue() != null)
+				m_location.setAddressType((String)lstAddressType.getSelectedItem().getValue());
+		}
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
-		//  Save chnages
+		//  Save changes
 		if(m_location.save())
 		{
 			return true;
@@ -1061,6 +1127,11 @@ public class WLocationDialog extends Window implements EventListener
 			MCAParish parish = (MCAParish)lstParish.getSelectedItem().getValue();
 			if (parish != null)
 				m_location.setCA_Parish_ID(parish.get_ID());
+		}
+		if (lstAddressType.getSelectedItem() != null)
+		{
+			if (lstAddressType.getSelectedItem().getValue() != null)
+				m_location.setAddressType((String)lstAddressType.getSelectedItem().getValue());
 		}
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
