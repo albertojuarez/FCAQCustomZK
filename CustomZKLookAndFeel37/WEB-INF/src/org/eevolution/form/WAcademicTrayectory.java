@@ -244,7 +244,7 @@ public class WAcademicTrayectory extends AcademicTrayectory implements IFormCont
 				BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 3);
 				if(student!=null)
 				{
-					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
+					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(AcademicUtil.getCurrentYearConfig(m_ctx).getNoteScale()))>0)
 					{
 						newValue = BigDecimal.ZERO;
 						examTable.setValueAt(newValue, event.getIndex0(), 3);
