@@ -891,7 +891,8 @@ public class WBrowser extends Browser implements IFormController,
 					dataColumn.setSelected(isSelected);
 					detail.getModel().setValueAt(dataColumn, row,m_keyColumnIndex);
 				}
-				selectedList[row] = row;
+				if(isSelected)
+					selectedList[row] = row;
 			}
 			detail.setSelectedIndices(selectedList);
 
