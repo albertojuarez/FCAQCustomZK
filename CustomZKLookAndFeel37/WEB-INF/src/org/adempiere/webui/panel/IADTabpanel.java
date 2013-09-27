@@ -120,4 +120,6 @@ public interface IADTabpanel extends Component, Evaluatee {
 	
 	public List<EmbeddedPanel> getIncludedPanel();
 	
+	public int getWindowNo();
+	
 }

@@ -978,7 +978,12 @@ public class ADSortTab extends Panel implements IADTabpanel
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
+	@Override
+	public int getWindowNo() {
+		// TODO Auto-generated method stub
+		return m_WindowNo;
+	}
 	
 }	//ADSortTab
 

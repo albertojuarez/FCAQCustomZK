@@ -116,7 +116,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     private AbstractADWindowPanel      windowPanel;
 
-    private int               windowNo;
+    public int               windowNo;
 
     public Grid              grid;
 
@@ -950,6 +950,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			}
 	    			catch(Exception e)
 	    			{
+	    				e.printStackTrace();
 	    				//nothing to do, just ignore
 	    			}
 	    			

@@ -133,7 +133,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
         logger = CLogger.getCLogger(AbstractADWindowPanel.class);
     }
 
-    private Properties           ctx;
+    public Properties           ctx;
 
     private GridWindow           gridWindow;
 
