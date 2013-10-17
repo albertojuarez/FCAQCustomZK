@@ -948,14 +948,20 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			((WListbox)noteTable).setStyle("sizedByContent=true");
 	
 			noteTable.setColumnClass(0, String.class, true);
-	
-			noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-			noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-			noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-			noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
-			
-			noteTable.setColumnClass(5, org.fcaq.components.WNoteEditor.class, false);
-	
+			int    i=0;
+
+			for(i =0; i<= headingLines.size(); i++)
+			{
+				noteTable.setColumnClass(i+1, org.fcaq.components.WNoteEditor.class, false );
+			}
+			//cambio   aqui inicio
+			//noteTable.setColumnClass(1, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			//noteTable.setColumnClass(2, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			//noteTable.setColumnClass(3, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			//noteTable.setColumnClass(4, org.fcaq.components.WNoteEditor.class, note!=null?note.isSent():false);
+			//cambio   aqui    fin 
+			noteTable.setColumnClass(i+1, org.fcaq.components.WNoteEditor.class, false);
+
 			noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
 	
 			noteTable.setColumnClass(noteTable.getColumnCount()-1, org.fcaq.components.WNoteEditor.class, false);
