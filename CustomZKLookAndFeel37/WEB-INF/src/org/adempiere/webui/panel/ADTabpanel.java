@@ -925,13 +925,12 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 		    				{	    	
 		    					if( ((Row) o).isVisible())
 		    					{
-		    						addSize += sizeImage((Row) o); //josias: se acumula en addSize los pizeles de mas que necesita una imagen en una fila.
-		    						size += INC;
+		    						size += getComponentSize((Row) o); 
 		    					}
 		    				}
 		    				else if(o instanceof org.zkoss.zul.Group)
 		    				{
-		    					size -= 5;
+		    					size +=20; 
 		    				}
 		    					
 		    			}
@@ -939,12 +938,11 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
 		    				size += 25; // 25 = statusbar
     			
-		    			//int size = (rows) * INC;
 		    			
-		    			size += addSize; //josias: los pixeles acumulados para imagenes se agregan a size.
+		    			size += addSize; 
 		    			size += doAutoSize();
 		    			
-		    			
+
 						window.setHeight(size + "px");
 		    			window.resize();
 	    			}
@@ -1388,14 +1386,14 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	{
 		if(includedPanel.size()>0)
 		{
-			int size = 0; //josias: se agregó size, para acumular el tamaño adicional de las pestañas incluidas.
+			int size = 0; 
 			
 			for(EmbeddedPanel panel : includedPanel)
 			{
-				size += includedAutoRezise(panel); //josias: anteriormente se hacía return de lo que entregaba el método, pero si es que había mas incluidos ya no los consideraba.
+				size += includedAutoRezise(panel); 
 			}
 			
-			return size; //josias: al final de for se regresa lo acumulado en size.
+			return size; 
 		}
 		return 0;
 	}
@@ -1427,13 +1425,12 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			    				{
 			    					if( ((Row) o).isVisible())
 			    					{
-			    						addSize += sizeImage((Row) o); //josias: se acumula en addSize los pixeles faltantes para las imagenes.
-			    						size += INC ;
+			    						size += getComponentSize((Row) o) ; 
 			    					}
 			    				}
 			    				else if (o instanceof org.zkoss.zul.Group)
 			    				{
-			    					size -= 5;
+			    					size +=20; // Group
 			    				}
 			    				
 			    			}
@@ -1441,7 +1438,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
 			    		    size += 25; // 25 = statusbar
 	    					
-	    	    			size += addSize; //josias: se sgrega a size los pixeles acumulados para imagenes.
+	    	    			size += addSize; 
 	    			
 			    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
 			    			
@@ -1471,8 +1468,44 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
     	}
 		return 0; 
 	}
+	
+	private int getComponentSize(Row row) { 
+		
+		int addSize = 0;
+		
+		for (Object o : ((Row) row).getChildren()) {
+			
+			if(o instanceof org.zkoss.zkex.zul.Borderlayout)
+			{
+				return 0;
+			}
+			
+			if (o instanceof org.zkoss.zk.ui.HtmlBasedComponent  ){
+				
+				String height = ((org.zkoss.zk.ui.HtmlBasedComponent) o).getHeight();
+				
+				if (height==null)
+				{
+					height="30";
+				}
+				
+				if(!height.contains("%"))
+				{
+									
+					int size = Integer.parseInt(height.replace("px", "")) + 6; 
+					
+					if (size > addSize) 
+						addSize = size;
+				}
+				
+			}
+		}
+		
+		return addSize;
+	}
 
-	private int sizeImage(Row row) { //josias: método para calcular los pixeles extra para filas que contienen imagenes.
+	@Deprecated
+	private int sizeImage(Row row) { 
 		
 		int addSize = 0;
 		
@@ -1481,9 +1514,9 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			if (o instanceof org.zkoss.zul.Image){
 				
 				int size = Integer.parseInt(((org.zkoss.zul.Image) o)
-						.getHeight().replace("px", "")) - INC; //josias: se obtiene el tamaño de la imagen y se le resta INC, ya que solo se sumarán pixeles extra.
+						.getHeight().replace("px", "")) - INC; 
 				
-				if (size > addSize) //para filas que contienen dos imagenes o más, se toma como referencia la de mayor tamaño
+				if (size > addSize)
 					addSize = size;
 			}
 		}
