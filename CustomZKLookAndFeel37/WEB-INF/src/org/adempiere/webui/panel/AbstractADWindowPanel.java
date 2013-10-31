@@ -1869,7 +1869,22 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			return;
 
 		//	Query
-		MQuery query = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+		//MQuery query = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+		
+		MQuery oldQuery = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+        MQuery query = new MQuery(curTabx.getTableName()) ;
+        
+        try {
+ 
+            query = oldQuery.deepCopy();
+        }
+        catch (Exception e) {
+            
+            query = oldQuery;
+            e.printStackTrace();
+        }
+        
+        
 		if(curTabx.getWhereClause()!=null)
 		{
 			if(curTabx.getWhereClause().length()>0)
