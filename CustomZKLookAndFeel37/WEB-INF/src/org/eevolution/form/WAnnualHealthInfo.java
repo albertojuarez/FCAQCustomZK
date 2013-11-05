@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Combobox;
 import org.adempiere.webui.component.ConfirmPanel;
@@ -262,7 +263,13 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 			return;
 		}
 		
-		setAnnualHealthInfo(C_BPartner_ID, weight, height);
+		try {
+			setAnnualHealthInfo(C_BPartner_ID, weight, height);
+		}
+		catch (Exception e) {
+			
+			showErrorMessage(e.toString().replace("org.adempiere.exceptions.AdempiereException:", ""));
+		}
 		
 		setting = false;
 	}
