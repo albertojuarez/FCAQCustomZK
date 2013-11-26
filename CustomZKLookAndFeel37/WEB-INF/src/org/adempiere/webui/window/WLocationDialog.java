@@ -49,6 +49,7 @@ import org.fcaq.model.MCACanton;
 import org.fcaq.model.MCAParish;
 import org.fcaq.model.MCAProvince;
 import org.fcaq.model.MCASector;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
@@ -219,7 +220,7 @@ public class WLocationDialog extends Window implements EventListener
 		
 		initLocation();
 		//               
-		this.setWidth("305px");
+		this.setWidth("390px");
 		this.setClosable(true);
 		this.setBorder("normal");
 		this.setAttribute("mode","modal");
@@ -261,61 +262,63 @@ public class WLocationDialog extends Window implements EventListener
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 
 		txtAddress1 = new Textbox();
-		txtAddress1.setCols(20);
+		txtAddress1.setCols(30);
 		txtAddress2 = new Textbox();
-		txtAddress2.setCols(20);
+		txtAddress2.setCols(30);
 		txtAddress3 = new Textbox();
-		txtAddress3.setCols(20);
+		txtAddress3.setCols(30);
 		txtAddress4 = new Textbox();
-		txtAddress4.setCols(20);
+		txtAddress4.setMultiline(true);
+		((HtmlBasedComponent)txtAddress4).setStyle("height:60px");	
+		txtAddress4.setCols(30);
 
 		//autocomplete City
 		txtCity = new WAutoCompleterCity(m_WindowNo);
-		txtCity.setCols(20);
+		txtCity.setCols(30);
 		txtCity.setAutodrop(true);
 		txtCity.setAutocomplete(true);
 		txtCity.addEventListener(Events.ON_CHANGING, this);
 		//txtCity
 
 		txtPostal = new Textbox();
-		txtPostal.setCols(20);
+		txtPostal.setCols(30);
 		txtPostalAdd = new Textbox();
-		txtPostalAdd.setCols(20);
+		txtPostalAdd.setCols(30);
 
 		lstRegion    = new Listbox();
 		lstRegion.setMold("select");
-		lstRegion.setWidth("154px");
+		lstRegion.setWidth("204px");
 		lstRegion.setRows(0);
 
 		lstCountry  = new Listbox();
 		lstCountry.setMold("select");
-		lstCountry.setWidth("154px");
+		lstCountry.setWidth("204px");
 		lstCountry.setRows(0);
 		
 		//Begin Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		lstSector	= new Listbox();
 		lstSector.setMold("select");
-		lstSector.setWidth("154px");
+		lstSector.setWidth("204px");
 		lstSector.setRows(0);
 		
 		lstProvince	= new Listbox();
 		lstProvince.setMold("select");
-		lstProvince.setWidth("154px");
+		lstProvince.setWidth("204px");
 		lstProvince.setRows(0);
 		
 		lstCanton	= new Listbox();
 		lstCanton.setMold("select");
-		lstCanton.setWidth("154px");
+		lstCanton.setWidth("204px");
 		lstCanton.setRows(0);
 		
 		lstParish	= new Listbox();
 		lstParish.setMold("select");
-		lstParish.setWidth("154px");
+		lstParish.setWidth("204px");
 		lstParish.setRows(0);
 		
 		lstAddressType	= new Listbox();
 		lstAddressType.setMold("select");
-		lstAddressType.setWidth("154px");
+		lstAddressType.setWidth("204px");
 		lstAddressType.setRows(0);
 		//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 		
