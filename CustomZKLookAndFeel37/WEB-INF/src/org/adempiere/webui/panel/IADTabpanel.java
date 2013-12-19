@@ -12,7 +12,11 @@
  *****************************************************************************/
 package org.adempiere.webui.panel;
 
+import java.util.List;
+
 import org.adempiere.webui.component.CWindowToolbar;
+import org.adempiere.webui.component.Grid;
+import org.adempiere.webui.panel.ADTabpanel.EmbeddedPanel;
 import org.compiere.model.GridTab;
 import org.compiere.util.Evaluatee;
 import org.zkoss.zk.ui.Component;
@@ -111,4 +115,11 @@ public interface IADTabpanel extends Component, Evaluatee {
 	public void setUnselected();
 	
 	public void setSelected();
+	
+	public Grid getGrid();
+	
+	public List<EmbeddedPanel> getIncludedPanel();
+	
+	public int getWindowNo();
+	
 }

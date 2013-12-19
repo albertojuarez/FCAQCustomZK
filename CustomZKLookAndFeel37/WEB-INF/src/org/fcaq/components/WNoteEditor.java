@@ -452,10 +452,10 @@ public class WNoteEditor extends Div  implements INoteEditor{
 				{
 					if(Integer.parseInt(section)<=3 )
 					{
-						if(decimalBox.getValue().compareTo(new BigDecimal("5"))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
-						{
-							decimalBox.setValue(new BigDecimal("0"));
-						}
+						//if(decimalBox.getValue().compareTo(new BigDecimal("5"))>0 || decimalBox.getValue().compareTo(new BigDecimal("0"))<0)
+						//{
+						//	decimalBox.setValue(new BigDecimal("0"));
+						//}
 					}
 				}
 			}
@@ -536,14 +536,14 @@ public class WNoteEditor extends Div  implements INoteEditor{
 			decimalBox.setValue(new BigDecimal("0"));
 		}
 
-		if(discConfig.isAverageCriteria() 
+		/*if(discConfig.isAverageCriteria() 
 				&& X_CA_CourseDef.SECTION_Kinder.equals(getNote().getCA_CourseDef().getSection())    
 				&& X_CA_CourseDef.MODALITY_Nacional.equals(getNote().getCA_CourseDef().getModality())  
 				&& decimalBox.getValue().compareTo(new BigDecimal("5"))>0)
 		{
 
 			decimalBox.setValue(new BigDecimal("0"));
-		}
+		}*/
 
 		if(!discConfig.isAverageCriteria() && decimalBox.getValue().compareTo(new BigDecimal("4"))>0 && !isfinal)
 		{

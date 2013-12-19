@@ -33,6 +33,7 @@ import org.adempiere.webui.component.IADTab;
 import org.adempiere.webui.component.Tabbox;
 import org.adempiere.webui.component.Tabpanel;
 import org.adempiere.webui.component.Tabs;
+import org.adempiere.webui.panel.ADTabpanel.EmbeddedPanel;
 import org.adempiere.webui.part.ITabOnSelectHandler;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.util.UserPreference;
@@ -242,6 +243,21 @@ public class ADWindowPanel extends AbstractADWindowPanel
 	@Override
 	public boolean initPanel(int adWindowId, MQuery query) {
 		boolean retValue = super.initPanel(adWindowId, query);
+		
+		if(toolbar.getCurrentTab() instanceof ADTabpanel)
+		{
+			ADTabpanel tabpanel = (ADTabpanel)toolbar.getCurrentTab();
+			if(tabpanel.getIncludedPanel().size()>0)
+			{
+				for(EmbeddedPanel panel : tabpanel.getIncludedPanel())
+				{
+					tabpanel.includedAutoRezise(panel);
+				}
+			}
+			tabpanel.setFocus(true);
+		}
+		
+		
 		if (adTab.getTabCount() == 1) {
 			if (west != null)
 				west.setVisible(false);

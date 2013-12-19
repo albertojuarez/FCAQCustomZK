@@ -81,7 +81,7 @@ import org.zkoss.zul.SimpleTreeNode;
 import org.zkoss.zul.Space;
 import org.zkoss.zul.Treeitem;
 
-/**
+/** 
  *
  * This class is based on org.compiere.grid.GridController written by Jorg Janke.
  * Changes have been brought for UI compatibility.
@@ -116,9 +116,9 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
     private AbstractADWindowPanel      windowPanel;
 
-    private int               windowNo;
+    public int               windowNo;
 
-    private Grid              grid;
+    public Grid              grid;
 
     private ArrayList<WEditor> editors = new ArrayList<WEditor>();
 
@@ -152,6 +152,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	private boolean m_vetoActive = false;
 	
 	private CWindowToolbar globalToolbar;
+	
+	private int INC = 30;
 		
 	public CWindowToolbar getGlobalToolbar()
 	{
@@ -334,6 +336,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
             			if (ep.adTabId == field.getIncluded_Tab_ID()) {
             				ep.group = includedTab.get(ep.adTabId);
             				createEmbeddedPanelUI(ep);
+            				((ADTabpanel)ep.tabPanel).autoResize();
+
             				break;
             			}
             		}
@@ -551,6 +555,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 
         if (!gridTab.isSingleRow() && !isGridView())
         	switchRowPresentation();
+        
     }
 
 	private Component createSpacer() {
@@ -673,6 +678,22 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         		if (row.isVisible() != visible)
         			row.setVisible(visible);
         	}
+        }
+        
+        for (EmbeddedPanel ep : includedPanel) {
+        	
+        	if(ep.gridWindow.getTab(ep.tabIndex).isDisplayed())
+    		{
+    			ep.windowPanel.getParent().setVisible(true);
+    			ep.group.setVisible(true);
+    		}
+        	else {
+        		
+        		ep.windowPanel.getParent().setVisible(false);
+    			ep.group.setVisible(false);
+        	}
+        	
+        	//ep.tabPanel.dynamicDisplay(0);
         }
         
         logger.config(gridTab.toString() + " - fini - " + (col<=0 ? "complete" : "seletive"));
@@ -883,13 +904,6 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    		{
 	    			
 	    			int size = MSysConfig.getIntValue("TAB_INCLUDING_HEIGHT", 400);
-	    			
-	    			
-	    			/*
-		    		int rows = gridTab.getRowCount();
-		    		int size = (rows * 32) + 75;
-					if(size>400)
-						size=400;*/
 						
 		    		window.setHeight(size + "px");
 					
@@ -899,23 +913,44 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    		}
 	    		else
 	    		{
-	    			
-	    			int rows = 0;
-	    			Row c = new Row();
-	    			for(Object o : grid.getRows().getChildren())
-	    			{
-	    				if(o instanceof Row)
-	    				{
-	    					rows++;
-	    				}
-	    					
+	    			try{
+		    			int rows = 0;
+		    			Row c = new Row();
+		    			int addSize = 0;
+		    			
+		    			int size = 0;
+		    			for(Object o : grid.getRows().getChildren())
+		    			{
+		    				if(o instanceof Row )
+		    				{	    	
+		    					if( ((Row) o).isVisible())
+		    					{
+		    						size += getComponentSize((Row) o); 
+		    					}
+		    				}
+		    				else if(o instanceof org.zkoss.zul.Group)
+		    				{
+		    					size +=20; 
+		    				}
+		    					
+		    			}
+		    			
+
+		    				size += 25; // 25 = statusbar
+    			
+		    			
+		    			size += addSize; 
+		    			size += doAutoSize();
+		    			
+
+						window.setHeight(size + "px");
+		    			window.resize();
 	    			}
-	    			
-	    			int size = rows * 40 + 100;
-	    			
-	    			
-					window.setHeight(size + "px");
-	    			window.resize();
+	    			catch(Exception e)
+	    			{
+	    				e.printStackTrace();
+	    				//nothing to do, just ignore
+	    			}
 	    			
 	    		}
 	    		
@@ -923,6 +958,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 			}
     	}
     }
+    
+    
     
     public void setUnselected()
     {
@@ -942,13 +979,13 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
     		//return;
     	
     	getGlobalToolbar().setActualPanel(this);
-    	((HtmlBasedComponent)listPanel).setStyle("border-left: 6px solid #fa962f; border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
-		((HtmlBasedComponent)grid).setStyle("border-left: 6px solid #fa962f; border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
+    	((HtmlBasedComponent)listPanel).setStyle("border-left: 6px solid #fa962f; "); //border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
+		((HtmlBasedComponent)grid).setStyle("border-left: 6px solid #fa962f; "); //border-top: 1px solid #fa962f; border-bottom: 1px solid #fa962f; border-right: 1px solid #fa962f;");
 		
-		grid.setWidth("99%");
-		grid.setHeight("95%");
-		listPanel.setWidth("99%");
-		listPanel.setHeight("95%");
+		grid.setWidth("99.1%");
+		//grid.setHeight("95%");
+		listPanel.setWidth("99.1%");
+		//listPanel.setHeight("95%");
     }
     
     public void repaintComponents(boolean isRow)
@@ -1055,13 +1092,7 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
         if (!includedPanel.isEmpty() && e.getChangedColumn() == -1) {
         	for (EmbeddedPanel panel : includedPanel)
         		panel.tabPanel.query(false, 0, 0);
-        }
-        
-        if(windowPanel!= null)
-	        if(windowPanel.isEmbedded())
-	        {
-	    		autoResize();
-	        }        
+        }      
     }
 
     private void deleteNode(int recordId) {
@@ -1350,5 +1381,158 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	public GridPanel getGridView() {
 		return listPanel;
 	}
+	
+	public int doAutoSize()
+	{
+		if(includedPanel.size()>0)
+		{
+			int size = 0; 
+			
+			for(EmbeddedPanel panel : includedPanel)
+			{
+				size += includedAutoRezise(panel); 
+			}
+			
+			return size; 
+		}
+		return 0;
+	}
+	
+	public int includedAutoRezise(EmbeddedPanel embeddedpanel)
+	{
+		if(embeddedpanel.windowPanel  !=null)
+    	{
+	    	if(embeddedpanel.windowPanel.isEmbedded())
+			{
+				Borderlayout window = embeddedpanel.windowPanel.getComponent();
+
+	    			int rows = 0;
+	    			Row c = new Row();
+	    			try{
+	    				
+	    				int size = 0;
+	    				int addSize = 0;
+	    				
+	    				if (!embeddedpanel.tabPanel.getGridTab().isSingleRow()) 
+	    				{
+	    					size = MSysConfig.getIntValue("TAB_INCLUDING_HEIGHT", 400);
+	    				}
+	    				else {
+	    					
+	    					for(Object o : embeddedpanel.tabPanel.getGrid().getRows().getChildren())
+			    			{
+			    				if(o instanceof Row)
+			    				{
+			    					if( ((Row) o).isVisible())
+			    					{
+			    						size += getComponentSize((Row) o) ; 
+			    					}
+			    				}
+			    				else if (o instanceof org.zkoss.zul.Group)
+			    				{
+			    					size +=20; // Group
+			    				}
+			    				
+			    			}
+	    			
+
+			    		    size += 25; // 25 = statusbar
+	    					
+	    	    			size += addSize; 
+	    			
+			    			List<EmbeddedPanel> included = embeddedpanel.tabPanel.getIncludedPanel();
+			    			
+			    			if(included.size()>0)
+			    			{
+			    				for(EmbeddedPanel panel : included)
+			    				{
+				    				size += includedAutoRezise(panel);
+			    				}
+			    			}
+	    				}
+	    			
+					window.setHeight(size + "px");
+	    			window.resize();
+	    			
+	    			return size;
+	    			}
+	    			catch(Exception e)
+	    			{
+	    				e.printStackTrace();
+	    				// nothig to do, just ignore
+	    			}
+	    			
+	    			return 0;
+			}
+
+    	}
+		return 0; 
+	}
+	
+	private int getComponentSize(Row row) { 
+		
+		int addSize = 0;
+		
+		for (Object o : ((Row) row).getChildren()) {
+			
+			if(o instanceof org.zkoss.zkex.zul.Borderlayout)
+			{
+				return 0;
+			}
+			
+			if (o instanceof org.zkoss.zk.ui.HtmlBasedComponent  ){
+				
+				String height = ((org.zkoss.zk.ui.HtmlBasedComponent) o).getHeight();
+				
+				if (height==null)
+				{
+					height="30";
+				}
+				
+				if(!height.contains("%"))
+				{
+									
+					int size = Integer.parseInt(height.replace("px", "")) + 6; 
+					
+					if (size > addSize) 
+						addSize = size;
+				}
+				
+			}
+		}
+		
+		return addSize;
+	}
+
+	@Deprecated
+	private int sizeImage(Row row) { 
+		
+		int addSize = 0;
+		
+		for (Object o : ((Row) row).getChildren()) {
+			
+			if (o instanceof org.zkoss.zul.Image){
+				
+				int size = Integer.parseInt(((org.zkoss.zul.Image) o)
+						.getHeight().replace("px", "")) - INC; 
+				
+				if (size > addSize)
+					addSize = size;
+			}
+		}
+		
+		return addSize;
+	}
+
+	@Override
+	public Grid getGrid() {
+		return grid;
+	}
+
+	@Override
+	public List<EmbeddedPanel> getIncludedPanel() {
+		return includedPanel;
+	}
+	
 }
 

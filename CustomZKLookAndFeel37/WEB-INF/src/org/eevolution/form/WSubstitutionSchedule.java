@@ -2,7 +2,6 @@ package org.eevolution.form;
 
 import java.sql.Timestamp;
 
-import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
@@ -35,60 +34,49 @@ import org.zkoss.zkex.zul.North;
 import org.zkoss.zul.Space;
 import org.zkoss.zul.Vbox;
 
-public class WSchedule extends Schedule implements IFormController, EventListener, ValueChangeListener{
-
+public class WSubstitutionSchedule extends SubstitutionSchedule implements IFormController, EventListener, ValueChangeListener {
+	
 	private CustomForm form = new CustomForm();
 	private Borderlayout mainLayout = new Borderlayout();
 	private Panel parameterPanel = new Panel();
 	private Grid parameterLayout = GridFactory.newGridLayout();
-	private Panel mainPanel = new Panel();
-
+	
 	private Label lBPartner = null;
 	private WSearchEditor fBPartner = null; // Profesor, Alumno
-	private Label lGroup = null;
-	private WTableDirEditor fGroup = null; // Curso (Grado, paralelo)
-	private Label lSubject = null;
-	private WTableDirEditor fSubject = null; // Materia
 	private Label lSchoolYear = null;
 	private WTableDirEditor fSchoolYear = null;
-
-	private Button bSave = new Button("Save");
-
+	
 	private Borderlayout scheduleLayout = new Borderlayout();
 	Vbox periodLayout = new Vbox();
-
-	Center scheduleCenter = new Center();
-
 	
+	Center scheduleCenter = new Center();
 	North scheduleNorth = new North();
 
-	
-
-	public WSchedule()
-	{
-		try
-		{
+	public WSubstitutionSchedule() {
+		
+		try {
+			
 			loadStardData();
-
-			if(iseditablemode)
-				dynInit();
-
+			
+			dynInit();
+			
 			zkInit();
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
+			
 			e.printStackTrace();
 		}
 	}
 
-	private void dynInit()
-	{
-		int AD_Column_ID = 2893;  
-		MLookup teacher = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
-		fBPartner = new WSearchEditor("C_BPartner_ID", true, false, true, teacher);
+	private void dynInit() {
+		
+		MLookup teacher = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, 
+				COLUMN_BPartner_Teacher_ID, DisplayType.Search);
+		fBPartner = new WSearchEditor(COLUMNNAME_BPartner_Teacher, true, false, true, teacher);
 		fBPartner.addValueChangeListener(this);
 		
-		fSchoolYear = new WTableDirEditor("CA_SchoolYear_ID", true, false, true, AcademicUtil.buildLookup(1000000, "", form.getWindowNo()));
+		fSchoolYear = new WTableDirEditor(X_CA_SchoolYear.COLUMNNAME_CA_SchoolYear_ID, true, false, true, 
+				AcademicUtil.buildLookup(COLUMN_SchoolYear_ID, "", form.getWindowNo()));
 		fSchoolYear.setValue(getSchoolYear().get_ID());
 		fSchoolYear.addValueChangeListener(this);
 	}
@@ -105,25 +93,22 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		north.appendChild(parameterPanel);
 		Rows rows = null;
 		Row row = null;
-		parameterLayout.setWidth("800px");
+		parameterLayout.setWidth("99%");
 		rows = parameterLayout.newRows();
 
 		parameterPanel.appendChild(parameterLayout);
-
-		if(iseditablemode)
-		{
-			lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Find"));
-			lSchoolYear = new Label(Msg.getMsg(ctx, "SchoolYear"));
-			row = rows.newRow();
-			row.appendChild(lSchoolYear);
-			row.appendChild(fSchoolYear.getComponent());
-			row.appendChild(lBPartner);
-			row.appendChild(fBPartner.getComponent());
-		}
+		
+		lBPartner = new Label(Msg.getMsg(Env.getCtx(), "Teacher"));
+		lSchoolYear = new Label(Msg.getMsg(ctx, "SchoolYear"));
+		row = rows.newRow();
+		row.appendChild(lSchoolYear);
+		row.appendChild(fSchoolYear.getComponent());
+		row.appendChild(lBPartner);
+		row.appendChild(fBPartner.getComponent());
 		
 		row = rows.newRow();
 		row.appendChild(new Space());
-		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toLocaleString() +  "   D\u00EDa actual " + DateUtils.getDayNo()));
+		row.appendChild(new Label( new Timestamp(System.currentTimeMillis()).toString() +  "   D\u00EDa actual " + DateUtils.getDayNo()));
 		
 		scheduleLayout.setWidth("99%");
 		scheduleLayout.setHeight("100%");
@@ -138,7 +123,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		
 		//scheduleCenter.setFlex(true);
 		
-		periodLayout.setHeight("400px");
+		periodLayout.setHeight("600px");
 		periodLayout.setWidth("99%");
 		
 		scheduleCenter.appendChild(periodLayout);
@@ -146,13 +131,12 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		
 		if(days!=null && periods!=null)
 		{
-			for(int x=1; x<=9; x++)
+			for(int x=1; x<=8; x++)
 			{
 				Period period = new Period(x, days, periods, 
-						iseditablemode, currentBPartner, getSchoolYear(), 
-						false, form.getWindowNo());
+						true, currentBPartner, getSchoolYear(), 
+						true, form.getWindowNo());
 				
-				period.iseditablemode=iseditablemode;
 				periodLayout.appendChild(period);
 			}
 		}
@@ -180,37 +164,37 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 1":"Monday");
+		header = new Label("Day 1");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 2":"Tuesday");
+		header = new Label("Day 2");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 3":"Wednesday");
+		header = new Label("Day 3");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 4":"Thursday");
+		header = new Label("Day 4");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 5":"Friday");
+		header = new Label("Day 5");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 		span = new Span();
 		span.setParent(schedulePanelNorth);
 		span.setStyle("height: 99%; display: inline-block; width: 14%;");
-		header = new Label(drawmode==0?"Day 6":"");
+		header = new Label("Day 6");
 		header.setStyle("font-size:20px;");
 		span.appendChild(header);
 	}
@@ -222,7 +206,7 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 		clean();
 		
-		if ("C_BPartner_ID".equals(name))
+		if (COLUMNNAME_BPartner_Teacher.equals(name))
 		{
 			fBPartner.setValue(value);
 
@@ -230,13 +214,10 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 				return;
 			currentBPartner = new MBPartner(ctx, (Integer)fBPartner.getValue(), null);
 			
-			if(currentBPartner.isStudent())
-				loadStudentSchedule();
-			else
-				loadTeacherSchedule();
+			loadTeacherSchedule();
 		}
 		
-		if ("CA_SchoolYear_ID".equals(name)) {
+		if (X_CA_SchoolYear.COLUMNNAME_CA_SchoolYear_ID.equals(name)) {
 			
 			fSchoolYear.setValue(value);
 			
@@ -249,13 +230,8 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 			
 			if (currentBPartner == null)
 				return;
-			else {
-				
-				if(currentBPartner.isStudent())
-					loadStudentSchedule();
-				else
-					loadTeacherSchedule();
-			}
+			else
+				loadTeacherSchedule();
 		}
 		
 		renderNorth();
@@ -270,27 +246,15 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 
 		scheduleCenter.appendChild(periodLayout);
 		scheduleLayout.appendChild(scheduleCenter);
-
-		for(int x=1; x<=9; x++)
+		
+		for(int x=1; x<=8; x++)
 		{
 			Period period = null;
-			if(!currentBPartner.isStudent() 
-					&& !isSportTeacher(currentBPartner))
-			{	
-				period = new Period(x, days, periods, 
-						iseditablemode, currentBPartner, getSchoolYear(), 
-						false, form.getWindowNo());
 				
-				period.iseditablemode=iseditablemode;
-			}
-			else
-			{
-				period = new Period(x, days, periods, 
-						false, currentBPartner, getSchoolYear(), 
-						false, form.getWindowNo());
-				
-				period.iseditablemode=false;
-			}
+			period = new Period(x, days, periods, 
+					true, currentBPartner, getSchoolYear(), 
+					true, form.getWindowNo());
+			
 			periodLayout.appendChild(period);
 		}
 	}
@@ -322,4 +286,5 @@ public class WSchedule extends Schedule implements IFormController, EventListene
 		days = null;
 		periods = null;
 	}
+
 }

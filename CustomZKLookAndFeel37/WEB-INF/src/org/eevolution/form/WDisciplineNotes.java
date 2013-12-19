@@ -292,7 +292,9 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			MBPartner selectedstudent = ((INoteEditor)noteTable.getValueAt(row, 1+inccol)).getStudent();
 			refreshDelayInfo(selectedstudent,currentMatterAssignment, currentParcial);
 			displayAbsenceInfo(String.valueOf(assisNo), String.valueOf(delayNo));
-			double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
+			//double discount = ( yearConfig.getRoundLimit().doubleValue()) * (assisNo + delayNo);
+			BigDecimal discount = ( yearConfig.getRoundLimit().multiply(new BigDecimal(assisNo + delayNo)));
+
 			setDiscontInfo(selectedstudent, discount);
 		}
 		else if(event.getTarget().equals(bChekNotes))
@@ -418,7 +420,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		{
 			X_CA_CourseDef course = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
 			
-			if(course.getSection().equals("04")) // Solo en primaria
+			if(course.getSection().equals("04") && course.getModality().equals("N")) // Solo en primaria nacional) 
 			{
 				
 				String whereClause = X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
@@ -514,7 +516,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 	@Override
-	public void setDiscontInfo(MBPartner student, double discount) {
+	public void setDiscontInfo(MBPartner student, BigDecimal discount) {
 		try
 		{
 			for(int row = 0; row<=noteTable.getRowCount(); row++)

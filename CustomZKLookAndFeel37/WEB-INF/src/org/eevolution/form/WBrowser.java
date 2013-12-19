@@ -68,6 +68,7 @@ import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoUtil;
 import org.compiere.util.ASyncProcess;
 import org.compiere.util.DB;
+import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
@@ -806,6 +807,9 @@ public class WBrowser extends Browser implements IFormController,
 		bDelete.setEnabled(true);
 		collapsibleSeach.setOpen(!isCollapsible);
 		p_loadedOK = initBrowser();
+		Env.setContext(Env.getCtx(), 0, "currWindowNo", p_WindowNo);
+		if(parameterPanel !=null)
+			parameterPanel.refreshContext();
 		executeQuery();
 	}
 
@@ -888,7 +892,8 @@ public class WBrowser extends Browser implements IFormController,
 					dataColumn.setSelected(isSelected);
 					detail.getModel().setValueAt(dataColumn, row,m_keyColumnIndex);
 				}
-				selectedList[row] = row;
+				if(isSelected)
+					selectedList[row] = row;
 			}
 			detail.setSelectedIndices(selectedList);
 
@@ -987,22 +992,32 @@ public class WBrowser extends Browser implements IFormController,
 		
 		m_parameters_values = new ArrayList<Object>();
 		m_parameters = new ArrayList<Object>();
-
+		
 		boolean onRange = false;
 		StringBuilder sql = new StringBuilder(p_whereClause);
-
+		
 		for (Entry<Object, Object> entry : searchGrid.getParamenters().entrySet()) {
 			WEditor editor = (WEditor) entry.getValue();
 			GridFieldVO field = editor.getGridField().getVO();
 			if (!onRange) {
-
+		
 				if (editor.getValue() != null
 						&& !editor.getValue().toString().isEmpty()
 						&& !field.isRange) {
 					sql.append(" AND ");
-					sql.append(field.Help).append("=? ");
-					m_parameters.add(field.Help);
-					m_parameters_values.add(editor.getValue());
+		
+		            if(DisplayType.String == field.displayType)
+		            {
+		                sql.append(field.Help).append(" LIKE ? ");
+		                m_parameters.add(field.Help);
+					    m_parameters_values.add("%" + editor.getValue() + "%");
+		            }
+		            else
+		            {
+		                sql.append(field.Help).append("=? ");
+		                m_parameters.add(field.Help);
+		                m_parameters_values.add(editor.getValue());
+		            }
 				} else if (editor.getValue() != null
 						&& !editor.getValue().toString().isEmpty()
 						&& field.isRange) {

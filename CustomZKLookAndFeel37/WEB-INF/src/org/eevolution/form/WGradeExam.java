@@ -3,7 +3,6 @@ package org.eevolution.form;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -27,7 +26,6 @@ import org.adempiere.webui.event.WTableModelListener;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
-import org.compiere.minigrid.IMiniTable;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MColumn;
 import org.compiere.model.Query;
@@ -36,8 +34,8 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.fcaq.model.X_CA_CourseDef;
 import org.fcaq.model.X_CA_ExamType;
+import org.fcaq.model.X_CA_ExamTypeDate;
 import org.fcaq.model.X_CA_MatterAssignment;
-import org.fcaq.model.X_CA_SchoolYear;
 import org.fcaq.util.AcademicUtil;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -165,7 +163,7 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		row = rows.newRow();
 		row.appendChild(lSubject); // Etiqueta de materia
 		row.appendChild(fMatterAssignment.getComponent());
-		
+
 		row.appendChild(lTry);
 		row.appendChild(fTry);
 	}
@@ -225,7 +223,7 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		fTry.appendItem("3", "3");
 		fTry.appendItem("4", "4");
 		fTry.addEventListener(Events.ON_CHANGE, this);
-		
+
 
 
 	}
@@ -295,10 +293,10 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 
 		if(currentTeacher==null || currentCourse==null || currentAssignment==null || currentTry==null)
 			return;
-		
+
 		Vector<String> columns = getColumns();
-		
-		
+
+
 		Vector<Vector<Object>> data = getStudentData();
 
 		ListModelTable modelP = new ListModelTable(data);
@@ -312,7 +310,7 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		examTable.setColumnClass(1, String.class, true);
 		examTable.setColumnClass(2, String.class, true);
 		examTable.setColumnClass(3, BigDecimal.class, isReadOnly());
-		
+
 		examTable.autoSize();
 		((WListbox)examTable).setWidth("100%");
 		((WListbox)examTable).setHeight("100%");
@@ -323,15 +321,40 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 	private boolean isReadOnly() {
 
 		String whereClause = X_CA_ExamType.COLUMNNAME_Value + "=? AND " + 
-							 X_CA_ExamType.COLUMNNAME_CA_SchoolYear_ID + "=?";
-		
+				X_CA_ExamType.COLUMNNAME_CA_SchoolYear_ID + "=?";
+
 		X_CA_ExamType examType = new Query(m_ctx, X_CA_ExamType.Table_Name, whereClause, null)
-							.setOnlyActiveRecords(true)
-							.setParameters("GE", schoolYear.get_ID())
-							.first();
-		
-		if(examType.getDateFrom().getTime()< System.currentTimeMillis() && 
-				System.currentTimeMillis()< examType.getDateTo().getTime() )
+		.setOnlyActiveRecords(true)
+		.setParameters("GE", schoolYear.get_ID())
+		.first();
+
+		if(examType==null)
+			return true;
+
+		whereClause = X_CA_ExamTypeDate.COLUMNNAME_CA_ExamType_ID + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Modality + "=? AND " +
+				X_CA_ExamTypeDate.COLUMNNAME_Grade + "=? ";
+
+		List<Object> parameters = new ArrayList<Object>();
+
+
+		parameters.add(examType.get_ID());
+		parameters.add(currentCourse.getModality());
+		parameters.add(currentCourse.getGrade());
+
+
+
+		X_CA_ExamTypeDate examDate = new Query(m_ctx, X_CA_ExamTypeDate.Table_Name, whereClause, null)
+		.setOnlyActiveRecords(true)
+		.setParameters(parameters)
+		.first();
+
+		if(examDate==null)
+			return true;
+
+
+		if(examDate.getDateFrom().getTime()< System.currentTimeMillis() && 
+				System.currentTimeMillis()< examDate.getDateTo().getTime() )
 			return false;
 		else
 			return true;
@@ -347,13 +370,20 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 			.setOnlyActiveRecords(true)
 			.setParameters(studentvalue)
 			.first();
-			
+
 			if(column==(3)) //Exam Grade
 			{
+
 				BigDecimal newValue = (BigDecimal)examTable.getValueAt(event.getIndex0(), 3);
+
+				if(newValue==null)
+				{
+					newValue = BigDecimal.ZERO;
+				}
+
 				if(student!=null)
 				{
-					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(100))>0)
+					if(newValue.compareTo(new BigDecimal(0))<0 || newValue.compareTo(new BigDecimal(AcademicUtil.getCurrentYearConfig(m_ctx).getNoteScale()))>0)
 					{
 						newValue = BigDecimal.ZERO;
 						examTable.setValueAt(newValue, event.getIndex0(), 3);
@@ -361,7 +391,7 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 					}
 					else
 					{
-							saveExam(student, event.getIndex0(), newValue);
+						saveExam(student, event.getIndex0(), newValue);
 					}
 				}
 			}
@@ -376,7 +406,7 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 			currentTry = fTry.getValue();
 			refreshExamTable();
 		}
-		
+
 		else if (event.getTarget().equals(isElective))
 		{
 
@@ -386,30 +416,30 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		}
 		else if(event.getTarget().equals(bShowComments))
 		{
-			
-				List<String> description = new ArrayList<String>();
-				
-				if(currentTeacher!=null)
-					description.add(currentTeacher.getName());
-				if(currentCourse!=null)
-					description.add(fCourseDef.getDisplay());
-				if(currentAssignment!=null)
-					description.add(fMatterAssignment.getDisplay());
-				
-				description.add("Intento: " + currentTry);
 
-				WGradeViewer  gradeViewer = new WGradeViewer(description, examTable);
-				
-				gradeViewer.setSizable(true);
-				gradeViewer.setWidth("700px");
-				gradeViewer.setHeight("600px");
-				gradeViewer.setShadow(true);
-				gradeViewer.setBorder("normal");
-				gradeViewer.setClosable(true);
-				gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
-				gradeViewer.setContentStyle("overflow: auto");
-	
-				AEnv.showCenterScreen(gradeViewer);
+			List<String> description = new ArrayList<String>();
+
+			if(currentTeacher!=null)
+				description.add(currentTeacher.getName());
+			if(currentCourse!=null)
+				description.add(fCourseDef.getDisplay());
+			if(currentAssignment!=null)
+				description.add(fMatterAssignment.getDisplay());
+
+			description.add("Intento: " + currentTry);
+
+			WGradeViewer  gradeViewer = new WGradeViewer(description, examTable);
+
+			gradeViewer.setSizable(true);
+			gradeViewer.setWidth("700px");
+			gradeViewer.setHeight("600px");
+			gradeViewer.setShadow(true);
+			gradeViewer.setBorder("normal");
+			gradeViewer.setClosable(true);
+			gradeViewer.setTitle(Msg.translate(Env.getCtx(),"Grades"));
+			gradeViewer.setContentStyle("overflow: auto");
+
+			AEnv.showCenterScreen(gradeViewer);
 
 		}
 	}

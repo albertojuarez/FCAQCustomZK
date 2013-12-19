@@ -49,6 +49,7 @@ import org.adempiere.webui.event.ActionEvent;
 import org.adempiere.webui.event.ActionListener;
 import org.adempiere.webui.event.ToolbarListener;
 import org.adempiere.webui.exception.ApplicationException;
+import org.adempiere.webui.panel.ADTabpanel.EmbeddedPanel;
 import org.adempiere.webui.part.AbstractUIPart;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
@@ -132,7 +133,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
         logger = CLogger.getCLogger(AbstractADWindowPanel.class);
     }
 
-    private Properties           ctx;
+    public Properties           ctx;
 
     private GridWindow           gridWindow;
 
@@ -633,6 +634,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			        curTabpanel.activate(true);
 			    }
 		    }
+		    
+		   // public int doAutoSize()
+			
+
+
+			
 		}
 
 		if (tabIndex == 0) {
@@ -1862,7 +1869,22 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			return;
 
 		//	Query
-		MQuery query = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+		//MQuery query = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+		
+		MQuery oldQuery = curTabx.getQuery() ; //  new MQuery(curTabx.getTableName());
+        MQuery query = new MQuery(curTabx.getTableName()) ;
+        
+        try {
+ 
+            query = oldQuery.deepCopy();
+        }
+        catch (Exception e) {
+            
+            query = oldQuery;
+            e.printStackTrace();
+        }
+        
+        
 		if(curTabx.getWhereClause()!=null)
 		{
 			if(curTabx.getWhereClause().length()>0)
@@ -2453,6 +2475,13 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	 */
 	public int getWindowNo() {
 		return curWindowNo;
+	}
+	
+	/**
+	 * @return parent
+	 */
+	public Component getParent() {
+		return this.parent;
 	}
 
 }
