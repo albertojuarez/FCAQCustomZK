@@ -328,6 +328,8 @@ public class WGradeExam extends GradeExam implements IFormController, EventListe
 		.setParameters("GE", schoolYear.get_ID())
 		.first();
 
+		if(examType==null)
+			return true;
 
 		whereClause = X_CA_ExamTypeDate.COLUMNNAME_CA_ExamType_ID + "=? AND " +
 				X_CA_ExamTypeDate.COLUMNNAME_Modality + "=? AND " +

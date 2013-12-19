@@ -420,7 +420,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		{
 			X_CA_CourseDef course = new X_CA_CourseDef(m_ctx, (Integer)fCourseDef.getValue(), null);
 			
-			if(course.getSection().equals("04")) // Solo en primaria
+			if(course.getSection().equals("04") && course.getModality().equals("N")) // Solo en primaria nacional) 
 			{
 				
 				String whereClause = X_CA_MatterAssignment.COLUMNNAME_CA_MatterAssignment_ID + 
