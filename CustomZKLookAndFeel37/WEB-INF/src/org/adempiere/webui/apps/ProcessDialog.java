@@ -15,13 +15,11 @@ import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.desktop.IDesktop;
-import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.process.WProcessInfo;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.adempiere.webui.window.SimplePDFViewer;
 import org.compiere.apps.ProcessCtl;
-import org.compiere.model.MProcess;
 import org.compiere.print.ReportEngine;
 import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoUtil;
@@ -105,7 +103,12 @@ public class ProcessDialog extends Window implements EventListener//, ASyncProce
 		
 		log.info("Process=" + AD_Process_ID );
 		m_ctx = Env.getCtx();
-		m_WindowNo = SessionManager.getAppDesktop().registerWindow(this);
+		
+		if(SessionManager.isDefaultDesktop())
+			m_WindowNo = SessionManager.getAppDesktop().registerWindow(this);
+		else
+			m_WindowNo = 0;
+		
 		this.setAttribute(IDesktop.WINDOWNO_ATTRIBUTE, m_WindowNo);
 		m_AD_Process_ID = AD_Process_ID;
 		Env.setContext(Env.getCtx(), m_WindowNo, "IsSOTrx", isSOTrx ? "Y" : "N");
@@ -313,23 +316,6 @@ public class ProcessDialog extends Window implements EventListener//, ASyncProce
 	public void runProcess() {
 		try {
 			ProcessCtl.process(null, m_WindowNo, parameterPanel, m_pi, null);
-			
-			MProcess process = new MProcess(m_ctx, m_AD_Process_ID, null);
-			
-			int adFormID = process.getAD_Form_ID();
-			if (adFormID != 0 )
-			{
-				String title = process.getName();
-				ProcessInfo pi = new ProcessInfo (title, process.get_ID(), 0, 0);
-				pi.setAD_User_ID (Env.getAD_User_ID(m_ctx));
-				pi.setAD_Client_ID (Env.getAD_Client_ID(m_ctx));
-				ADForm form = ADForm.openForm(adFormID);
-				form.setProcessInfo(pi);
-				form.setAttribute(Window.MODE_KEY, Window.MODE_EMBEDDED);
-				form.setAttribute(Window.INSERT_POSITION_KEY, Window.INSERT_NEXT);
-				SessionManager.getAppDesktop().showWindow(form);
-			}
-			
 		} finally {
 			unlockUI(m_pi);
 		}
