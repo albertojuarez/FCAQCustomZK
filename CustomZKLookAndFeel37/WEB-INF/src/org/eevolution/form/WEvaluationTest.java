@@ -281,25 +281,40 @@ import org.zkoss.zul.Space;
 			
 			
 			
-			if( currentEvaluation.getDateFrom().getTime()>= System.currentTimeMillis() &&  // Quimestre actual
-					currentEvaluation.getDateTo().getTime()<= System.currentTimeMillis())
+			if( currentEvaluation.getDateFrom().getTime()<= System.currentTimeMillis() &&  // Quimestre actual
+					currentEvaluation.getDateTo().getTime()>= System.currentTimeMillis())
 				{
 					X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, currentEvaluation.getSeqNo().toString(), "3");
+					
+					
 					if(parcial.getDateStart().getTime()>=System.currentTimeMillis() &&
-							   //parcial.getDateTo().getTime()>=System.currentTimeMillis() && 
 							   parcial.getDateFrom().getTime()<=System.currentTimeMillis()
 									)
+						
 					{
+						return true;
+					}
+					else
+						return false;
+			}
+			
+			else
+			{
+				
+				X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, "2", "3");
+
+				
+				if(parcial.getDateStart().getTime()>=System.currentTimeMillis() &&
+						   parcial.getDateFrom().getTime()<=System.currentTimeMillis()
+								)
+					
+				{
 					return true;
 				}
 				else
 					return false;
 			}
 			
-			else
-			{
-				return true;
-			}
 			
 		}
 
