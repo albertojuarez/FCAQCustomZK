@@ -17,7 +17,10 @@
 
 package org.adempiere.webui.session;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.adempiere.webui.IWebClient;
 import org.adempiere.webui.desktop.IDesktop;
@@ -46,7 +49,7 @@ public class SessionManager
                 && !"".equals(adClientId) && !"".equals(adOrgId));
     }
     
-    private static Session getSession()
+    public static Session getSession()
     {
         return  Executions.getCurrent().getDesktop().getSession();
     }
@@ -64,8 +67,38 @@ public class SessionManager
     
     public static IWebClient getSessionApplication()
     {
+    	
+    	String displaytype = ""; // W - Window, P - Process
+    	int desktop_id= -1;
+    	try
+    	{
+    		Map map = Executions.getCurrent().getParameterMap();
+    
+    		Set set = map.entrySet();
+    		Iterator parameters = set.iterator();
+    				
+    		while (parameters.hasNext())
+    		{
+    			Map.Entry m =(Map.Entry)parameters.next();
+    			String name = (String)m.getKey();
+    			if("displaytype".equals(name))
+					displaytype = Executions.getCurrent().getParameter("displaytype");
+				else if("desktop_id".equals(name))
+					desktop_id = Integer.parseInt(Executions.getCurrent().getParameter("desktop_id"));
+    		}
+    	}
+    	catch(Exception e)
+    	{
+    		displaytype="";
+    		desktop_id = -1;
+    	}
+    	
         Session session = getSession();
-        IWebClient app = (IWebClient)session.getAttribute(SESSION_APPLICATION);
+        IWebClient app = null; 
+        if(desktop_id>0)
+        	 app = (IWebClient)session.getAttribute(SESSION_APPLICATION + displaytype + desktop_id);
+        else
+        	 app = (IWebClient)session.getAttribute(SESSION_APPLICATION);
         return app;
     }
     
@@ -82,8 +115,39 @@ public class SessionManager
         getSessionApplication().logout();
     }
     
+    
+    // Controlling multiple desktops by same session
+    
+    
     public static boolean isDefaultDesktop()
     {
-    	return getSessionApplication().isDefaultDesktop();
+    	 Session session = getSession();
+         Boolean isdefault = (Boolean)session.getAttribute("IsDefaultDesktop");
+         return isdefault;    
     }
+    
+    public static void setIsDefaultDesktop( boolean isDefault)
+    {
+    	Session session = getSession();
+        session.setAttribute("IsDefaultDesktop", isDefault);
+    }
+    
+    public static void setUniqueDesktop(IDesktop desktop)
+    {
+    	Session session = getSession();
+        session.setAttribute("UniqueDesktop", desktop);
+    }
+    public static IDesktop getUniqueDesktop()
+    {
+    	Session session = getSession();
+        IDesktop desktop = (IDesktop)session.getAttribute("UniqueDesktop");
+        return desktop; 
+    }
+    
+    public static void setSessionApplication(IWebClient app, String attributeName)
+    {
+        Session session = getSession();
+        session.setAttribute(attributeName, app);
+    }
+    
 }

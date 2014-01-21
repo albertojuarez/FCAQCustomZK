@@ -35,6 +35,7 @@ import org.adempiere.webui.component.ZoomCommand;
 import org.adempiere.webui.desktop.DefaultDesktop;
 import org.adempiere.webui.desktop.IDesktop;
 import org.adempiere.webui.desktop.SimpleDesktop;
+import org.adempiere.webui.desktop.SimpleDesktopRender;
 import org.adempiere.webui.event.TokenEvent;
 import org.adempiere.webui.session.SessionContextListener;
 import org.adempiere.webui.session.SessionManager;
@@ -74,7 +75,11 @@ import org.zkoss.zk.ui.sys.ExecutionCtrl;
 import org.zkoss.zk.ui.sys.ExecutionsCtrl;
 import org.zkoss.zk.ui.sys.SessionCtrl;
 import org.zkoss.zk.ui.sys.Visualizer;
+import org.zkoss.zkex.zul.Borderlayout;
+import org.zkoss.zkex.zul.Center;
 import org.zkoss.zul.Window;
+import org.zkoss.zkex.zul.Borderlayout;
+
 
 /**
  *
@@ -119,7 +124,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
     	userPreference = new UserPreference();
     }
     
-    private boolean useDefaultDesktop = true; 
+    private boolean isDefaultDesktop = true; 
     private String desktopClass = ";"; 
     private String username = ""; 
     private String password = "";
@@ -143,7 +148,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
     	// BEGIN AJC 11 dic 2013
     	
     	
-    	useDefaultDesktop=true;
+    	isDefaultDesktop=true;
 		Properties ctx = Env.getCtx();
 
 		Map map = getDesktop().getExecution().getParameterMap();
@@ -159,7 +164,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 			
 				if("iDesktopClass".equals(name))
 				{
-					useDefaultDesktop=false;
+					isDefaultDesktop=false;
 					desktopClass = getDesktop().getExecution().getParameter("iDesktopClass");		
 				}
 				else if("username".equals(name))
@@ -199,22 +204,6 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 			}
 			
 		}
-    	
-		/*
-		try {
-			String var = "SeqNo" + displaytype + desktop_id;
-			int seqno = Env.getContextAsInt(ctx, 0, var);
-			if(seqno>0)
-			{	
-					Thread.sleep(6000);
-			}
-		} catch (InterruptedException e) {
-
-			e.printStackTrace();
-		}*/
-		
-		
-    	
 		
 //		Language
 		String langName = pLanguaje;
@@ -230,12 +219,24 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
         
         
         langSession = Env.getContext(ctx, Env.LANGUAGE);
-        SessionManager.setSessionApplication(this);
+        
+        SessionManager.setIsDefaultDesktop(isDefaultDesktop);
+        
+        if(SessionManager.isDefaultDesktop())
+        	SessionManager.setSessionApplication(this);
+        else
+        {
+        	SessionManager.setSessionApplication(this, "SessionApplication" + displaytype + desktop_id);
+        	//if(SessionManager.getSessionApplication()==null)
+            SessionManager.setSessionApplication(this);
+
+        }
+        
         Session session = Executions.getCurrent().getDesktop().getSession();
         if (session.getAttribute(SessionContextListener.SESSION_CTX) == null || !SessionManager.isUserLoggedIn(ctx))
         {
         	//BEGIN AJC 8 AGO 2011
-			if(username!=null && username.length()>0 && !useDefaultDesktop)
+			if(username!=null && username.length()>0 && !(SessionManager.isDefaultDesktop()))
 			{
 				validateLogin();
 			}
@@ -262,7 +263,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 		String clientname = DB.getSQLValueString(null, "Select name from AD_Client where AD_Client_ID=?", client_id);
 		String orgname = DB.getSQLValueString(null, "Select name from AD_Org where AD_Org_ID=?", org_id);
 		
-		if (org.compiere.Adempiere.getVersion().length() != 0 && !useDefaultDesktop) {
+		if (org.compiere.Adempiere.getVersion().length() != 0 && !(SessionManager.isDefaultDesktop())) {
 			org.compiere.Adempiere.startup(true);
 			org.compiere.util.Ini.setProperty(org.compiere.util.Ini.P_UID,      username);
 			org.compiere.util.Ini.setProperty(org.compiere.util.Ini.P_PWD,      password);
@@ -287,8 +288,24 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 	}
 	//END AJC 8 AGO 2011
     
-    
-
+    //Begin AJC 26 dic 2013
+	
+	SimpleDesktopRender windowArea;
+	
+	public void setRenderPart(SimpleDesktopRender windowArea)
+	{
+		this.windowArea = windowArea;
+	}
+	
+	public SimpleDesktopRender getRenderPart()
+	{
+		return windowArea;
+	}
+	
+	
+	//end AJC 26 dic 2013
+	
+	
     public void onOk()
     {
     }
@@ -434,23 +451,44 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 			}
 		}
 
-		if (appDesktop == null)
-		{
-			//create new desktop
-			createDesktop();
-			appDesktop.setClientInfo(clientInfo);
-			appDesktop.createPart(this.getPage());
-			
-			currSess.setAttribute("application.desktop", appDesktop);
-			
-			ExecutionCarryOver eco = new ExecutionCarryOver(this.getPage().getDesktop());
-			currSess.setAttribute(EXECUTION_CARRYOVER_SESSION_KEY, eco);
-			currSess.setAttribute(ZK_DESKTOP_SESSION_KEY, this.getPage().getDesktop());
-		}
 		
+			//create new desktop
+			if(SessionManager.isDefaultDesktop() )
+			{
+				if (appDesktop == null)
+				{
+					createDesktop();
+					appDesktop.setClientInfo(clientInfo);
+					appDesktop.createPart(this.getPage());
+					currSess.setAttribute("application.desktop", appDesktop);
+					ExecutionCarryOver eco = new ExecutionCarryOver(this.getPage().getDesktop());
+					currSess.setAttribute(EXECUTION_CARRYOVER_SESSION_KEY, eco);
+					currSess.setAttribute(ZK_DESKTOP_SESSION_KEY, this.getPage().getDesktop());
+				}
+			}
+			else
+			{
+				if(SessionManager.getUniqueDesktop()==null)
+				{
+					createDesktop();
+					appDesktop.setClientInfo(clientInfo);
+					SessionManager.setUniqueDesktop(appDesktop);
+					// TODO: Missing set current UI as Draw Canvas
+					ExecutionCarryOver eco = new ExecutionCarryOver(this.getPage().getDesktop());
+					currSess.setAttribute(EXECUTION_CARRYOVER_SESSION_KEY, eco);
+					currSess.setAttribute(ZK_DESKTOP_SESSION_KEY, this.getPage().getDesktop());
+				}
+				else
+				{
+					appDesktop = SessionManager.getUniqueDesktop();
+				}
+					
+			}
+			
+			
 		
 		//BEGIN AJC 12 DIC 2013
-		if(appDesktop instanceof SimpleDesktop && !useDefaultDesktop)
+		if(appDesktop instanceof SimpleDesktop && !(SessionManager.isDefaultDesktop()))
 		{			
 			try{
 				appDesktop.closeActiveWindow();
@@ -521,7 +559,7 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
     	appDesktop = null;
 		String className = "";
 
-    	if(!useDefaultDesktop)
+    	if(!(SessionManager.isDefaultDesktop()))
 			className=desktopClass;
 		else
 			className= MSysConfig.getValue(IDesktop.CLASS_NAME_KEY);
@@ -569,7 +607,10 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
      */
     public IDesktop getAppDeskop()
     {
-    	return appDesktop;
+    	if(SessionManager.isDefaultDesktop())
+    		return appDesktop;
+    	else
+    		return SessionManager.getUniqueDesktop();
     }
 
 	public void onEvent(Event event) {
@@ -614,6 +655,6 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 
 	@Override
 	public boolean isDefaultDesktop() {
-		return useDefaultDesktop;
+		return SessionManager.isDefaultDesktop();
 	}
 }

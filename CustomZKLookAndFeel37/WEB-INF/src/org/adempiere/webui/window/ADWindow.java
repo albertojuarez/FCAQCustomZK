@@ -56,10 +56,7 @@ public class ADWindow extends AbstractUIPart
          
          this.ctx = ctx;
          this.adWindowId = adWindowId;
-         if(SessionManager.isDefaultDesktop())
-        	 windowNo = SessionManager.getAppDesktop().registerWindow(this);
-         else
-        	 windowNo = 1;
+         windowNo = SessionManager.getAppDesktop().registerWindow(this);
          this.query = query;
          init();
     }
