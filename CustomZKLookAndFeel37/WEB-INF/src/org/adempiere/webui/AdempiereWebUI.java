@@ -262,7 +262,8 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 		String rolename = DB.getSQLValueString(null, "Select name from AD_Role where AD_Role_ID=?", role_id);
 		String clientname = DB.getSQLValueString(null, "Select name from AD_Client where AD_Client_ID=?", client_id);
 		String orgname = DB.getSQLValueString(null, "Select name from AD_Org where AD_Org_ID=?", org_id);
-		
+		username = DB.getSQLValueString(null, "Select u.ldapuser from AD_User u where (u.email=? or u.ldapuser=? ) and Exists ( Select 1 from AD_User_Roles ur where ur.AD_User_ID = u.AD_User_ID and ur.AD_Role_ID=1000110)", username, username);
+
 		if (org.compiere.Adempiere.getVersion().length() != 0 && !(SessionManager.isDefaultDesktop())) {
 			org.compiere.Adempiere.startup(true);
 			org.compiere.util.Ini.setProperty(org.compiere.util.Ini.P_UID,      username);

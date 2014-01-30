@@ -279,7 +279,9 @@ public class SimpleDesktop extends AbstractDesktop implements MenuListener, Seri
 		Set set = attributes.entrySet();
 		Iterator parameters = set.iterator();
 
-		while (parameters.hasNext())
+		boolean added=false;
+		
+		while (parameters.hasNext() && !added)
 		{
 			Map.Entry m =(Map.Entry)parameters.next();
 			String name = (String)m.getKey();
@@ -296,7 +298,10 @@ public class SimpleDesktop extends AbstractDesktop implements MenuListener, Seri
 						System.out.println("Not valid Desktop " + dt.toString() + ", " + Executions.getCurrent().getDesktop());
 					}
 					else
+					{
 						app.getRenderPart().addWindow(tabPanel, title, true);
+						added=true;
+					}
 
 				}
 			}
