@@ -537,7 +537,10 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 			{
 				appDesktop.openProcessDialog(desktop_id, true);
 			}
-			
+			else if("S".equals(displaytype))
+			{
+				appDesktop.openBrowse(desktop_id);
+			}
 			
 			
 			

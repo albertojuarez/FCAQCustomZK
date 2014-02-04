@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.adempiere.model.MBrowse;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.IWebClient;
 import org.adempiere.webui.apps.ProcessDialog;
@@ -17,6 +18,7 @@ import org.adempiere.webui.component.ToolBarButton;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.event.MenuListener;
 import org.adempiere.webui.panel.ADForm;
+import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.part.AbstractUIPart;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.util.IServerPushCallback;
@@ -26,6 +28,7 @@ import org.compiere.model.MQuery;
 import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.WebDoc;
+import org.eevolution.form.WBrowser;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Desktop;
 import org.zkoss.zk.ui.Executions;
@@ -209,8 +212,16 @@ public class SimpleDesktop extends AbstractDesktop implements MenuListener, Seri
 
 	@Override
 	public void openBrowse(int AD_Browse_ID) {
-		// TODO Auto-generated method stub
 
+		createContainer();
+
+		MBrowse browse = new MBrowse(Env.getCtx() ,AD_Browse_ID, null);
+		CustomForm ff =  WBrowser.openBrowse(AD_Browse_ID);
+		DesktopTabpanel tabPanel = new DesktopTabpanel();
+        ff.setParent(tabPanel);
+        preOpenNewTab();
+        getUIContainer().getRenderPart().addWindow(tabPanel, browse.getTitle(), true);
+		
 	}
 
 	@Override
