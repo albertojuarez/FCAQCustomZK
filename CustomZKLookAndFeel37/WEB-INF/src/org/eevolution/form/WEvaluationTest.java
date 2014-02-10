@@ -276,32 +276,31 @@ import org.zkoss.zul.Space;
 		}
 
 
-		private boolean canEdit(X_CA_EvaluationPeriod currentEvaluation) {
-
-			
-			
-			
-			if( currentEvaluation.getDateFrom().getTime()>= System.currentTimeMillis() &&  // Quimestre actual
-					currentEvaluation.getDateTo().getTime()<= System.currentTimeMillis())
-				{
-					X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, currentEvaluation.getSeqNo().toString(), "3");
-					if(parcial.getDateStart().getTime()>=System.currentTimeMillis() &&
-							   //parcial.getDateTo().getTime()>=System.currentTimeMillis() && 
-							   parcial.getDateFrom().getTime()<=System.currentTimeMillis()
-									)
-					{
-					return true;
-				}
-				else
-					return false;
-			}
-			
-			else
-			{
+	private boolean canEdit(X_CA_EvaluationPeriod currentEvaluation) {
+		
+		try {
+			X_CA_EvaluationPeriod period_current = AcademicUtil
+					.getCurrentEvaluationPeriod(m_ctx, currentCourse.get_ID());
+			X_CA_Parcial parcial_current_max = AcademicUtil.getRealParcial(
+					currentCourse, period_current.getSeqNo().toString(), "3");
+			X_CA_Parcial parcial_current = AcademicUtil.getCurrentParcial(
+					m_ctx, currentCourse.get_ID());
+			if (currentEvaluation.getSeqNo().intValue() < period_current
+					.getSeqNo().intValue()) {
 				return true;
+			} else if (currentEvaluation.getSeqNo().intValue() > period_current
+					.getSeqNo().intValue()) {
+				return false;
+			} else if (parcial_current.getSeqNo().intValue() == parcial_current_max
+					.getSeqNo().intValue()) {
+				return true;
+			} else {
+				return false;
 			}
-			
+		} catch (Exception e) {
+			return false;
 		}
+	}
 
 		public void repaintParameterPanel()
 		{
