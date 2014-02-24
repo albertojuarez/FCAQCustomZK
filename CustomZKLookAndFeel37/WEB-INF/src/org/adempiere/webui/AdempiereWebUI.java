@@ -169,20 +169,9 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
 				}
 				else if("username".equals(name))
 				{
-					String username = getDesktop().getExecution().getParameter("username");	
+					username = getDesktop().getExecution().getParameter("username");	
 					username = SecureEngine.decrypt(username);
-					
-					Session session = SessionManager.getSession();
-					
-					String sessionUser = (String) session.getAttribute("PortalUserName");
-					
-					if(!username.equals(sessionUser) && sessionUser!=null)
-					{
-						//PortalLogout();
-					}
-					session.setAttribute("PortalUserName", username);
-					
- 				}
+				}
 				else if("password".equals(name))
 				{
 					password = getDesktop().getExecution().getParameter("password");
@@ -615,19 +604,6 @@ public class AdempiereWebUI extends Window implements EventListener, IWebClient
         Page page = this.getPage();
         page.removeComponents();
         Executions.sendRedirect("index.zul");
-    }
-    
-    public void PortalLogout()
-    {
-    	appDesktop.logout();
-    	Executions.getCurrent().getDesktop().getSession().getAttributes().clear();
-
-    	MSession mSession = MSession.get(Env.getCtx(), false);
-    	if (mSession != null) {
-    		mSession.logout();
-    	}
-
-        SessionManager.clearSession();
     }
 
     /**
