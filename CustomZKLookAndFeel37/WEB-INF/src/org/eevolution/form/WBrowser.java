@@ -895,7 +895,8 @@ public class WBrowser extends Browser implements IFormController,
 				if(isSelected)
 					selectedList[row] = row;
 			}
-			detail.setSelectedIndices(selectedList);
+			if(isSelected)
+				detail.setSelectedIndices(selectedList);
 
 		//detail.getModel().addTableModelListener(this);
 	} // run
