@@ -280,59 +280,23 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 
 
 	private boolean canEdit(X_CA_EvaluationPeriod currentEvaluation) {
-
-
-
-		try{
-
-
-
-			if( currentEvaluation.getDateFrom().getTime()<= System.currentTimeMillis() &&  // Quimestre actual
-					currentEvaluation.getDateTo().getTime()>= System.currentTimeMillis())
-			{
-				X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, currentEvaluation.getSeqNo().toString(), "3");
-
-
-				DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
-				//Date parcialEnd  = parcial.getDateTo();
-				Date parcialEnd  = parcial.getDateStart(); // Inicio de fecha de juntas
-				String dateString = df.format(parcialEnd);
-				dateString  = dateString +  " 23:59:59"; 
-				SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"); 
-				parcialEnd = dateFormat.parse(dateString);
-
-
-				if(parcial.getDateFrom().getTime()<=System.currentTimeMillis() &&
-						parcialEnd.getTime()>=System.currentTimeMillis()
-						)
-
-				{
-					return true;
-				}
-				else
-					return false;
+		
+		try {
+			
+			X_CA_EvaluationPeriod period_current = AcademicUtil.getCurrentEvaluationPeriod(m_ctx, currentCourse.get_ID());
+			X_CA_Parcial parcial_current_max = AcademicUtil.getRealParcial(currentCourse, period_current.getSeqNo().toString(), "3");
+			X_CA_Parcial parcial_current = AcademicUtil.getCurrentParcial(m_ctx, currentCourse.get_ID());
+			
+			if (currentEvaluation.getSeqNo().intValue() < period_current.getSeqNo().intValue()) {
+				return true;
+			} else if (currentEvaluation.getSeqNo().intValue() > period_current.getSeqNo().intValue()) {
+				return false;
+			} else if (parcial_current.getSeqNo().intValue() == parcial_current_max.getSeqNo().intValue()) {
+				return true;
+			} else {
+				return false;
 			}
-
-			else
-			{
-
-				X_CA_Parcial parcial = AcademicUtil.getRealParcial(currentCourse, "2", "3");
-
-
-				if(parcial.getDateFrom().getTime()<=System.currentTimeMillis() &&
-						parcial.getDateStart().getTime()>=System.currentTimeMillis()
-						)
-
-				{
-					return true;
-				}
-				else
-					return false;
-			}
-
-		}
-		catch(Exception e)
-		{
+		} catch (Exception e) {
 			return false;
 		}
 	}
