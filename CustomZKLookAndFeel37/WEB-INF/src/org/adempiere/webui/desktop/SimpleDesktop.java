@@ -178,8 +178,19 @@ public class SimpleDesktop extends AbstractDesktop implements MenuListener, Seri
 
 	@Override
 	public void showZoomWindow(int window_ID, MQuery query) {
-		// TODO Auto-generated method stub
+		
+		createContainer();
 
+    	ADWindow wnd = new ADWindow(Env.getCtx(), window_ID, query);
+
+    	DesktopTabpanel tabPanel = new DesktopTabpanel();
+    	if (wnd.createPart(tabPanel) != null)
+    	{
+    		preOpenNewTab();
+    		//windowContainer.insertAfter(windowContainer.getSelectedTab(), tabPanel, wnd.getTitle(), true, true);
+			getUIContainer().getRenderPart().addWindow(tabPanel, wnd.getTitle(), true);
+
+    	}
 	}
 
 	@Override
