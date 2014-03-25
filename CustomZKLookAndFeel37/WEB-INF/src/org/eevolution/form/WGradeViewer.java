@@ -11,6 +11,7 @@ import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Window;
 import org.compiere.minigrid.IMiniTable;
 import org.compiere.model.MBPartner;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.util.Env;
 import org.fcaq.model.X_CA_Note;
@@ -67,7 +68,9 @@ public class WGradeViewer extends Window{
 		
 		user = new MUser(Env.getCtx(), Env.getContextAsInt(Env.getCtx(), "#AD_User_ID"), null);
 		
-		String html = "<a href=http://newsis.fcaq.k12.ec/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
+		String ip = MSysConfig.getValue("FCAQ_MainIP");
+		
+		String html = "<a href=" + ip + "/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
 		html += "<p>" + user.getName() + "<br>";
 		
 		for(String item : description)
@@ -140,7 +143,9 @@ public class WGradeViewer extends Window{
 		
 		user = new MUser(Env.getCtx(), Env.getContextAsInt(Env.getCtx(), "#AD_User_ID"), null);
 		
-		String html = "<a href=http://newsis.fcaq.k12.ec/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
+		String ip = MSysConfig.getValue("FCAQ_MainIP");
+		
+		String html = "<a href=" + ip + "/reports/tmpgrade/" + user.getName()+ ".html target=_blank>Print</a><font FACE='arial' SIZE=1 >";
 				
 		html+= "<table border=1>\n";
 	
