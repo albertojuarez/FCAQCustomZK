@@ -40,6 +40,7 @@ import org.compiere.model.MCountry;
 import org.compiere.model.MLocation;
 import org.compiere.model.MRefList;
 import org.compiere.model.MRegion;
+import org.compiere.model.MSysConfig;
 import org.compiere.util.CLogger;
 import org.compiere.util.DefaultContextProvider;
 import org.compiere.util.Env;
@@ -460,6 +461,23 @@ public class WLocationDialog extends Window implements EventListener
 			for (MCAProvince province : MCAProvince.getProvinces(Env.getCtx(), m_location.getC_Country_ID(), null))
 			{
 				lstProvince.appendItem(province.getName(), province);
+			}
+			
+			Iterator<?> iter = lstProvince.getChildren().iterator();
+			String provinceDefault = MSysConfig.getValue("FCAQProvinceDefault");
+			
+			while (iter.hasNext())
+			{
+				ListItem listitem = (ListItem)iter.next();
+				
+				if (listitem.getValue() != null 
+						&& provinceDefault.equals(((MCAProvince) listitem.getValue()).getValue())) {
+					
+					lstProvince.setSelectedItem(listitem);
+					m_location.setCA_Province_ID(((MCAProvince) listitem.getValue()).get_ID());
+					
+					break;
+				}
 			}
 			//End Add FCAQ Fields, Josias Vargas, e-Evolution, 12-06-2013
 			
