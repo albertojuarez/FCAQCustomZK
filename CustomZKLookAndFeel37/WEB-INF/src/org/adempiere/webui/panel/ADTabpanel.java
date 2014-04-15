@@ -950,6 +950,8 @@ DataStatusListener, IADTabpanel, VetoableChangeListener
 	    			{
 	    				e.printStackTrace();
 	    				//nothing to do, just ignore
+	    				window.setHeight( "61px");
+                        window.resize();
 	    			}
 	    			
 	    		}
