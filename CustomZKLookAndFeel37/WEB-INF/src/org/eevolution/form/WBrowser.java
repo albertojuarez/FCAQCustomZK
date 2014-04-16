@@ -261,7 +261,7 @@ public class WBrowser extends Browser implements IFormController,
 		
 		MQuery query = getMQuery();
 		if(query != null)
-			AEnv.zoom(query);
+			AEnv.zoom(getAD_Window_ID(), query);
 		
 		hideBusyDialog();
 	}
@@ -568,7 +568,7 @@ public class WBrowser extends Browser implements IFormController,
 			}
 		});
 		
-		if(ad_Window_ID>0)
+		if(AD_Window_ID>0)
 			toolsBar.appendChild(bZoom);
 
 		bExport.setLabel(Msg.getMsg(Env.getCtx(),"Export"));
