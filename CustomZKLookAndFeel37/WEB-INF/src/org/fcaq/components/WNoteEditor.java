@@ -182,7 +182,15 @@ public class WNoteEditor extends Div  implements INoteEditor{
 					parcialEnd.getTime()>=(currentTime)))
 			{
 				decimalBox.setReadonly(true);
-			}}
+			}
+			
+			if(note.getCA_Parcial().getDateFinish() !=  null) {
+               
+				if((new Date()).after(note.getCA_Parcial().getDateFinish())) {
+                        decimalBox.setReadonly(true);
+                }
+			}
+		}
 		catch(Exception e)
 		{
 			//Nothing to do, just ignore
@@ -196,6 +204,13 @@ public class WNoteEditor extends Div  implements INoteEditor{
 		{
 			this.noteLine_id = noteLine.get_ID();
 			decimalBox.setReadonly(!"O".equals((noteLine.getDocStatus())));
+			
+			if(noteLine.getCA_Note().getCA_Parcial().getDateFinish() !=  null) {
+	               
+				if((new Date()).after(noteLine.getCA_Note().getCA_Parcial().getDateFinish())) {
+                        decimalBox.setReadonly(true);
+                }       
+			}
 
 			if(isdiscipline)
 			{
