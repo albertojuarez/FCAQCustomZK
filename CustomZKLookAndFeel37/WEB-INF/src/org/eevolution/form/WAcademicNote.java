@@ -106,7 +106,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 	private WTableDirEditor fMatterAssignment = null;
 	//private WTableDirEditor fSubject = null;
 
-	private Checkbox isElective = new Checkbox();
+	//private Checkbox isElective = new Checkbox();
 
 	private WTableDirEditor noteCategory  = null;
 	private WTableDirEditor noteType = null;
@@ -188,9 +188,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 
 		row = rows.newRow();
 
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		isElective.setWidth("39%");
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//isElective.setWidth("39%");
 
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
@@ -249,11 +249,11 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		fDate.setValue(new Timestamp(date.getTime()));
 		fDate.addValueChangeListener(this);
 
-		isElective.setSelected(false);
-		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
+		//isElective.setSelected(false);
+		//isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
 
 
-		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookupAll(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
@@ -298,7 +298,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		bShowComments.addActionListener(this);
 		bChekNotes.addActionListener(this);
 
-		isElective.addActionListener(this);
+		//isElective.addActionListener(this);
 	}
 
 	@Override
@@ -355,6 +355,7 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 					isfilterenabled = true;
 					filtertype=2;
 				}
+				if(tmpCourse.isElective()){inccol = 1; isHeaderElective = true;}else{inccol = 0; isHeaderElective = false;};
 			}
 			/*
 			String whereClause =  " AND User1_ID=" + currentUser.get_ID() + " AND " + X_CA_NoteCategory.COLUMNNAME_CA_NoteCategory_ID + 
@@ -620,16 +621,21 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		{
 			comments.dispose();	
 		}
-		else if (event.getTarget().equals(isElective))
+		else if (event.getTarget().equals(fCourseDef))
 		{
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
 
-			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
-			fCourseDef.addValueChangeListener(this);
+			if(tmpCourse!=null){
+				if(tmpCourse.isElective()){inccol = 1;isHeaderElective  =  true ;}else{inccol = 0;isHeaderElective  =  false ;};
+			}
+			
+			//fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+			//fCourseDef.addValueChangeListener(this);
 
 			//if(isElective.isSelected())
 			//{
-				inccol = 1;
-				isHeaderElective  =  true ;
+				//inccol = 1;
+				//isHeaderElective  =  true ;
 				fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
 				fMatterAssignment.addValueChangeListener(this);
 			/*}
@@ -724,9 +730,9 @@ implements IFormController, EventListener, WTableModelListener, ValueChangeListe
 		rows = parameterLayout.newRows();
 
 		row = rows.newRow();		
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		isElective.setWidth("39%");
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//isElective.setWidth("39%");
 
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());

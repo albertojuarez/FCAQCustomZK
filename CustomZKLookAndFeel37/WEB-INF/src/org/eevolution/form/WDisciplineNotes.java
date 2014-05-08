@@ -60,7 +60,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	// Form Components
 
-	private Checkbox isElective = new Checkbox();
+	//private Checkbox isElective = new Checkbox();
 
 	private Label lCourseDef = null;
 	private Label lParcial = null;
@@ -97,7 +97,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 	private void dynInit()
 	{
-		isElective.setSelected(false);
+		//isElective.setSelected(false);
 
 		noteTable = new WListbox();
 		((WListbox)noteTable).setWidth("100%");
@@ -105,9 +105,9 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		((WListbox)noteTable).setFixedLayout(false);
 		((WListbox)noteTable).setVflex(true);
 
-		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
+		//isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
 
-		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookupAll(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID()));
@@ -117,7 +117,7 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		fParcial.addValueChangeListener(this);
 		//fParcial.setValue(AcademicUtil.getCurrentParcial(m_ctx,0).get_ID());
 
-		isElective.addActionListener(this);
+		//isElective.addActionListener(this);
 		((WListbox)noteTable).addActionListener(this);
 
 		bChekNotes.addActionListener(this);
@@ -154,23 +154,23 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		parameterLayout.setWidth("1000px");
 		rows = parameterLayout.newRows();
 
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		row.appendChild(new Space());
+		//row = rows.newRow();
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//row.appendChild(new Space());
 		row = rows.newRow();
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
 		fCourseDef.getComponent().setWidth("60%");
+		row.appendChild(new Space());
+		row.appendChild(absence);
+		
+		row = rows.newRow();
 		row.appendChild(lSubjectMatter);
 		row.appendChild(fMatterAssignment.getComponent());
 
-
-		row = rows.newRow();
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
-		row.appendChild(new Space());
-		row.appendChild(absence);
 
 
 		Center center = new Center();
@@ -242,6 +242,11 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), (Integer)fCourseDef.getValue()));
 			fMatterAssignment.addValueChangeListener(this);
 
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
+
+			if(tmpCourse!=null){
+				if(tmpCourse.isElective()){inccol = 1;}else{inccol = 0;};
+			}
 
 			repaintParameterPanel();
 			refreshHeader();
@@ -269,9 +274,14 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 	@Override
 	public void onEvent(Event event) throws Exception {
 
-		if (event.getTarget().equals(isElective))
+		if (event.getTarget().equals(fCourseDef))
 		{
-			if(isElective.isSelected())
+			X_CA_CourseDef tmpCourse = new X_CA_CourseDef(m_ctx,(Integer) fCourseDef.getValue(), null);
+
+			if(tmpCourse!=null){
+				if(tmpCourse.isElective()){inccol = 1;}else{inccol = 0;};
+			}
+			/*if(isElective.isSelected())
 			{
 				inccol=1;
 			}
@@ -280,9 +290,9 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 				inccol=0;
 			}
 			
-			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookupAll(form.getWindowNo(),currentBPartner.get_ID()));
 			fCourseDef.addValueChangeListener(this);
-
+			 */
 			repaintParameterPanel();
 			refreshHeader();
 		}
@@ -472,14 +482,18 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 		parameterLayout.setWidth("1000px");
 		rows = parameterLayout.newRows();
 
-		row = rows.newRow();
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		row.appendChild(new Space());
+		//row = rows.newRow();
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//row.appendChild(new Space());
 		row = rows.newRow();
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
 		fCourseDef.getComponent().setWidth("50%");
+		row.appendChild(new Space());
+		row.appendChild(absence);
+		
+		row = rows.newRow();
 		
 		if(lclassroom.getValue().length()>0)
 		{
@@ -492,14 +506,8 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 			row.appendChild(fMatterAssignment.getComponent());
 		}
 		
-		
-
-
-		row = rows.newRow();
 		row.appendChild(lParcial);
 		row.appendChild(fParcial.getComponent());
-		row.appendChild(new Space());
-		row.appendChild(absence);
 	}
 
 

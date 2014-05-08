@@ -60,7 +60,7 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 	private WTableDirEditor fEvaluation = null;
 	private WTableDirEditor fMatterAssignment = null;
 
-	private Checkbox isElective = new Checkbox();
+	//private Checkbox isElective = new Checkbox();
 
 
 	public WEvaluationTest()
@@ -89,11 +89,11 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 		((WListbox)studentTable).setVflex(true);
 		((WListbox)studentTable).setStyle("overflow:auto;");
 
-		isElective.setSelected(false);
-		isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
+		//isElective.setSelected(false);
+		//isElective.setLabel(Msg.getMsg(Env.getCtx(), "Is Elective"));
 
 
-		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
+		fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true, AcademicUtil.getCourseLookupAll(form.getWindowNo(),currentBPartner.get_ID()));
 		fCourseDef.addValueChangeListener(this);
 
 		fMatterAssignment = new WTableDirEditor("CA_MatterAssignment_ID", true, false, true, AcademicUtil.getMatterAssignmentLookup(form.getWindowNo(),currentBPartner.get_ID(), 0));
@@ -104,7 +104,7 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 		fEvaluation.addValueChangeListener(this);
 
 
-		isElective.addActionListener(this);
+		//isElective.addActionListener(this);
 
 
 
@@ -140,9 +140,9 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 
 		row = rows.newRow();
 
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		isElective.setWidth("39%");
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//isElective.setWidth("39%");
 
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
@@ -311,9 +311,9 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 		rows = parameterLayout.newRows();
 
 		row = rows.newRow();		
-		row.appendChild(new Space());
-		row.appendChild(isElective);
-		isElective.setWidth("39%");
+		//row.appendChild(new Space());
+		//row.appendChild(isElective);
+		//isElective.setWidth("39%");
 
 		row.appendChild(lCourseDef);
 		row.appendChild(fCourseDef.getComponent());
@@ -332,7 +332,7 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 
 	@Override
 	public void onEvent(Event event) throws Exception {
-		if (event.getTarget().equals(isElective))
+		/*if (event.getTarget().equals(isElective))
 		{
 
 			fCourseDef = new WTableDirEditor("CA_CourseDef_ID", true, false, true,AcademicUtil.getCourseLookup(form.getWindowNo(),currentBPartner.get_ID(), isElective.isSelected()));
@@ -340,7 +340,7 @@ implements IFormController, EventListener, ValueChangeListener, WTableModelListe
 
 
 			repaintParameterPanel();
-		}
+		}*/
 	}
 
 	private void prepareLoadTable() {
