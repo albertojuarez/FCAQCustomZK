@@ -389,6 +389,10 @@ public class WDisciplineNotes extends DisciplineNotes implements IFormController
 
 
 		noteTable.setColumnClass(0, String.class, true);
+		
+		if (inccol > 0)
+			noteTable.setColumnClass(inccol, String.class, true);
+		
 		noteTable.setColumnClass(1+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(2+inccol, org.fcaq.components.WNoteEditor.class, false);
 		noteTable.setColumnClass(3+inccol, org.fcaq.components.WNoteEditor.class, false);
